@@ -6,14 +6,21 @@ from pgmpy.factors.discrete import (
     DiscreteFactor,
 )
 from pgmpy.factors.continuous import ContinuousFactor
+#TODO: add typing
 
 
 class NullCPD(BaseFactor):
-    def __init__(self, variable):
+    def __init__(self, variable, variable_card):
         self.variable = variable
+        self.variable_card = variable_card #is this correct?
+        self.cardinality = [variable_card]
+        self.variables = [self.variable]
 
     def scope(self):
         return [self.variable]
+
+    def to_factor(self):
+        return self
 
 
 class CID(BayesianModel):
@@ -49,7 +56,7 @@ class CID(BayesianModel):
             else:
                 self.cpds.append(cpd)
 
-    def check_model(self, allow_null=False):
+    def check_model(self, allow_null=True):
         """
         Check the model for various errors. This method checks for the following
         errors.
@@ -87,6 +94,31 @@ class CID(BayesianModel):
                     )
         return True
 
+    #def _get_local_policies(self, decision_name):
+    #    #returns a list of all possible CPDs
+    #    pass
+
+    def _get_sp_policy(self, decision_name):
+        policy = {}
+        for context in contexts:
+            self._get_best_act(self, decision_name, context)
+            policy[context] = act
+        return TabularCPD(policy)
+
+    def _get_best_act(self, decision_name, context):
+        utilities = []
+        for act in acts:
+            pdf = BeliefPropagation(self).query(act)
+            utilities.append(pdf.expectation())
+        return acts[np.argmax(utilities)]
 
 
+
+def get_minimal_cid():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([('A', 'B')])
+    cpd = TabularCPD('B',2,[[1., 0.], [0., 1.]], evidence=['A'], evidence_card = [2])
+    #import ipdb; ipdb.set_trace()
+    cid.add_cpds(NullCPD('A', 2), cpd)
+    return cid
     
