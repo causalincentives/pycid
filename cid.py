@@ -1,3 +1,4 @@
+import numpy as np
 from pgmpy.factors.base import BaseFactor
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import (
@@ -6,26 +7,33 @@ from pgmpy.factors.discrete import (
     DiscreteFactor,
 )
 from pgmpy.factors.continuous import ContinuousFactor
-#TODO: add typing
+import logging
+import typing
+import itertools
+from pgmpy.inference.ExactInference import BeliefPropagation
 
 
 class NullCPD(BaseFactor):
     def __init__(self, variable, variable_card):
         self.variable = variable
         self.variable_card = variable_card #is this correct?
-        self.cardinality = [variable_card]
+        self.cardinality = [variable_card] #possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
 
     def scope(self):
         return [self.variable]
 
-    def to_factor(self):
-        return self
+    def copy(self):
+        return NullCPD(self.variable, self.variable_card)
+
+    #def to_factor(self):
+    #    return self
 
 
 class CID(BayesianModel):
-    def __init__(self, ebunch=None):
+    def __init__(self, ebunch:list=None, utility_names:list=None):
         super(CID, self).__init__(ebunch=ebunch)
+        self.utility_names = utility_names
 
     def check_sufficient_recall(self):
         pass
@@ -98,27 +106,118 @@ class CID(BayesianModel):
     #    #returns a list of all possible CPDs
     #    pass
 
+    def _impute_random_policy(self):
+        #imputes random uniform policy to all NullCPDs
+        new = self.copy()
+        for cpd in new.get_cpds():
+            if isinstance(cpd, NullCPD):
+                n_actions = cpd.variable_card
+                parents = new.get_parents(cpd.variable)
+                parents_card = [p.cardinality for p in parents]
+                transition_probs = np.ones((n_actions, np.product(parents_card).astype(int)))/n_actions
+                uniform_policy = TabularCPD(
+                        cpd.variable, 
+                        cpd.variable_card, 
+                        transition_probs,
+                        evidence=[p.variable for p in parents],
+                        evidence_card = parents_card
+                        )
+                new.add_cpds(uniform_policy)
+        return new
+
+    def _get_decisions(self): #TODO: not currently used anywhere. maybe delete.
+        decisions = [cpd for cpd in cid.get_cpds() if isinstance(i, NullCPD)]
+        return decisions
+
+    def _indices_to_prob_table(self, indices, n_actions):
+        return np.eye(n_actions)[indices].T
+
     def _get_sp_policy(self, decision_name):
-        policy = {}
-        for context in contexts:
-            self._get_best_act(self, decision_name, context)
-            policy[context] = act
-        return TabularCPD(policy)
+        actions = []
+        parents = self.get_parents(decision_name)
+        if parents:
+            parent_cards = [self.get_cardinality(p) for p in parents]
+            context_tuples = itertools.product(*[range(card) for card in parent_cards])
+            for context_tuple in context_tuples:
+                context = {p:c for p,c in zip(parents, context_tuple)}
+                act = self._get_best_act(decision_name, context)
+                actions.append(act)
+        else:
+            act = self._get_best_act(decision_name, {})
+            actions.append(act)
+
+        #actions = []
+        #parents = self.get_parents(decision_name)
+        #parent_cards = [self.get_cardinality(p) for p in parents]
+        #contexts = itertools.product((range(card) for card in parent_cards))
+        #for context in contexts:
+        #    act = self._get_best_act(self, decision_name, context)
+        #    actions.append(act)
+
+        prob_table = self._indices_to_prob_table(actions, self.get_cardinality(decision_name))
+
+        variable_card = self.get_cardinality(decision_name)
+        evidence = self.get_parents(decision_name)
+        evidence_card = [self.get_cardinality(e) for e in evidence]
+        cpd = TabularCPD(
+                decision_name, 
+                variable_card,
+                prob_table,
+                evidence,
+                evidence_card
+                )
+        return cpd
 
     def _get_best_act(self, decision_name, context):
         utilities = []
+        #net = cid._impute_random_policy()
+        decision = self.get_cpds(decision_name)
+        acts = np.arange(decision.variable_card)
         for act in acts:
-            pdf = BeliefPropagation(self).query(act)
-            utilities.append(pdf.expectation())
+            ev = self._act_utility(decision_name, context, act)
+            utilities.append(ev)
         return acts[np.argmax(utilities)]
+
+    def _act_utility(self, decision_name:str, context:dict, act:int):
+        # for example: 
+        # cid = get_minimal_cid()
+        # out = self._act_utility('A', {}, 1) #TODO: give example that uses context
+        bp = BeliefPropagation(self._impute_random_policy())
+        context[decision_name] = act #add act to decision context
+        factor = bp.query(self.utility_names, context)
+        factor.normalize() #make probs add to one
+
+        ev = 0
+        for idx, prob in np.ndenumerate(factor.values):
+            utils = idx #TODO: change utils to be arbitrary-valued and use idx as indices to retrieve them
+            ev += np.sum(utils) * prob
+        #ev = (factor.values * np.arange(factor.cardinality)).sum()
+        return ev
+
+    def copy(self):
+        model_copy = CID()
+        model_copy.add_nodes_from(self.nodes())
+        model_copy.add_edges_from(self.edges())
+        if self.cpds:
+            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
+        return model_copy
+
 
 
 
 def get_minimal_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
-    cid = CID([('A', 'B')])
+    cid = CID([('A', 'B')], ['B'])
     cpd = TabularCPD('B',2,[[1., 0.], [0., 1.]], evidence=['A'], evidence_card = [2])
-    #import ipdb; ipdb.set_trace()
     cid.add_cpds(NullCPD('A', 2), cpd)
     return cid
+
+def get_3node_cid():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([('A', 'B'), ('B', 'C')], ['B', 'C'])
+    cpd = TabularCPD('B',2, np.eye(2), evidence=['A'], evidence_card = [2])
+    cpd2 = TabularCPD('C',2, np.eye(2), evidence=['B'], evidence_card = [2])
+    cid.add_cpds(NullCPD('A', 2), cpd, cpd2)
+    return cid
+
     
