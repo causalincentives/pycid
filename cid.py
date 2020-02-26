@@ -11,6 +11,7 @@ import logging
 import typing
 import itertools
 from pgmpy.inference.ExactInference import BeliefPropagation
+import functools
 
 
 class NullCPD(BaseFactor):
@@ -35,8 +36,40 @@ class CID(BayesianModel):
         super(CID, self).__init__(ebunch=ebunch)
         self.utility_names = utility_names
 
+    def _get_decisions(self):
+        decisions = [node for node in self.cpds if isinstance(node, NullCPD)]
+        if not decisions: #TODO: can be deleted
+            import ipdb; ipdb.set_trace()
+        return decisions
+
+    def _get_compatible_ordering(self):
+        decisions = self._get_decisions()
+        def compare(node1, node2): 
+            a = node1.variable
+            b = node2.variable
+            return a != b and a in self._get_ancestors_of(b)
+        ordering = sorted(decisions, key=functools.cmp_to_key(compare))
+        return [o.variable for o in ordering]
+
+
     def check_sufficient_recall(self):
-        pass
+        decision_ordering = self._get_compatible_ordering()
+        for i, dname1 in enumerate(decision_ordering):
+            for j, dname2 in enumerate(decision_ordering[i+1:]):
+                for uname in self.utility_names:
+                    if dname2 in self._get_ancestors_of(uname):
+                        cid_with_policy = self.copy()
+                        cid_with_policy.add_edge('pi',dname1)
+                        observed = cid_with_policy.get_parents(dname2)
+                        connected = cid_with_policy.is_active_trail('pi', uname, observed=observed)
+                        print(dname1, dname2, connected)
+                        if connected:
+                            logging.warning(
+                                    "{} has insufficient recall of {} due to utility {}".format(
+                                        dname2, dname1, uname)
+                                    )
+                            return False
+        return True
 
     def solve(self, decision_name):
         #returns an optimal cpd for a given decision
@@ -125,10 +158,6 @@ class CID(BayesianModel):
                 new.add_cpds(uniform_policy)
         return new
 
-    def _get_decisions(self): #TODO: not currently used anywhere. maybe delete.
-        decisions = [cpd for cpd in cid.get_cpds() if isinstance(i, NullCPD)]
-        return decisions
-
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
 
@@ -209,15 +238,24 @@ def get_minimal_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([('A', 'B')], ['B'])
     cpd = TabularCPD('B',2,[[1., 0.], [0., 1.]], evidence=['A'], evidence_card = [2])
-    cid.add_cpds(NullCPD('A', 2), cpd)
+    nullcpd = NullCPD('A', 2)
+    cid.add_cpds(nullcpd, cpd)
     return cid
 
 def get_3node_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([('A', 'B'), ('B', 'C')], ['B', 'C'])
-    cpd = TabularCPD('B',2, np.eye(2), evidence=['A'], evidence_card = [2])
+    nullcpd = NullCPD('A', 2)
+    #cpd = TabularCPD('B',2, np.eye(2), evidence=['A'], evidence_card = [2])
+    nullcpd2 = NullCPD('B', 2)
     cpd2 = TabularCPD('C',2, np.eye(2), evidence=['B'], evidence_card = [2])
-    cid.add_cpds(NullCPD('A', 2), cpd, cpd2)
+    cid.add_cpds(nullcpd, nullcpd2, cpd2)
+    #cid.add_cpds(nullcpd, cpd, cpd2)
     return cid
 
-    
+def get_insufficient_recall_cid():
+    cid = CID([('A','U'),('B','U')], ['U'])
+    tabcpd = TabularCPD('U', 2, np.random.randn(2,4), evidence=['A','B'], evidence_card=[2,2])
+    cid.add_cpds(NullCPD('A', 2), NullCPD('B', 2), tabcpd)
+    return cid
+        
