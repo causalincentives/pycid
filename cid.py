@@ -161,10 +161,19 @@ class CID(BayesianModel):
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
 
-    def _get_global_sp_policy():
+    def solve(self):
+        #returns dictionary with subgame perfect global policy
+        new_cid = self.copy()
         # get ordering
+        dnames = self._get_compatible_ordering()
         # solve in reverse ordering
+        sp_policies = {}
+        for dname in reversed(dnames):
+            sp_policy = new_cid._get_sp_policy(dname)
+            new_cid.add_cpds(sp_policy)
+            sp_policies[dname] = sp_policy
         # input each policy once it's solve
+        return sp_policies
 
     def _get_sp_policy(self, decision_name):
         actions = []
