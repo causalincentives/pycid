@@ -62,7 +62,7 @@ class CID(BayesianModel):
                         cid_with_policy.add_edge('pi',dname1)
                         observed = cid_with_policy.get_parents(dname2)
                         connected = cid_with_policy.is_active_trail('pi', uname, observed=observed)
-                        print(dname1, dname2, connected)
+                        #print(dname1, dname2, connected)
                         if connected:
                             logging.warning(
                                     "{} has insufficient recall of {} due to utility {}".format(
@@ -71,13 +71,13 @@ class CID(BayesianModel):
                             return False
         return True
 
-    def solve(self, decision_name):
-        #returns an optimal cpd for a given decision
-        pass
+    #def solve(self, decision_name):
+    #    #returns an optimal cpd for a given decision
+    #    pass
 
-    def expected_utility(self, cpd_dict):
-        #input a cpd for each decision
-        pass
+    #def expected_utility(self, cpd_dict):
+    #    #input a cpd for each decision
+    #    pass
 
     def add_cpds(self, *cpds):
         for cpd in cpds:
@@ -160,6 +160,11 @@ class CID(BayesianModel):
 
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
+
+    def _get_global_sp_policy():
+        # get ordering
+        # solve in reverse ordering
+        # input each policy once it's solve
 
     def _get_sp_policy(self, decision_name):
         actions = []
