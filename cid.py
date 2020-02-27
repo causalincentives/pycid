@@ -146,13 +146,13 @@ class CID(BayesianModel):
             if isinstance(cpd, NullCPD):
                 n_actions = cpd.variable_card
                 parents = new.get_parents(cpd.variable)
-                parents_card = [p.cardinality for p in parents]
+                parents_card = [self.get_cardinality(p) for p in parents]
                 transition_probs = np.ones((n_actions, np.product(parents_card).astype(int)))/n_actions
                 uniform_policy = TabularCPD(
                         cpd.variable, 
                         cpd.variable_card, 
                         transition_probs,
-                        evidence=[p.variable for p in parents],
+                        evidence=parents,
                         evidence_card = parents_card
                         )
                 new.add_cpds(uniform_policy)
@@ -238,7 +238,7 @@ class CID(BayesianModel):
         return ev
 
     def copy(self):
-        model_copy = CID()
+        model_copy = CID(utility_names=self.utility_names)
         model_copy.add_nodes_from(self.nodes())
         model_copy.add_edges_from(self.edges())
         if self.cpds:
@@ -258,7 +258,7 @@ def get_minimal_cid():
 
 def get_3node_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
-    cid = CID([('A', 'B'), ('B', 'C')], ['B', 'C'])
+    cid = CID([('A', 'B'), ('B', 'C')], ['C'])
     nullcpd = NullCPD('A', 2)
     #cpd = TabularCPD('B',2, np.eye(2), evidence=['A'], evidence_card = [2])
     nullcpd2 = NullCPD('B', 2)
