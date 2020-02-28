@@ -9,6 +9,7 @@ from pgmpy.factors.discrete import (
 from pgmpy.factors.continuous import ContinuousFactor
 import logging
 import typing
+from typing import List, Tuple
 import itertools
 from pgmpy.inference.ExactInference import BeliefPropagation
 import functools
@@ -32,31 +33,28 @@ class NullCPD(BaseFactor):
 
 
 class CID(BayesianModel):
-    def __init__(self, ebunch:list=None, utility_names:list=None):
+    def __init__(self, ebunch:List[Tuple[str, str]]=None, unames:List[str]=None):
         super(CID, self).__init__(ebunch=ebunch)
-        self.utility_names = utility_names
+        self.unames = unames
 
-    def _get_decisions(self):
-        decisions = [node for node in self.cpds if isinstance(node, NullCPD)]
+    def _get_decision_names(self):
+        decisions = [node.variable for node in self.cpds if isinstance(node, NullCPD)]
         if not decisions: #TODO: can be deleted
-            import ipdb; ipdb.set_trace()
+            raise ValueError('the cid has no NullCPDs')
         return decisions
 
-    def _get_compatible_ordering(self):
-        decisions = self._get_decisions()
+    def _get_valid_order(self, node_names):
         def compare(node1, node2): 
-            a = node1.variable
-            b = node2.variable
-            return a != b and a in self._get_ancestors_of(b)
-        ordering = sorted(decisions, key=functools.cmp_to_key(compare))
-        return [o.variable for o in ordering]
+            return node1 != node2 and node1 in self._get_ancestors_of(node2)
+        ordering = sorted(node_names, key=functools.cmp_to_key(compare))
+        return ordering
 
 
     def check_sufficient_recall(self):
-        decision_ordering = self._get_compatible_ordering()
+        decision_ordering = self._get_valid_order(self._get_decision_names())
         for i, dname1 in enumerate(decision_ordering):
             for j, dname2 in enumerate(decision_ordering[i+1:]):
-                for uname in self.utility_names:
+                for uname in self.unames:
                     if dname2 in self._get_ancestors_of(uname):
                         cid_with_policy = self.copy()
                         cid_with_policy.add_edge('pi',dname1)
@@ -227,7 +225,7 @@ class CID(BayesianModel):
         # out = self._act_utility('A', {}, 1) #TODO: give example that uses context
         bp = BeliefPropagation(self._impute_random_policy())
         context[decision_name] = act #add act to decision context
-        factor = bp.query(self.utility_names, context)
+        factor = bp.query(self.unames, context)
         factor.normalize() #make probs add to one
 
         ev = 0
@@ -238,7 +236,7 @@ class CID(BayesianModel):
         return ev
 
     def copy(self):
-        model_copy = CID(utility_names=self.utility_names)
+        model_copy = CID(unames=self.unames)
         model_copy.add_nodes_from(self.nodes())
         model_copy.add_edges_from(self.edges())
         if self.cpds:
