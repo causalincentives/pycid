@@ -33,49 +33,41 @@ class NullCPD(BaseFactor):
 
 
 class CID(BayesianModel):
-    def __init__(self, ebunch:List[Tuple[str, str]]=None, unames:List[str]=None):
+    def __init__(self, ebunch:List[Tuple[str, str]]=None, utilities:List[str]=None):
         super(CID, self).__init__(ebunch=ebunch)
-        self.unames = unames
+        self.utilities = utilities
 
-    def _get_decision_names(self):
+    def _get_decisions(self):
         decisions = [node.variable for node in self.cpds if isinstance(node, NullCPD)]
         if not decisions: #TODO: can be deleted
             raise ValueError('the cid has no NullCPDs')
         return decisions
 
-    def _get_valid_order(self, node_names):
+    def _get_valid_order(self, nodes:List[str]):
         def compare(node1, node2): 
             return node1 != node2 and node1 in self._get_ancestors_of(node2)
-        ordering = sorted(node_names, key=functools.cmp_to_key(compare))
+        ordering = sorted(nodes, key=functools.cmp_to_key(compare))
         return ordering
 
 
     def check_sufficient_recall(self):
-        decision_ordering = self._get_valid_order(self._get_decision_names())
-        for i, dname1 in enumerate(decision_ordering):
-            for j, dname2 in enumerate(decision_ordering[i+1:]):
-                for uname in self.unames:
-                    if dname2 in self._get_ancestors_of(uname):
+        decision_ordering = self._get_valid_order(self._get_decisions())
+        for i, decision1 in enumerate(decision_ordering):
+            for j, decision2 in enumerate(decision_ordering[i+1:]):
+                for utility in self.utilities:
+                    if decision2 in self._get_ancestors_of(utility):
                         cid_with_policy = self.copy()
-                        cid_with_policy.add_edge('pi',dname1)
-                        observed = cid_with_policy.get_parents(dname2)
-                        connected = cid_with_policy.is_active_trail('pi', uname, observed=observed)
-                        #print(dname1, dname2, connected)
+                        cid_with_policy.add_edge('pi',decision1)
+                        observed = cid_with_policy.get_parents(decision2)
+                        connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
+                        #print(decision1, decision2, connected)
                         if connected:
                             logging.warning(
                                     "{} has insufficient recall of {} due to utility {}".format(
-                                        dname2, dname1, uname)
+                                        decision2, decision1, utility)
                                     )
                             return False
         return True
-
-    #def solve(self, decision_name):
-    #    #returns an optimal cpd for a given decision
-    #    pass
-
-    #def expected_utility(self, cpd_dict):
-    #    #input a cpd for each decision
-    #    pass
 
     def add_cpds(self, *cpds):
         for cpd in cpds:
@@ -133,7 +125,7 @@ class CID(BayesianModel):
                     )
         return True
 
-    #def _get_local_policies(self, decision_name):
+    #def _get_local_policies(self, decision):
     #    #returns a list of all possible CPDs
     #    pass
 
@@ -163,45 +155,45 @@ class CID(BayesianModel):
         #returns dictionary with subgame perfect global policy
         new_cid = self.copy()
         # get ordering
-        dnames = self._get_compatible_ordering()
+        decisions = self._get_valid_order(self._get_decisions())
         # solve in reverse ordering
         sp_policies = {}
-        for dname in reversed(dnames):
-            sp_policy = new_cid._get_sp_policy(dname)
+        for decision in reversed(decisions):
+            sp_policy = new_cid._get_sp_policy(decision)
             new_cid.add_cpds(sp_policy)
-            sp_policies[dname] = sp_policy
+            sp_policies[decision] = sp_policy
         # input each policy once it's solve
         return sp_policies
 
-    def _get_sp_policy(self, decision_name):
+    def _get_sp_policy(self, decision):
         actions = []
-        parents = self.get_parents(decision_name)
+        parents = self.get_parents(decision)
         if parents:
             parent_cards = [self.get_cardinality(p) for p in parents]
             context_tuples = itertools.product(*[range(card) for card in parent_cards])
             for context_tuple in context_tuples:
                 context = {p:c for p,c in zip(parents, context_tuple)}
-                act = self._get_best_act(decision_name, context)
+                act = self._get_best_act(decision, context)
                 actions.append(act)
         else:
-            act = self._get_best_act(decision_name, {})
+            act = self._get_best_act(decision, {})
             actions.append(act)
 
         #actions = []
-        #parents = self.get_parents(decision_name)
+        #parents = self.get_parents(decision)
         #parent_cards = [self.get_cardinality(p) for p in parents]
         #contexts = itertools.product((range(card) for card in parent_cards))
         #for context in contexts:
-        #    act = self._get_best_act(self, decision_name, context)
+        #    act = self._get_best_act(self, decision, context)
         #    actions.append(act)
 
-        prob_table = self._indices_to_prob_table(actions, self.get_cardinality(decision_name))
+        prob_table = self._indices_to_prob_table(actions, self.get_cardinality(decision))
 
-        variable_card = self.get_cardinality(decision_name)
-        evidence = self.get_parents(decision_name)
+        variable_card = self.get_cardinality(decision)
+        evidence = self.get_parents(decision)
         evidence_card = [self.get_cardinality(e) for e in evidence]
         cpd = TabularCPD(
-                decision_name, 
+                decision, 
                 variable_card,
                 prob_table,
                 evidence,
@@ -209,23 +201,22 @@ class CID(BayesianModel):
                 )
         return cpd
 
-    def _get_best_act(self, decision_name, context):
+    def _get_best_act(self, decision, context):
         utilities = []
         #net = cid._impute_random_policy()
-        decision = self.get_cpds(decision_name)
-        acts = np.arange(decision.variable_card)
+        acts = np.arange(self.get_cpds(decision).variable_card)
         for act in acts:
-            ev = self._act_utility(decision_name, context, act)
+            ev = self._act_utility(decision, context, act)
             utilities.append(ev)
         return acts[np.argmax(utilities)]
 
-    def _act_utility(self, decision_name:str, context:dict, act:int):
+    def _act_utility(self, decision:str, context:dict, act:int):
         # for example: 
         # cid = get_minimal_cid()
         # out = self._act_utility('A', {}, 1) #TODO: give example that uses context
         bp = BeliefPropagation(self._impute_random_policy())
-        context[decision_name] = act #add act to decision context
-        factor = bp.query(self.unames, context)
+        context[decision] = act #add act to decision context
+        factor = bp.query(self.utilities, context)
         factor.normalize() #make probs add to one
 
         ev = 0
@@ -236,7 +227,7 @@ class CID(BayesianModel):
         return ev
 
     def copy(self):
-        model_copy = CID(unames=self.unames)
+        model_copy = CID(utilities=self.utilities)
         model_copy.add_nodes_from(self.nodes())
         model_copy.add_edges_from(self.edges())
         if self.cpds:
