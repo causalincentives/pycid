@@ -1,6 +1,6 @@
 
 
-def choose_paths(cid):
+def choose_paths(cid, decision, utility):
     #path are lists of node names
     return control_path, info_path
 
