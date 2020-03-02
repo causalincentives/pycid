@@ -2,10 +2,6 @@
 #agreements; and to You under the Apache License, Version 2.0.
 
 
-def choose_paths(cid, decision, utility):
-    #path are lists of node names
-    return control_path, info_path
-
 def modify_cid(cid):
     #copy nodes
     #choose control and info paths for each decision
