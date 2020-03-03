@@ -1,6 +1,9 @@
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
 #agreements; and to You under the Apache License, Version 2.0.
 
+from typing import List
+import numpy as np
+
 
 def _find_path_recurse(bn, path: List[str], B: str):
     if path[-1]==B:
@@ -36,24 +39,55 @@ def _active_neighbours(bn, path: List[str], E: List[str]):
     return new_active_neighbours
     
 
-def _find_active_path_recurse(bn, path, B, E):
+def find_active_path_recurse(bn, path, B, E):
     if path[-1]==B and B not in E:
         return path
     else:
         neighbours = _active_neighbours(bn, path, E)
         for neighbour in neighbours:
             ext = path + [neighbour]
-            ext = _find_active_path_recurse(bn, ext, B, E)
+            ext = find_active_path_recurse(bn, ext, B, E)
             if ext and ext[-1]==B and B not in E:
                 return ext
             
-def find_active_path(bn, A, B, E):
-    return _find_active_path_recurse(bn, [A], B, E)
+#def find_active_path(bn, A, B, E):
+#    return _find_active_path_recurse(bn, [A], B, E)
 
-def choose_paths(cid, decision, X, utility):
-    control_path = find_path_from(cid, decision, utility)
-    other_parents = [i for i in cid.get_parents(decision) if i!=X]
-    info_path = find_active_path(cid, [decision, X], utility, other_parents)
-    return control_path, info_path
+def _get_path_pair(cid, X, D):
+    for utility in cid.utilities:
+        control_path = find_path_from(cid, D, utility)
+        other_parents = [i for i in cid.get_parents(D) if i!=X]
+        info_path = find_active_path_recurse(cid, [D, X], utility, other_parents)
+        if control_path and info_path:
+            return {'control':control_path, 'info':info_path}
+    return #if no path present
+
+def get_infolinks(cid, path):
+    #extract infolinks from a path
+    infolinks = []
+    for start, end in zip(path[:-1], path[1:]):
+        if end.startswith('D'): #TODO: check whether NullCPD instead
+            if start in cid.get_parents(end):
+                infolinks.append(start, end)
+    return infolinks
+
+def choose_all_paths(cid, decision, obs):
+    paths = {}
+    pair = _get_path_pair(cid, obs, decision)
+    assert pair is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
+    paths[(obs, decision)] = pair
+    infolinks = get_infolinks(cid, pair['control']) + get_infolinks(cid, pair['info'])
+    new_infolinks = set(infolinks) - set(paths)
+    while new_infolinks:
+        for X, D in new_infolinks:
+            if (X,D) not in paths:
+                paths[(X,D)] = _get_path_pair(cid, X, D)
+        infolinks = get_infolinks(cid, pair['control']) + get_infolinks(cid, pair['info'])
+        new_infolinks = set(infolinks) - set(paths)
+    return paths
+
+
+#TODO: why does step (1) advise removing all other nodes?
+#TODO: why does step (1) advise choosing the info path so that X \neq S?
 
 
