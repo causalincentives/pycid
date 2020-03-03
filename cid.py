@@ -40,6 +40,35 @@ class CID(BayesianModel):
         super(CID, self).__init__(ebunch=ebunch)
         self.utilities = utilities
 
+    def nr_observations(self, decision):
+        #get nonrequisite observations
+        nonrequisite = []
+        parents = self.get_parents(decision)
+        for obs in parents:
+            other_parents = [i for i in parents if i!=obs]
+            connected = self.active_trail_nodes(obs, observed=other_parents)
+            downstream_utilities = [i for i in self.utilities if decision in self._get_ancestors_of(i)]
+            if len([u for u in downstream_utilities if u in connected])==0:
+                nonrequisite.append(obs)
+        return nonrequisite
+
+    def trimmed(self):
+        #return the trimmed version of the graph
+        #based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
+        #using the assumption that the graph is soluble
+        cid = self.copy()
+        decisions = cid._get_decisions()
+        while True:
+            removed = 0
+            for decision in decisions:
+                nonrequisite = cid.nr_observations(decision)
+                for nr in nonrequisite:
+                    removed += 1
+                    cid.remove_edge(nr, decision)
+            if removed==0:
+                break
+        return cid
+
     def _get_decisions(self):
         decisions = [node.variable for node in self.cpds if isinstance(node, NullCPD)]
         if not decisions: #TODO: can be deleted
