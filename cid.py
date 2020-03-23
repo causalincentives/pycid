@@ -197,27 +197,28 @@ class CID(BayesianModel):
         # input each policy once it's solve
         return sp_policies
 
-    def _get_sp_policy(self, decision):
-        actions = []
+    def _possible_contexts(self, decision):
         parents = self.get_parents(decision)
         if parents:
+            contexts = []
             parent_cards = [self.get_cardinality(p) for p in parents]
             context_tuples = itertools.product(*[range(card) for card in parent_cards])
             for context_tuple in context_tuples:
-                context = {p:c for p,c in zip(parents, context_tuple)}
-                act = self._get_best_act(decision, context)
+                contexts.append({p:c for p,c in zip(parents, context_tuple)})
+            return contexts
+        else:
+            return None
+
+    def _get_sp_policy(self, decision):
+        actions = []
+        contexts = self._possible_contexts(decision)
+        if contexts:
+            for context in contexts:
+                act = self._optimal_decisions(decision, context)[0]
                 actions.append(act)
         else:
-            act = self._get_best_act(decision, {})
+            act = self._optimal_decisions(decision, {})[0]
             actions.append(act)
-
-        #actions = []
-        #parents = self.get_parents(decision)
-        #parent_cards = [self.get_cardinality(p) for p in parents]
-        #contexts = itertools.product((range(card) for card in parent_cards))
-        #for context in contexts:
-        #    act = self._get_best_act(self, decision, context)
-        #    actions.append(act)
 
         prob_table = self._indices_to_prob_table(actions, self.get_cardinality(decision))
 
@@ -233,21 +234,23 @@ class CID(BayesianModel):
                 )
         return cpd
 
-    def _get_best_act(self, decision, context):
+    def _optimal_decisions(self, decision, context):
         utilities = []
         #net = cid._impute_random_policy()
         acts = np.arange(self.get_cpds(decision).variable_card)
         for act in acts:
-            ev = self._act_utility(decision, context, act)
+            context = context.copy()
+            context[decision] = act
+            ev = self.expected_utility(context)
             utilities.append(ev)
-        return acts[np.argmax(utilities)]
+        indices = np.where(np.array(utilities)==np.max(utilities))
+        return acts[indices]
 
-    def _act_utility(self, decision:str, context:dict, act:int):
+    def expected_utility(self, context:dict):
         # for example: 
         # cid = get_minimal_cid()
-        # out = self._act_utility('A', {}, 1) #TODO: give example that uses context
+        # out = self.expected_utility({'D':1}) #TODO: give example that uses context
         bp = BeliefPropagation(self._impute_random_policy())
-        context[decision] = act #add act to decision context
         factor = bp.query(self.utilities, context)
         factor.normalize() #make probs add to one
 
@@ -279,14 +282,56 @@ def get_minimal_cid():
 
 def get_3node_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
-    cid = CID([('A', 'B'), ('B', 'C')], ['C'])
-    nullcpd = NullCPD('A', 2)
-    #cpd = TabularCPD('B',2, np.eye(2), evidence=['A'], evidence_card = [2])
-    nullcpd2 = NullCPD('B', 2)
-    cpd2 = TabularCPD('C',2, np.eye(2), evidence=['B'], evidence_card = [2])
-    cid.add_cpds(nullcpd, nullcpd2, cpd2)
-    #cid.add_cpds(nullcpd, cpd, cpd2)
+    cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')], ['U'])
+    scpd = TabularCPD('S',2,np.array([[.5],[.5]]))#, evidence=[], evidence_card = [])
+    mat = np.array([[0,1, 1,0], [1,0,0,1]])
+    ucpd = TabularCPD('U', 2, mat, evidence=['S', 'D'], evidence_card=[2,2])
+    nullcpd = NullCPD('D', 2)
+    cid.add_cpds(nullcpd, scpd, ucpd)
     return cid
+
+def get_5node_cid():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([
+        ('S1', 'D'), 
+        ('S1', 'U1'), 
+        ('S2', 'D'), 
+        ('S2', 'U2'), 
+        ('D', 'U1'),
+        ('D', 'U2')
+        ], 
+        ['U1', 'U2'])
+    s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))
+    s2cpd = TabularCPD('S2',2,np.array([[.5],[.5]]))
+    mat = np.array([[0,1, 1,0], [1,0,0,1]])
+    u1cpd = TabularCPD('U1', 2, mat, evidence=['S1', 'D'], evidence_card=[2,2])
+    u2cpd = TabularCPD('U2', 2, mat, evidence=['S2', 'D'], evidence_card=[2,2])
+    nullcpd = NullCPD('D', 2)
+    cid.add_cpds(nullcpd, s1cpd, s2cpd, u1cpd, u2cpd)
+    return cid
+
+def get_2dec_cid():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([
+        ('S1', 'S2'), 
+        ('S1','D1'), 
+        ('D1','S2'),
+        ('S2', 'U'), 
+        ('S2', 'D2'), 
+        ('D2', 'U')
+        ], 
+        ['U'])
+    s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))#, evidence=[], evidence_card = [])
+    d1cpd = NullCPD('D1', 2)
+    d2cpd = NullCPD('D2', 2)
+    mat1 = np.array([[0,1, 1,0], [1,0,0,1]])
+    s2cpd = TabularCPD('S2', 2, mat1, evidence=['S1', 'D1'], evidence_card=[2,2])
+    mat2 = np.array([[0,1, 1,0], [1,0,0,1]])
+    ucpd = TabularCPD('U', 2, mat2, evidence=['S2', 'D2'], evidence_card=[2,2])
+    cid.add_cpds(s1cpd, d1cpd, s2cpd, d2cpd, ucpd)
+    return cid
+
+
 
 def get_insufficient_recall_cid():
     cid = CID([('A','U'),('B','U')], ['U'])
