@@ -31,6 +31,9 @@ class NullCPD(BaseFactor):
     def copy(self):
         return NullCPD(self.variable, self.variable_card)
 
+    def marginalize(self, variables, inplace=True): #TODO (maybe): decrease cardinality by len(variables)
+        if not inplace:
+            return self
     #def to_factor(self):
     #    return self
 
@@ -77,7 +80,14 @@ class CID(BayesianModel):
 
     def _get_valid_order(self, nodes:List[str]):
         def compare(node1, node2): 
-            return node1 != node2 and node1 in self._get_ancestors_of(node2)
+            if node1==node2:
+                return 0
+            elif node1 in self._get_ancestors_of(node2):
+                return -1
+            elif node2 in self._get_ancestors_of(node1):
+                return 1
+            else:
+                return 0
         ordering = sorted(nodes, key=functools.cmp_to_key(compare))
         return ordering
 
@@ -90,7 +100,7 @@ class CID(BayesianModel):
                     if decision2 in self._get_ancestors_of(utility):
                         cid_with_policy = self.copy()
                         cid_with_policy.add_edge('pi',decision1)
-                        observed = cid_with_policy.get_parents(decision2)
+                        observed = cid_with_policy.get_parents(decision2) + [decision2]
                         connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
                         #print(decision1, decision2, connected)
                         if connected:

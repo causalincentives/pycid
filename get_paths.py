@@ -40,6 +40,7 @@ def _active_neighbours(bn, path: List[str], E: List[str]):
     
 
 def find_active_path_recurse(bn, path, B, E):
+    #find active path from `path' to `B' given `E'
     if path[-1]==B and B not in E:
         return path
     else:
