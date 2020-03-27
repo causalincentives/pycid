@@ -48,10 +48,12 @@ class CID(BayesianModel):
         nonrequisite = []
         parents = self.get_parents(decision)
         for obs in parents:
-            other_parents = [i for i in parents if i!=obs]
-            connected = self.active_trail_nodes(obs, observed=other_parents)
-            downstream_utilities = [i for i in self.utilities if decision in self._get_ancestors_of(i)]
-            if len([u for u in downstream_utilities if u in connected])==0:
+            observed = list(set(parents+ [decision]) - set([obs]))
+            connected = set(self.active_trail_nodes([obs], observed=observed)[obs])
+            downstream_utilities = set([i for i in self.utilities if decision in self._get_ancestors_of(i)])
+            #if len([u for u in downstream_utilities if u in connected])==0:
+            #import ipdb; ipdb.set_trace()
+            if not connected.intersection(downstream_utilities):
                 nonrequisite.append(obs)
         return nonrequisite
 
