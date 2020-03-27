@@ -16,6 +16,7 @@ from typing import List, Tuple
 import itertools
 from pgmpy.inference.ExactInference import BeliefPropagation
 import functools
+import networkx as nx
 
 
 class NullCPD(BaseFactor):
@@ -280,6 +281,19 @@ class CID(BayesianModel):
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
+
+    def __get_color(self, node):
+        if node.startswith('D'):
+            return 'lightblue'
+        elif node.startswith('U'):
+            return 'yellow'
+        else:
+            return 'lightgray'
+
+    def draw(self):
+        l = nx.kamada_kawai_layout(self)
+        colors = [self.__get_color(node) for node in self.nodes]
+        nx.draw_networkx(self, pos=l, node_color=colors)
 
 
 
