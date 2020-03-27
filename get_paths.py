@@ -82,7 +82,7 @@ def get_infolinks(cid, path):
     for start, end in zip(path[:-1], path[1:]):
         if end in cid._get_decisions():
             if start in cid.get_parents(end):
-                infolinks.append(start, end)
+                infolinks.append((start, end))
     return infolinks
 
 def choose_all_paths(cid, decision, obs):
@@ -94,8 +94,8 @@ def choose_all_paths(cid, decision, obs):
     new_infolinks = set(infolinks) - set(paths)
     while new_infolinks:
         for X, D in new_infolinks:
-            if (X,D) not in paths:
-                paths[(X,D)] = _get_path_pair(cid, D, obs)
+            if (X,D) not in paths.keys():
+                paths[(X,D)] = _get_path_pair(cid, D, X)
         infolinks = get_infolinks(cid, pair['control']) + get_infolinks(cid, pair['info'])
         new_infolinks = set(infolinks) - set(paths)
     return paths
