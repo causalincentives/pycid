@@ -102,6 +102,7 @@ def choose_all_right_paths(cid, decision, obs):
 
 
 def check_paths(cid, paths, decision, obs): 
+    #TODO: also check that i_C is the node where the history encounters the string
     #check that all infolinks have their own paths, and that they're directed or backdoor from C
     paths = paths.copy()
     #check that all infolinks have their own paths
