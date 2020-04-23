@@ -70,7 +70,7 @@ def _get_path_pair(cid, D, X):
     parents = cid.get_parents(D)
     other_parents = list(set(parents+[D]) - set([X]))
     for utility in downstream_utilities:
-        info_path = find_active_path_recurse(cid, [D, X], utility, other_parents)
+        info_path = find_active_path_recurse(cid, [X], utility, [D] + other_parents)
         if info_path:
             control_path = find_dirpath(cid, D, utility)
             return {'control':control_path, 'info':info_path}
@@ -99,11 +99,6 @@ def choose_all_paths(cid, decision, obs):
         infolinks = get_infolinks(cid, pair['control']) + get_infolinks(cid, pair['info'])
         new_infolinks = set(infolinks) - set(paths)
     return paths
-
-
-#TODO: remove earlier infolinks before finding infopath
-
-
 
 
 #TODO: why does step (1) advise removing all other nodes?
