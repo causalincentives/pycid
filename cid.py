@@ -20,11 +20,12 @@ import networkx as nx
 
 
 class NullCPD(BaseFactor):
-    def __init__(self, variable, variable_card):
+    def __init__(self, variable, variable_card, state_names={}):
         self.variable = variable
         self.variable_card = variable_card #is this correct?
         self.cardinality = [variable_card] #possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
+        self.state_names = state_names
 
     def scope(self):
         return [self.variable]
@@ -365,3 +366,28 @@ def get_insufficient_recall_cid():
     cid.add_cpds(NullCPD('A', 2), NullCPD('B', 2), tabcpd)
     return cid
         
+def get_nested_cid():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([
+        ('S1', 'D1'), 
+        ('S1', 'S3'), 
+        ('D1', 'S3'), 
+        ('S2', 'S4'), 
+        ('S2', 'U'), 
+        ('S3', 'S4'), 
+        ('S3', 'D2'), 
+        ('S4', 'D2'), 
+        ('D2', 'U')],
+        ['U'])
+    cpds = [
+        TabularCPD('S1',2,np.array([[.5],[.5]])),
+        TabularCPD('S2',2,np.array([[.5],[.5]])),
+        TabularCPD('S3',2,np.array([[0, 1, 1, 0],[1, 0, 0, 1]]), evidence=['S1', 'S2'], evidence_card=[2,2]),
+        TabularCPD('S4',2,np.array([[.5, 0, .5, 1],[.5, 0, 0.5, 1]]), evidence=['S2', 'S3'], evidence_card=[2,2]),
+        NullCPD('D1', 2),
+        NullCPD('D2', 2),
+        TabularCPD('U', 2, np.array([[1, 0, 0, 1], [0, 1, 1, 0]]), evidence=['D2', 'S2'], evidence_card=[2,2])
+    ]
+    cid.add_cpds(*cpds)
+    return cid
+
