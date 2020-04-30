@@ -77,8 +77,8 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
         #parameterize decision
         control_cpds[D] = get_identity_cpd(cid, info_cpds, D, info[0])
         #parameterize control path
-        for j, W in enumerate(control[1:-1]):
-            parent = control[j-1]
+        for j in range(1, len(control)-1):
+            parent, W = control[j-1:j+1]
             control_cpds[W] = get_identity_cpd(cid, control_cpds, W, parent)#, state_names=None)
         #parameterize utility node
         U = control[-1]
@@ -128,8 +128,8 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
         #parameterize decision with extra bit
         control_cpds[D] = NullCPD(D, 2)
         #parameterize control path to transmit extra bit
-        for j, W in enumerate(control[1:-1]):
-            parent = control[j-1]
+        for j in range(1, len(control)-1):
+            parent, W = control[j-1:j+1]
             control_cpds[W] = get_identity_cpd(cid, control_cpds, W, parent)#, state_names=None)
 
         #parameterize utility

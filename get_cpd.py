@@ -20,8 +20,8 @@ def get_H_cpd(sys_cpds, systems, h_pointer):
 
 
 def __get_identity_values(dims, axis):
-    B = np.eye(dims[axis])
-    #values = __project_values(dims, axis, B)
+    values = np.eye(dims[axis])
+    #values = __project_values(dims, axis, values)
     return values
 
 def get_identity_cpd(cid, cpds, node, parent):#, state_names):
@@ -36,13 +36,12 @@ def get_identity_cpd(cid, cpds, node, parent):#, state_names):
         cpd = NullCPD(node, variable_card)#, state_names)
     else:
         #evidence = cid.get_parents(node)
-        evidence = [parent]
-        evidence_card = [cpds[e].variable_card]
+        evidence_card = [cpds[parent].variable_card]
         variable_card = cpds[parent].variable_card
         if parent:
             #if state_names is None:
             #    state_names = cpds[parent].state_names
-            parent_idx = np.where(np.array(evidence)==parent)[0][0]
+            parent_idx = np.where(np.array([parent])==parent)[0][0]
             values = __get_identity_values(evidence_card,parent_idx)
         else:
             variable_card = []
@@ -51,7 +50,7 @@ def get_identity_cpd(cid, cpds, node, parent):#, state_names):
 
         cpd = TabularCPD(variable=node,
                         variable_card=variable_card,
-                         evidence=evidence,
+                         evidence=[parent],
                          evidence_card=evidence_card,
                          values=values,
                          #state_names = state_names
