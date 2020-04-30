@@ -8,24 +8,24 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
 from get_systems import is_directed
-from get_cpd import get_identity_cpd, merge_cpds, get_equality_cpd
+from get_cpd import get_identity_cpd, merge_cpds, get_equality_cpd, get_xor_cpd
 
 def get_motifs(cid, path):
     shapes = []
     for i in range(len(path)):
         if i==0:
             shapes.append('start')
-        elif i==len(path):
+        elif i==len(path)-1:
             shapes.append('end')
         elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
-            return 'f'
+            shapes.append('f')
         elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
-            return 'c'
+            shapes.append('c')
         elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
-            return 'r'
+            shapes.append('r')
         elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
-            return 'l'
-    return
+            shapes.append('l')
+    return shapes
 
 def parameterize_system(cid, systems, system_idx, H_cpd):
     if H_cpd:
@@ -109,12 +109,12 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
                 parent = info[j-1]
                 info_cpds[W] = get_identity_cpd(cid, info_cpds, W, parent)#, state_names=None)
 
-        for j in range(len(info), i_C, -1):
-            X, W, Y = info[j-1,j+1]
+        for j in range(len(info)-2, i_C, -1):
+            X, W, Y = info[j-1:j+2]
             motif = motifs[j]
             #parameterize left-chains
             if motif is 'l':
-                parent = info[j+1]
+                parent = Y
                 info_cpds[W] = get_identity_cpd(cid, info_cpds, W, Y)#, state_names=None)
 
             #parameterize C as  F_1[H]
@@ -134,7 +134,7 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
 
         #parameterize utility
         U = control[-1]
-        control_cpds[U] = get_eqeuality_cpd(U, info_cpds[-2], control_cpds[-2])
+        control_cpds[U] = get_equality_cpd(U, info_cpds[info[-2]], control_cpds[control[-2]])
 
     cpds = {'info':info_cpds, 'control':control_cpds}
     return cpds
