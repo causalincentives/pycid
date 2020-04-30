@@ -1,4 +1,7 @@
-from get_paths import _get_path_pair, find_dirpath, choose_all_paths, _find_dirpath_recurse
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#agreements; and to You under the Apache License, Version 2.0.
+
+from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse
 import matplotlib.pyplot as plt
 
 def is_backdoor(cid, info_path):
@@ -51,7 +54,7 @@ def augment_paths(cid, history_path, D, info_path, i_C0):
         paths = {'history':history_final, 'info':info_final, 'i_C':len(active_C_to_Pa)-1}
         return paths
 
-def get_right_path_triple(cid, history_fragment, D, X):
+def get_system(cid, history_fragment, D, X):
     # takes a history_fragment for (D,X) then
     # chooses good (control/info)paths and returns them
     paths = _get_path_pair(cid, D, X)
@@ -60,18 +63,18 @@ def get_right_path_triple(cid, history_fragment, D, X):
     new_paths['control'] = paths['control']
     return new_paths
 
-def _find_right_paths_along_history(cid, all_paths, full_history):
+def _find_systems_along_history(cid, systems, full_history):
     new_history = []
     new_infolinks = []
     i = 0 #start of history fragment
     for j in range(1, len(full_history)):
         X, D = full_history[j-1:j+1]
-        if D in cid._get_decisions() and X in cid.get_parents(D) and (X,D) not in all_paths.keys():
+        if D in cid._get_decisions() and X in cid.get_parents(D):
             history_fragment = full_history[i:j]
-            paths = get_right_path_triple(cid, history_fragment, D, X)
+            paths = get_system(cid, history_fragment, D, X)
             new_history += paths.pop('history')
             X_new = paths['info'][0]
-            all_paths[(X_new, D)] = paths
+            systems.append(paths)
             new_infolinks.append((X_new,D))
             i = j
     if i: #decision encountered
@@ -80,28 +83,30 @@ def _find_right_paths_along_history(cid, all_paths, full_history):
     else:
         return full_history, new_infolinks
 
-def _choose_all_right_paths_recurse(cid, all_paths, D, X):
+def _choose_systems_recurse(cid, systems, system_idx, history_pointer):
+    systems[-1]['h_pointer'] = history_pointer
     for name in ['control', 'info']:
-        history = all_paths[(X, D)][name]
-        new_history_path, new_infolinks = _find_right_paths_along_history(cid, all_paths, history)
-        all_paths[(X, D)][name] = new_history_path
+        history = systems[system_idx][name]
+        new_history_path, new_infolinks = _find_systems_along_history(cid, systems, history)
+        systems[system_idx][name] = new_history_path
+        history_pointer = (system_idx, name)
 
-        for XD in new_infolinks:
-            _choose_all_right_paths_recurse(cid, all_paths, XD[1], XD[0])
+        for j in range(1, len(new_infolinks) + 1):
+            _choose_systems_recurse(cid, systems, system_idx+j, history_pointer)
     
-def choose_all_right_paths(cid, decision, obs):
+def choose_systems(cid, decision, obs):
     #recursively choose paths where infopaths are directed or backdoor from combiner node C
-    paths = {}
-    pair = _get_path_pair(cid, decision, obs)
-    assert pair is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
-    paths[(obs, decision)] = pair
+    systems = []
+    system = _get_path_pair(cid, decision, obs)
+    assert system is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
+    systems.append(system)
     
-    _choose_all_right_paths_recurse(cid, paths, decision, obs)
-    return paths
+    _choose_systems_recurse(cid, systems, 0, None)
+    return systems
 
 
 
-def check_paths(cid, paths, decision, obs): 
+def check_systems(cid, paths, decision, obs): 
     #TODO: also check that i_C is the node where the history encounters the string
     #check that all infolinks have their own paths, and that they're directed or backdoor from C
     paths = paths.copy()
