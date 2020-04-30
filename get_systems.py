@@ -112,18 +112,18 @@ def check_systems(cid, paths, decision, obs):
     paths = paths.copy()
     #check that all infolinks have their own paths
     for ptype in ['control', 'info']:
-        for XD, path in paths.items():
-            for i in range(len(path)-2):
+        for path in paths:
+            for i in range(len(path)-3):
                 X, D = path[ptype][i:i+2]
                 if X in cid.get_parents(D) and D in cid._get_decisions():
-                    if (X,D) not in paths.keys():
+                    if (X,D) not in [(path['info'][0],path['control'][0]) for path in paths]:
                         print("{} not in {}".format((X,D),paths.keys()))
                         return False
-    paths.pop((obs,decision)) #TODO: remove this (and args decision, obs) when (obs, decision) has an i_C
-    for XD, path in paths.items():
+    paths.pop(0) #TODO: remove this (and args decision, obs) when (obs, decision) has an i_C
+    for i, path in enumerate(paths):
         segment = path['info'][path['i_C']:]
         if not is_backdoor(cid, segment) and not is_directed(cid, segment):
-            print("{} infopath:{} is front-door but undirected".format(XD, segment))
+            print("{} system:{} is front-door but undirected".format(i, segment))
             return False
     return True
         #check that all infopaths except that of (X,D) are directed or backdoor from C
