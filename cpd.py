@@ -7,7 +7,7 @@ class NullCPD(BaseFactor):
     def __init__(self, variable, variable_card, state_names={}):
         self.variable = variable
         self.variable_card = variable_card #is this correct?
-        self.cardinality = [variable_card] #possible problem because this usually includes cardinality of parents
+        self.cardinality = [variable_card] #TODO: possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
         self.state_names = state_names
 

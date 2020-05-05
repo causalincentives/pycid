@@ -1,6 +1,3 @@
-#big todos: 
-# 1) finish parameterize_system. should take systems as input and do extension case and utilities.
-
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
 #agreements; and to You under the Apache License, Version 2.0.
 
@@ -8,7 +5,7 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
 from get_systems import is_directed
-from get_cpd import get_identity_cpd, merge_cpds, get_equality_cpd, get_xor_cpd
+from get_cpd import get_identity_cpd, merge_nodes, get_equality_cpd, get_xor_cpd
 
 def get_motifs(cid, path):
     shapes = []
@@ -55,9 +52,9 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
     if is_directed(cid, info[i_C:]):
         #parameterize C
         if H_cpd:
-            info_cpds[C] = get_identity_cpd(cid, {H:H_cpd, **info_cpds}, C, H_cpd.variable)#, state_names=None)
+            info_cpds[C] = get_identity_cpd(cid, C, H_cpd, (system_idx, 'info'))
         else:
-            info_cpds[C] =  TabularCPD(variable=C,
+            info_cpds[C] =  TabularCPD(variable=(system_idx, 'info', C),
                         variable_card=variable_card,
                          evidence=[],
                          evidence_card=[],
@@ -67,24 +64,24 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
         #parameterize nodes before C to equal their parents
         for j in range(i_C-1,-1, -1):
             parent, W = info[j+1:j-1]
-            info_cpds[W] = get_identity_cpd(cid, info_cpds, W, parent)#, state_names=None)
+            info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
         
         #parameterize nodes after C to equal their parents
         for j in range(i_C+1,len(info)-1):
             parent, W = info[j-1:j+1]
-            info_cpds[W] = get_identity_cpd(cid, info_cpds, W, parent)#, state_names=None)
+            info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
         #parameterize decision
-        control_cpds[D] = get_identity_cpd(cid, info_cpds, D, info[0])
+        control_cpds[D] = get_identity_cpd(cid, D, info_cpds[info[0]], (system_idx, 'control'))
         #parameterize control path
         for j in range(1, len(control)-1):
             parent, W = control[j-1:j+1]
-            control_cpds[W] = get_identity_cpd(cid, control_cpds, W, parent)#, state_names=None)
+            control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
         #parameterize utility node
         U = control[-1]
         info_cpd = control_cpds[control[-2]]
         control_cpd = info_cpds[info[-2]]
-        control_cpds[U] = get_equality_cpd(U, info_cpd, control_cpd)
+        control_cpds[U] = get_equality_cpd(U, info_cpd, control_cpd, (system_idx, 'control'))
 
     else:
         #if path from C is not directed, then sample a bistring 2^H_cpd.variable_card at S, F. 
@@ -97,7 +94,7 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
             motif = motifs[j]
             #parameterize forks
             if motif is 'f':
-                info_cpds[W] = TabularCPD(variable=W,
+                info_cpds[W] = TabularCPD(variable=(system_idx, 'info', W),
                             variable_card=variable_card,
                              evidence=[],
                              evidence_card=[],
@@ -107,7 +104,7 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
             #parameterize right-chains
             if motif is 'r':
                 parent = info[j-1]
-                info_cpds[W] = get_identity_cpd(cid, info_cpds, W, parent)#, state_names=None)
+                info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
         for j in range(len(info)-2, i_C, -1):
             X, W, Y = info[j-1:j+2]
@@ -115,29 +112,30 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
             #parameterize left-chains
             if motif is 'l':
                 parent = Y
-                info_cpds[W] = get_identity_cpd(cid, info_cpds, W, Y)#, state_names=None)
+                info_cpds[W] = get_identity_cpd(cid, W, info_cpds[Y], (system_idx, 'info'))
 
             #parameterize C as  F_1[H]
             if W==C:
                 assert X in cid.get_parents(W) and Y in cid.get_parents(W)
-                info_cpds[W] = get_func_cpd(W, info_cpds[X], info_cpds[Y])
+                info_cpds[W] = get_func_cpd(W, info_cpds[X], info_cpds[Y], (system_idx, 'info'))
             #parameterize other colliders as XOR
             elif motif is 'c':
                 info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y])
 
         #parameterize decision with extra bit
-        control_cpds[D] = NullCPD(D, 2)
+        control_cpds[D] = NullCPD((system_idx, 'control', D), 2)
         #parameterize control path to transmit extra bit
         for j in range(1, len(control)-1):
             parent, W = control[j-1:j+1]
-            control_cpds[W] = get_identity_cpd(cid, control_cpds, W, parent)#, state_names=None)
+            control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
 
         #parameterize utility
         U = control[-1]
-        control_cpds[U] = get_equality_cpd(U, info_cpds[info[-2]], control_cpds[control[-2]])
+        control_cpds[U] = get_equality_cpd(U, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
 
     cpds = {'info':info_cpds, 'control':control_cpds}
     return cpds
+
 
 
 
@@ -151,7 +149,7 @@ def parameterize_graph(cid, systems, infolink):
             H_cpd = None
         sys_cpds.append(parameterize_system(cid, system, H_cpd))
 
-    node_cpds = merge_cpds(cid, sys_cpds, node)
+    node_cpds = merge_nodes(cid, sys_cpds, node)
     return node_cpds
 
 
