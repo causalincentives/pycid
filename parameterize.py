@@ -5,7 +5,8 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
 from get_systems import is_directed
-from get_cpd import get_identity_cpd, merge_nodes, get_equality_cpd, get_xor_cpd
+from get_cpd import get_identity_cpd, merge_nodes, get_equality_cpd, get_xor_cpd, get_func_cpd
+from get_cpd import get_equals_func_cpd
 
 def get_motifs(cid, path):
     shapes = []
@@ -24,7 +25,7 @@ def get_motifs(cid, path):
             shapes.append('l')
     return shapes
 
-def parameterize_system(cid, systems, system_idx, H_cpd):
+def parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     if H_cpd:
         h_state_names = H_cpd.state_names
         H = H_cpd.variable
@@ -87,6 +88,7 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
         #if path from C is not directed, then sample a bistring 2^H_cpd.variable_card at S, F. 
         #XOR it at colliders, and slice it.
         #uniformly sample an integer, which will be interpreted as a function 2^H_cpd.variable_card->2
+
         motifs = get_motifs(cid, info)
 
         for j in range(i_C+1, len(info)):
@@ -106,6 +108,13 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
                 parent = info[j-1]
                 info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
+        #parameterize C as  F_1[H]
+        assert not (H_cpd is None and i_C==0), 'in first system, if observation is i_C, the infopath should be directed'
+        if H_cpd:
+            info_cpds[C] = get_func_cpd(C, info_cpds[info[i_C+1]], H_cpd, (system_idx, 'info'))
+        else:
+            info_cpds[C] = get_func_cpd(C, info_cpds[info[i_C+1]], info_cpds[info[i_C-1]], (system_idx, 'info')) #TODO: is this correct?
+
         for j in range(len(info)-2, i_C, -1):
             X, W, Y = info[j-1:j+2]
             motif = motifs[j]
@@ -114,13 +123,10 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
                 parent = Y
                 info_cpds[W] = get_identity_cpd(cid, W, info_cpds[Y], (system_idx, 'info'))
 
-            #parameterize C as  F_1[H]
-            if W==C:
-                assert X in cid.get_parents(W) and Y in cid.get_parents(W)
-                info_cpds[W] = get_func_cpd(W, info_cpds[X], info_cpds[Y], (system_idx, 'info'))
             #parameterize other colliders as XOR
             elif motif is 'c':
                 info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y])
+
 
         #parameterize decision with extra bit
         control_cpds[D] = NullCPD((system_idx, 'control', D), 2)
@@ -131,7 +137,9 @@ def parameterize_system(cid, systems, system_idx, H_cpd):
 
         #parameterize utility
         U = control[-1]
-        control_cpds[U] = get_equality_cpd(U, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
+        control_cpds[U] = get_equals_func_cpd(U, Hprime_cpd, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
+        #TODO: change to apply function of control_cpds[control[-2]] to the history then check equality with info[-2]
+
 
     cpds = {'info':info_cpds, 'control':control_cpds}
     return cpds

@@ -96,18 +96,19 @@ def get_xor_cpd(node, cpd1, cpd2, path_name):
             )
     return cpd
 
-def __get__func_values(size):
-    funcsize = 2**hsize
-    bitstrings = [np.binary_repr(i, hsize+funcsize) for i in np.arange(2**(funcsize+hsize))]
-    hists = [b[-hsize:] for b in bitstrings]
-    funcs = [b[:-hsize] for b in bitstrings]
+def __get_func_values(h_card):
+    hdim = np.log2(h_card).astype(int)
+    funcsize = 2**hdim
+    bitstrings = [np.binary_repr(i, funcsize+hdim) for i in np.arange(2**(funcsize+hdim))]
+    funcs = [b[:-hdim] for b in bitstrings]
+    hists = [b[-hdim:] for b in bitstrings]
     indices = [int(h, 2) for h in hists]
     values = np.array([f[i] for f, i in zip(funcs, indices)]).astype(int)
     value_table = np.eye(2)[values].T
     return value_table
 
 def get_func_cpd(node, f_cpd, h_cpd, path_name):
-    evidence = [f_cpd.variable_name, h_cpd.variable_name]
+    evidence = [f_cpd.variable, h_cpd.variable]
     evidence_card = [f_cpd.variable_card, h_cpd.variable_card]
     values = __get_func_values(h_cpd.variable_card)
     cpd = TabularCPD(variable=path_name +(node,),
@@ -117,10 +118,44 @@ def get_func_cpd(node, f_cpd, h_cpd, path_name):
             values=values
             )
     return cpd
+
+def __get_equals_func_values(h_card):
+    hdim = np.log2(h_card).astype(int)
+    funcsize = 2**hdim
+    bitstrings = [np.binary_repr(i, hdim+funcsize+hdim) for i in np.arange(2**(hdim+funcsize+hdim))]
+    args = [b[:hdim] for b in bitstrings]
+    funcs = [b[hdim:-hdim] for b in bitstrings]
+    outputs = [b[-hdim:] for b in bitstrings]
+    indices = [int(a, 2) for a in args]
+    values = np.array([f[i]==o for o, f, i in zip(outputs, funcs, indices)])
+    value_table = np.array([1-values, values])
+    return value_table
+
+
+def get_equals_func_cpd(node, arg_cpd, f_cpd, val_cpd, path_name):
+    evidence = [arg_cpd.variable, f_cpd.variable, val_cpd.variable]
+    evidence_card = [arg_cpd.variable_card, f_cpd.variable_card, val_cpd.variable_card]
+    values = __get_equals_func_values(val_cpd.variable_card)
+    cpd = TabularCPD(variable=path_name +(node,),
+            variable_card=2,
+            evidence=evidence,
+            evidence_card=evidence_card,
+            values=values
+            )
+    return cpd
+
+
+
+
+
+
+
+
+
     
 
 def __get_equality_values(dim):
-    return np.array((np.eye(dim).ravel(), 1-np.eye(dim).ravel()))
+    return np.array((1-np.eye(dim).ravel(), np.eye(dim).ravel()))
 
 #def __project_values2(dims, axes, values): #TODO: finish this
 #    for axis in axes:

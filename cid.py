@@ -13,6 +13,7 @@ from pgmpy.inference.ExactInference import BeliefPropagation
 import functools
 import networkx as nx
 from cpd import NullCPD
+import warnings
 
 class CID(BayesianModel):
     def __init__(self, ebunch:List[Tuple[str, str]]=None, utilities:List[str]=None):
@@ -128,7 +129,7 @@ class CID(BayesianModel):
             elif isinstance(cpd, (TabularCPD, ContinuousFactor)):
                 evidence = cpd.get_evidence()
                 parents = self.get_parents(node)
-                if set(evidence if evidence else []) != set(parents if parents else []):
+                if set(evidence if evidence else []) != set(parents if parents else []): #TODO: do es this check appropriate cardinalities?
                     raise ValueError(
                         "CPD associated with {node} doesn't have "
                         "proper parents associated with it.".format(node=node)
@@ -232,14 +233,23 @@ class CID(BayesianModel):
             ev = self.expected_utility(context)
             utilities.append(ev)
         indices = np.where(np.array(utilities)==np.max(utilities))
+        if len(acts[indices])==0:
+            warnings.warn('zero prob on {} so all actions deemed optimal'.format(context))
+            return np.array(acts)
         return acts[indices]
+
+    def _query(self, query, context):
+        #outputs P(U|context)*P(context). 
+        #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
+        bp = BeliefPropagation(self._impute_random_policy())
+        factor = bp.query(query, context)
+        return factor
 
     def expected_utility(self, context:dict):
         # for example: 
         # cid = get_minimal_cid()
         # out = self.expected_utility({'D':1}) #TODO: give example that uses context
-        bp = BeliefPropagation(self._impute_random_policy())
-        factor = bp.query(self.utilities, context)
+        factor = self._query(self.utilities, context)
         factor.normalize() #make probs add to one
 
         ev = 0
