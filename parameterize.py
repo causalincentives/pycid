@@ -2,52 +2,32 @@
 #agreements; and to You under the Apache License, Version 2.0.
 
 import numpy as np
-from pgmpy.factors.discrete import TabularCPD
+#from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
-from get_systems import is_directed
+from get_systems import is_directed, get_motifs
 from get_cpd import get_identity_cpd, merge_node, get_equality_cpd, get_xor_cpd, get_func_cpd
-from get_cpd import get_equals_func_cpd
+from get_cpd import get_equals_func_cpd, get_random_cpd
 
-def get_motifs(cid, path):
-    shapes = []
-    for i in range(len(path)):
-        if i==0:
-            shapes.append('start')
-        elif i==len(path)-1:
-            shapes.append('end')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('f')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('c')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('r')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('l')
-    return shapes
 
 def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
-    if H_cpd:
-        h_state_names = H_cpd.state_names
-        H = H_cpd.variable
-        variable_card = 2**H_cpd.variable_card
-    else: #if this is the first system (the infolink in question)
-        h_state_names = None
-        variable_card = 2
-
     system = systems[system_idx]
     control = system['control']
     info = system['info']
     i_C = system['i_C']
     C = info[i_C]
     X = info[0]
-    D = control[0]
+    D = control[0] #TODO: just parameterize D in the control path
+    if H_cpd:
+        variable_card = 2**H_cpd.variable_card
+    else: #if this is the first system (the infolink in question)
+        if is_directed(cid, info[i_C:]):
+            variable_card = 2
+        else:
+            variable_card = 4
 
-    info_cpds = {} #maps from node name to TabularCPD or NullCPDs
+
+    info_cpds = {} #maps from node name to TabularCPD or NullCPD
     control_cpds = {}
-    #ordered_decisions = cid._get_valid_order(cid._get_decisions())
-    #later_decisions = ordered_decisions[np.where(np.array(ordered_decisions)==D)[0][0]+1:]
-    #later_Cs = [system['info'][system['i_C']] for system in systems
-    #        if system['control'][0] in later_decisions]
 
     #create CPDs for each node, 
     if is_directed(cid, info[i_C:]):
@@ -55,16 +35,10 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         if H_cpd:
             info_cpds[C] = get_identity_cpd(cid, C, H_cpd, (system_idx, 'info'))
         else:
-            info_cpds[C] =  TabularCPD(variable=(system_idx, 'info', C),
-                        variable_card=variable_card,
-                         evidence=[],
-                         evidence_card=[],
-                         values=np.array(np.tile(1/variable_card,(1,variable_card)))
-                         #state_names = None,
-                        )
+            info_cpds[C] = get_random_cpd((system_idx, 'info', C), variable_card)
         #parameterize nodes before C to equal their parents
         for j in range(i_C-1,-1, -1):
-            parent, W = info[j+1:j-1]
+            paren, W = info[j+1:j-1]
             info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
         
         #parameterize nodes after C to equal their parents
@@ -90,46 +64,45 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         #uniformly sample an integer, which will be interpreted as a function 2^H_cpd.variable_card->2
 
         motifs = get_motifs(cid, info)
-
-        for j in range(i_C+1, len(info)):
-            W = info[j]
+        info_ind = {node:ind for ind, node in enumerate(info)}
+        #parameterize infopath except utility node
+        for W in cid._get_valid_order(info[:-1]):
+            j = info_ind[W]
             motif = motifs[j]
-            #parameterize forks
-            if motif is 'f':
-                info_cpds[W] = TabularCPD(variable=(system_idx, 'info', W),
-                            variable_card=variable_card,
-                             evidence=[],
-                             evidence_card=[],
-                             values=np.array(np.tile(1/variable_card,(1,variable_card)))
-                             #state_names = None,
-                            )
-            #parameterize right-chains
-            if motif is 'r':
-                parent = info[j-1]
-                info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
-
-        #parameterize C as  F_1[H]
-        assert not (H_cpd is None and i_C==0), 'in first system, if observation is i_C, the infopath should be directed'
-        if H_cpd:
-            info_cpds[C] = get_func_cpd(C, info_cpds[info[i_C+1]], H_cpd, (system_idx, 'info'))
-        else:
-            info_cpds[C] = get_func_cpd(C, info_cpds[info[i_C+1]], info_cpds[info[i_C-1]], (system_idx, 'info')) #TODO: is this correct?
-
-        for j in range(len(info)-2, i_C, -1):
-            X, W, Y = info[j-1:j+2]
-            motif = motifs[j]
-            #parameterize left-chains
-            if motif is 'l':
-                parent = Y
-                info_cpds[W] = get_identity_cpd(cid, W, info_cpds[Y], (system_idx, 'info'))
-
-            #parameterize other colliders as XOR
-            elif motif is 'c':
-                info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y])
+            Y = info[j+1]
+            if j==i_C:
+                #parameterize C as  F_1[H]
+                assert not (H_cpd is None and j==0), 'in first system, if observation is i_C, the infopath should be directed'
+                if H_cpd:
+                    info_cpds[W] = get_func_cpd(W, info_cpds[Y], H_cpd, (system_idx, 'info'))
+                else:
+                    X = info[j-1]
+                    info_cpds[W] = get_func_cpd(W, info_cpds[Y], info_cpds[X], (system_idx, 'info')) #TODO: is this correct?
+            elif j!=i_C:
+                motif = motifs[j]
+                #parameterize forks
+                if motif is 'f' and j<i_C:
+                    info_cpds[W] = get_random_cpd((system_idx, 'info', W), variable_card//2)
+                elif motif is 'f':
+                    info_cpds[W] = get_random_cpd((system_idx, 'info', W), variable_card)
+                #parameterize right-chains
+                elif motif in ['l']:
+                    info_cpds[W] = get_identity_cpd(cid, W, info_cpds[Y], (system_idx, 'info'))
+                elif motif is 'r':
+                    X = info[j-1]
+                    info_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'info'))
+                #parameterize left-chains
+                #parameterize other colliders as XOR
+                elif motif is 'c':
+                    X = info[j-1]
+                    info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y])
 
 
         #parameterize decision with extra bit
-        control_cpds[D] = NullCPD((system_idx, 'control', D), 2)
+        if H_cpd:
+            control_cpds[D] = NullCPD((system_idx, 'control', D), 2)
+        else:
+            control_cpds[D] = NullCPD((system_idx, 'control', D), variable_card)
         #parameterize control path to transmit extra bit
         for j in range(1, len(control)-1):
             parent, W = control[j-1:j+1]
@@ -138,7 +111,6 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         #parameterize utility
         U = control[-1]
         control_cpds[U] = get_equals_func_cpd(U, Hprime_cpd, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
-        #TODO: change to apply function of control_cpds[control[-2]] to the history then check equality with info[-2]
 
 
     cpds = {'info':info_cpds, 'control':control_cpds}

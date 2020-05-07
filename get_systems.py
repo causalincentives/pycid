@@ -3,6 +3,8 @@
 
 from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse
 import matplotlib.pyplot as plt
+from typing import List
+import numpy as np
 
 def is_backdoor(cid, info_path):
     return info_path[1] in cid.get_parents(info_path[0])
@@ -14,7 +16,7 @@ def is_directed(cid, info_path):
             return False
     return True
 
-def get_c_index(cid, history_fragment, info_path):
+def _get_c_index(cid, history_fragment, info_path):
     i_C = 0
     assert info_path[0]==history_fragment[-1]
     
@@ -25,13 +27,49 @@ def get_c_index(cid, history_fragment, info_path):
             i_C+= 1
     return i_C
 
+def get_first_c_index(cid, info_path):
+    motifs = get_motifs(cid, info_path)
+    if 'f' not in motifs: #directed
+        return 0
+    elif 'c' not in motifs: #if no colliders, then fork
+        return np.where(np.array(motifs)=='f')[0][0]
+    else: #if one or more colliders, then first collider
+        return np.where(np.array(motifs)=='c')[0][0]
+
+def get_motifs(cid, path):
+    shapes = []
+    for i in range(len(path)):
+        if i==0:
+            if path[i] in cid.get_parents(path[i+1]):
+                shapes.append('f')
+            else:
+                shapes.append('l')
+        elif i==len(path)-1:
+            shapes.append('end')
+        elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
+            shapes.append('f')
+        elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
+            shapes.append('c')
+        elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
+            shapes.append('r')
+        elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
+            shapes.append('l')
+    return shapes
+
+def _get_active_dirpath(cid, A:List, D):
+        A_to_D = _find_dirpath_recurse(cid, A, D)
+        for i, W in enumerate(A_to_D):
+            if W in cid.get_parents(D):
+                return A_to_D
+
+
 def augment_paths(cid, history_path, D, info_path, i_C0):
     X0 = info_path[0]
     C0 = info_path[i_C0]
     
     #follow the procedure for changing the path pair
     if is_backdoor(cid, info_path[i_C0:]) or is_directed(cid, info_path[i_C0:]):
-        paths = {'history':history_path, 'info': info_path, 'i_C':i_C0}
+        paths = {'history':history_path, 'info': info_path, 'i_C':i_C0, 'obs_paths':[]}
         return paths
     else:
         #find C (first collider on infopath)
@@ -42,23 +80,31 @@ def augment_paths(cid, history_path, D, info_path, i_C0):
                 i_C = i
                 break
         #find path from C to parent of D
+        active_C_to_Pa = _get_active_dirpath(cid, [C], D)
         C = info_path[i_C]
-        C_to_D = _find_dirpath_recurse(cid, [C], D)
-        for i, W in enumerate(C_to_D):
-            if W in cid.get_parents(D):
-                active_C_to_Pa = C_to_D[:i+1]
-                break
+        C_to_D = _get_active_dirpath(cid, [C], D)
+        active_C_to_Pa = C_to_D[:len(C_to_D)]
+
+        #find active paths from other colliders to D
+        motifs = get_motifs(cid, info_path)
+        obs_paths = []
+        for i in range(i_C0, len(info_path)):
+            if i_C != i:
+                motif = motifs[i]
+                if motif=='c':
+                    coll_to_pa = _get_active_dirpath(cid, [info_path[i]], D)
+                    obs_paths.append(coll_to_Pa[:len(coll_to_Pa)])
         
         history_final = history_path[:-i_C0] + info_path[i_C0:i_C] + active_C_to_Pa
         info_final = active_C_to_Pa[::-1] + info_path[i_C+1:]
-        paths = {'history':history_final, 'info':info_final, 'i_C':len(active_C_to_Pa)-1}
+        paths = {'history':history_final, 'info':info_final, 'i_C':len(active_C_to_Pa)-1, 'obs_paths':obs_paths}
         return paths
 
 def get_system(cid, history_fragment, D, X):
     # takes a history_fragment for (D,X) then
     # chooses good (control/info)paths and returns them
     paths = _get_path_pair(cid, D, X)
-    i_C = get_c_index(cid, history_fragment, paths['info'])
+    i_C = _get_c_index(cid, history_fragment, paths['info'])
     new_paths = augment_paths(cid, history_fragment, D, paths['info'], i_C)
     new_paths['control'] = paths['control']
     return new_paths

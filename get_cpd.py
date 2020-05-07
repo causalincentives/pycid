@@ -18,6 +18,15 @@ def __get_identity_values(size):
     values = np.eye(size)
     return values
 
+def get_random_cpd(variable, variable_card):
+        return TabularCPD(
+                variable=variable,
+                variable_card=variable_card,
+                evidence=[],
+                evidence_card=[],
+                values=np.array(np.tile(1/variable_card,(1,variable_card)))
+                )
+
 def get_identity_cpd(cid, node, parent_cpd, path_name):
     if node in cid._get_decisions():
         if parent_cpd:
@@ -123,8 +132,8 @@ def __get_equals_func_values(h_card):
     hdim = np.log2(h_card).astype(int)
     funcsize = 2**hdim
     bitstrings = [np.binary_repr(i, hdim+funcsize+hdim) for i in np.arange(2**(hdim+funcsize+hdim))]
-    args = [b[:hdim] for b in bitstrings]
-    funcs = [b[hdim:-hdim] for b in bitstrings]
+    funcs = [b[:-2*hdim] for b in bitstrings]
+    args = [b[-2*hdim:-hdim] for b in bitstrings]
     outputs = [b[-hdim:] for b in bitstrings]
     indices = [int(a, 2) for a in args]
     values = np.array([f[i]==o for o, f, i in zip(outputs, funcs, indices)])
@@ -133,9 +142,14 @@ def __get_equals_func_values(h_card):
 
 
 def get_equals_func_cpd(node, arg_cpd, f_cpd, val_cpd, path_name):
-    evidence = [arg_cpd.variable, f_cpd.variable, val_cpd.variable]
-    evidence_card = [arg_cpd.variable_card, f_cpd.variable_card, val_cpd.variable_card]
-    values = __get_equals_func_values(val_cpd.variable_card)
+    if arg_cpd:
+        evidence = [f_cpd.variable, arg_cpd.variable, val_cpd.variable]
+        evidence_card = [f_cpd.variable_card, arg_cpd.variable_card, val_cpd.variable_card]
+        values = __get_equals_func_values(val_cpd.variable_card)
+    else:
+        evidence = [f_cpd.variable, val_cpd.variable]
+        evidence_card = [f_cpd.variable_card, val_cpd.variable_card]
+        values = __get_equals_func_values(val_cpd.variable_card//2)
     cpd = TabularCPD(variable=path_name +(node,),
             variable_card=2,
             evidence=evidence,
@@ -246,13 +260,16 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     #make merged cpd for`name`
     node_names = [W.variable for W in node_cpds]
     node_cards = [W.variable_card for W in node_cpds]
-    variable_card = np.product(node_cards)
+    variable_card = np.product(node_cards, dtype=int)
     evidence = cid.get_parents(name)
     evidence_card = [merged_cpds[k].variable_card if k in merged_cpds else 1 for k in evidence] 
     
     #project each cpd onto set of actual parents
-    all_values = []
-    if isinstance(node_cpds[0], TabularCPD):
+    if name in cid._get_decisions():
+        assert isinstance(variable_card, (int, np.int64))
+        new_cpd = NullCPD(variable=name, variable_card = variable_card)
+    else:
+        all_values = []
         for node_cpd in node_cpds:
             assert np.all([isinstance(i, str) for i in node_cpd.get_evidence()])
             useful_idx = [i for i in range(len(evidence)) if evidence[i] in node_cpd.get_evidence()]
@@ -266,7 +283,10 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
                 all_values.append(node_cpd.get_values())
         
         #merge the values
-        values = reduce(_merge_values, all_values)
+        if all_values:
+            values = reduce(_merge_values, all_values)
+        else:
+            values = np.ones([1, np.product(evidence_card, dtype=int)])
 
         if name in cid.utilities:
             variable_card = int(np.log2(variable_card)+1)
@@ -279,8 +299,6 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
                         evidence_card=evidence_card,
                         values=values.reshape(1, -2)
                         )
-    elif isinstance(node_cpds[0], NullCPD):
-        new_cpd = NullCPD(variable=name, variable_card = np.product([i.variable_card for i in node_cpds]))
 
 
     
