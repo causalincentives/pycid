@@ -91,7 +91,7 @@ def get_nested_cid():
     cpds = [
         TabularCPD('S1',2,np.array([[.5],[.5]])),
         TabularCPD('S2',2,np.array([[.5],[.5]])),
-        TabularCPD('S3',2,np.array([[0, 1, 1, 0],[1, 0, 0, 1]]), evidence=['S1', 'S2'], evidence_card=[2,2]),
+        TabularCPD('S3',2,np.array([[0, 1, 1, 0],[1, 0, 0, 1]]), evidence=['S1', 'D1'], evidence_card=[2,2]),
         TabularCPD('S4',2,np.array([[.5, 0, .5, 1],[.5, 0, 0.5, 1]]), evidence=['S2', 'S3'], evidence_card=[2,2]),
         NullCPD('D1', 2),
         NullCPD('D2', 2),

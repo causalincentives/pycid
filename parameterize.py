@@ -5,7 +5,7 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
 from get_systems import is_directed
-from get_cpd import get_identity_cpd, merge_nodes, get_equality_cpd, get_xor_cpd, get_func_cpd
+from get_cpd import get_identity_cpd, merge_node, get_equality_cpd, get_xor_cpd, get_func_cpd
 from get_cpd import get_equals_func_cpd
 
 def get_motifs(cid, path):
@@ -25,7 +25,7 @@ def get_motifs(cid, path):
             shapes.append('l')
     return shapes
 
-def parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
+def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     if H_cpd:
         h_state_names = H_cpd.state_names
         H = H_cpd.variable
@@ -145,19 +145,46 @@ def parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     return cpds
 
 
+def get_Hcpd_idx(systems, idx):
+    system = systems[idx]
+    h_pointer = system['h_pointer']
+    C = system['info'][system['i_C']]
+    path = systems[h_pointer[0]][h_pointer[1]]
+    loc = np.where(np.array(path)==C)[0][0]
+    Hcpd_idx = h_pointer + tuple([loc-1])
+    return Hcpd_idx
+
+def get_Hcpd(systems, systems_cpds, system_idx):
+    cpd_idx, path_type, node_idx = get_Hcpd_idx(systems, system_idx)
+    H = systems[cpd_idx][path_type][node_idx]
+    Hcpd = systems_cpds[cpd_idx][path_type][H]
+    return Hcpd
+
+def get_Hprimecpd(systems, systems_cpds, system_idx):
+    cpd_idx, path_type, _ = get_Hcpd_idx(systems, system_idx)
+    Hprime = systems[cpd_idx][path_type][-2]
+    Hprimecpd = systems_cpds[cpd_idx][path_type][Hprime]
+    return Hprimecpd
+
+def parameterize_systems(cid, systems):
+    all_cpds = []
+    all_cpds.append(_parameterize_system(cid, systems, 0, None, None))
+    for i in range(1,len(systems)):
+        Hcpd = get_Hcpd(systems, all_cpds, i)
+        Hprimecpd = get_Hprimecpd(systems, all_cpds, i)
+        print(Hcpd.variable, Hprimecpd.variable)
+        all_cpds.append(_parameterize_system(cid, systems, i, Hcpd, Hprimecpd))
+    return all_cpds
 
 
-def parameterize_graph(cid, systems, infolink):
-    #systems is a list of dicts {'history':(1, 'control'),'control':..,'info':..}
-    sys_cpds = [] #list of lists of cpds
-    for system in systems:
-        if system['h_pointer']:
-            H_cpd = get_H_cpd(sys_cpds, systems, h_pointer)
-        else:
-            H_cpd = None
-        sys_cpds.append(parameterize_system(cid, system, H_cpd))
+def merge_all_nodes(cid, all_cpds):
+    all_cpds = [i.copy() for i in all_cpds]
+    all_cpds = all_cpds.copy()
+    merged_cpds = {}
+    for node in cid._get_valid_order(cid.nodes):
+        merged_cpds, all_cpds, _, _ = merge_node(cid, merged_cpds, all_cpds, node)
+    return merged_cpds
 
-    node_cpds = merge_nodes(cid, sys_cpds, node)
-    return node_cpds
+
 
 

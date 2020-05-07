@@ -237,7 +237,7 @@ def utility_values(values):
     new_values = np.array([values[i].sum(axis=0) for i in val_idx])
     return new_values
 
-def merge_nodes(cid, merged_cpds, flat_cpds, name):
+def merge_node(cid, merged_cpds, flat_cpds, name):
     #merges cpds to fit cid
     node_cpds = get_cpds(flat_cpds, name)
     graphical_children = [i for i in flat_cpds if i.variable[2] in cid.get_children(name)]
