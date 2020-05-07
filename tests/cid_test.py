@@ -8,8 +8,8 @@ import numpy as np
 
 #from models.two_decisions import TwoDecisions
 
-from cid import get_3node_cid, get_5node_cid, get_2dec_cid, TabularCPD
-
+from examples import get_3node_cid, get_5node_cid, get_2dec_cid
+from pgmpy.factors.discrete import TabularCPD
 
 class TestCIDClass(unittest.TestCase):
 

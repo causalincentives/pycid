@@ -27,24 +27,21 @@ def get_3node_cid():
 def get_5node_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
-        ('X', 'D'), 
-        ('X', 'C'), 
-        ('W', 'C'), 
-        ('W', 'U'),
-        ('C', 'D'), 
-        ('D', 'U'),
-        ], 
-        ['U'])
-    cpds = [
-        TabularCPD('W',2,np.array([[.5],[.5]])),
-        TabularCPD('X',2,np.array([[.5],[.5]])),
-        NullCPD('D', 2),
-        TabularCPD('C', 2,  np.array([[0,1, 1,0], [1,0,0,1]]), 
-         evidence=['W', 'X'], evidence_card=[2,2]),
-        TabularCPD('U', 2,  np.array([[1,0, 0,1], [0,1,1,0]]),
-         evidence=['W', 'X'], evidence_card=[2,2]),
-        ]
-    cid.add_cpds(*cpds)
+        ('S1', 'D'),
+        ('S1', 'U1'),
+        ('S2', 'D'),
+        ('S2', 'U2'),
+        ('D', 'U1'),
+        ('D', 'U2')
+        ],
+        ['U1', 'U2'])
+    s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))
+    s2cpd = TabularCPD('S2',2,np.array([[.5],[.5]]))
+    mat = np.array([[0,1, 1,0], [1,0,0,1]])
+    u1cpd = TabularCPD('U1', 2, mat, evidence=['S1', 'D'], evidence_card=[2,2])
+    u2cpd = TabularCPD('U2', 2, mat, evidence=['S2', 'D'], evidence_card=[2,2])
+    nullcpd = NullCPD('D', 2)
+    cid.add_cpds(nullcpd, s1cpd, s2cpd, u1cpd, u2cpd)
     return cid
 
 def get_2dec_cid():
