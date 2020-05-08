@@ -14,6 +14,7 @@ import functools
 import networkx as nx
 from cpd import NullCPD
 import warnings
+from pgmpy.models import MarkovModel
 
 class CID(BayesianModel):
     def __init__(self, ebunch:List[Tuple[str, str]]=None, utilities:List[str]=None):
@@ -232,8 +233,17 @@ class CID(BayesianModel):
     def _query(self, query, context):
         #outputs P(U|context)*P(context). 
         #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
-        bp = BeliefPropagation(self._impute_random_policy())
-        factor = bp.query(query, context)
+
+        #query fails if graph includes nodes not in moralized graph, so we remove them
+        cid = self.copy()
+        mm = MarkovModel(cid.moralize().edges())
+        for node in self.nodes:
+            if node not in mm.nodes:
+                cid.remove_node(node)
+        filtered_context = {k:v for k,v in context.items() if k in mm.nodes} 
+
+        bp = BeliefPropagation(cid._impute_random_policy()) 
+        factor = bp.query(query, filtered_context)
         return factor
 
     def expected_utility(self, context:dict):

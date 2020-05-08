@@ -7,6 +7,7 @@ from cid import NullCPD
 from get_systems import is_directed, get_motifs
 from get_cpd import get_identity_cpd, merge_node, get_equality_cpd, get_xor_cpd, get_func_cpd
 from get_cpd import get_equals_func_cpd, get_random_cpd
+import warnings
 
 
 def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
@@ -33,10 +34,11 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     #create CPDs for each node, 
     if is_directed(cid, info[i_C:]):
         #parameterize C
-        if H_cpd:
-            info_cpds[C] = get_identity_cpd(cid, C, H_cpd, (system_idx, 'info'))
-        else:
+        if not H_cpd:
             info_cpds[C] = get_random_cpd((system_idx, 'info', C), variable_card)
+            #if C!=H_cpd.variable[2]: #TODO: is this correct?
+                #info_cpds[C] = get_identity_cpd(cid, C, H_cpd, (system_idx, 'info'))
+        #else:
 
 
         #parameterize nodes before C to equal their parents
@@ -45,9 +47,19 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
         
         #parameterize nodes after C to equal their parents
+        #if H_cpd:
+        #    W = info[i_C+1]
+        #    info_cpds[W] = get_identity_cpd(cid, W, H_cpd, (system_idx, 'info'))
+        #else:
+        #    parent, W = info[i_C+1:i_C+3]
+        #    info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
         for j in range(i_C+1,len(info)-1):
-            parent, W = info[j-1:j+1]
-            info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
+            if j==i_C+1 and H_cpd:
+                W = info[j]
+                info_cpds[W] = get_identity_cpd(cid, W, H_cpd, (system_idx, 'info'))
+            else:
+                parent, W = info[j-1:j+1]
+                info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
         #parameterize decision
         if not H_cpd:
@@ -59,10 +71,15 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
 
         #parameterize utility node
         U = control[-1]
-        info_cpd = info_cpds[info[-2]]
         if H_cpd:
-            control_cpd = Hprime_cpd
+            if system['h_pointer'][1]=='control':
+                info_cpd = info_cpds[info[-2]]
+                control_cpd = Hprime_cpd
+            else:
+                info_cpd = Hprime_cpd
+                control_cpd = control_cpds[control[-2]]
         else:
+            info_cpd = info_cpds[info[-2]]
             control_cpd = control_cpds[control[-2]]
         control_cpds[U] = get_equality_cpd(U, info_cpd, control_cpd, (system_idx, 'control'))
 
@@ -103,7 +120,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
                 #parameterize other colliders as XOR
                 elif motif is 'c':
                     X = info[j-1]
-                    info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y])
+                    info_cpds[W] = get_xor_cpd(W, info_cpds[X], info_cpds[Y], (system_idx, 'info'))
 
 
         #parameterize decision with extra bit
@@ -117,8 +134,9 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
 
         #parameterize obs paths
-        if 'obs_paths' in system:
+        if 'obs_paths' in system: #TODO: can this be deleted?
             for path in system['obs_paths']:
+                #if path[0]!=C: #TODO: is it correct to leave this out?
                 for j,W in enumerate(path):
                     if j!=0:
                         X = path[j-1]
@@ -139,6 +157,10 @@ def get_Hcpd_idx(systems, idx):
     C = system['info'][system['i_C']]
     path = systems[h_pointer[0]][h_pointer[1]]
     loc = np.where(np.array(path)==C)[0][0]
+    if loc==0:
+        #if C is S on a previous infopath, then set H=C
+        warnings.warn('C is S for previous infopath') 
+        loc += 1 #TODO: is this correct?
     Hcpd_idx = h_pointer + tuple([loc-1])
     return Hcpd_idx
 

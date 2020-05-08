@@ -1,7 +1,7 @@
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
 #agreements; and to You under the Apache License, Version 2.0.
 
-from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse
+from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse, get_motifs, _get_active_dirpath
 import matplotlib.pyplot as plt
 from typing import List
 import numpy as np
@@ -36,32 +36,6 @@ def get_first_c_index(cid, info_path):
     else: #if one or more colliders, then first collider
         return np.where(np.array(motifs)=='c')[0][0]
 
-def get_motifs(cid, path):
-    shapes = []
-    for i in range(len(path)):
-        if i==0:
-            if path[i] in cid.get_parents(path[i+1]):
-                shapes.append('f')
-            else:
-                shapes.append('l')
-        elif i==len(path)-1:
-            shapes.append('end')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('f')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('c')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('r')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('l')
-    return shapes
-
-def _get_active_dirpath(cid, A:List, D):
-        A_to_D = _find_dirpath_recurse(cid, A, D)
-        for i, W in enumerate(A_to_D):
-            if W in cid.get_parents(D):
-                return A_to_D
-
 
 def augment_paths(cid, history_path, D, info_path, i_C0):
     X0 = info_path[0]
@@ -85,19 +59,9 @@ def augment_paths(cid, history_path, D, info_path, i_C0):
         C_to_D = _get_active_dirpath(cid, [C], D)
         active_C_to_Pa = C_to_D[:len(C_to_D)]
 
-        #find active paths from other colliders to D
-        motifs = get_motifs(cid, info_path)
-        obs_paths = []
-        for i in range(i_C0, len(info_path)):
-            if i_C != i:
-                motif = motifs[i]
-                if motif=='c':
-                    coll_to_pa = _get_active_dirpath(cid, [info_path[i]], D)
-                    obs_paths.append(coll_to_Pa[:len(coll_to_Pa)])
-        
         history_final = history_path[:-i_C0] + info_path[i_C0:i_C] + active_C_to_Pa
         info_final = active_C_to_Pa[::-1] + info_path[i_C+1:]
-        paths = {'history':history_final, 'info':info_final, 'i_C':len(active_C_to_Pa)-1, 'obs_paths':obs_paths}
+        paths = {'history':history_final, 'info':info_final, 'i_C':len(active_C_to_Pa)-1}
         return paths
 
 def get_system(cid, history_fragment, D, X):
@@ -107,6 +71,7 @@ def get_system(cid, history_fragment, D, X):
     i_C = _get_c_index(cid, history_fragment, paths['info'])
     new_paths = augment_paths(cid, history_fragment, D, paths['info'], i_C)
     new_paths['control'] = paths['control']
+    new_paths['obs_paths'] = paths['obs_paths']
     return new_paths
 
 def _find_systems_along_history(cid, systems, full_history):

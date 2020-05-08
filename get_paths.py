@@ -4,6 +4,26 @@
 from typing import List
 import numpy as np
 
+def get_motifs(cid, path):
+    shapes = []
+    for i in range(len(path)):
+        if i==0:
+            if path[i] in cid.get_parents(path[i+1]):
+                shapes.append('f')
+            else:
+                shapes.append('l')
+        elif i==len(path)-1:
+            shapes.append('end')
+        elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
+            shapes.append('f')
+        elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
+            shapes.append('c')
+        elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
+            shapes.append('r')
+        elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
+            shapes.append('l')
+    return shapes
+
 
 def _find_dirpath_recurse(bn, path: List[str], B: str):
     if path[-1]==B:
@@ -73,8 +93,27 @@ def _get_path_pair(cid, D, X):
         info_path = find_active_path_recurse(cid, [X], utility, [D] + other_parents)
         if info_path:
             control_path = find_dirpath(cid, D, utility)
-            return {'control':control_path, 'info':info_path}
+            obs_paths = _get_obs_paths(cid, info_path, D)
+            return {'control':control_path, 'info':info_path, 'obs_paths':obs_paths}
     return #if no path present
+
+def _get_active_dirpath(cid, A:List, D):
+        A_to_D = _find_dirpath_recurse(cid, A, D)
+        for i, W in enumerate(A_to_D):
+            if W in cid.get_parents(D):
+                return A_to_D
+
+
+def _get_obs_paths(cid, info_path, D):
+    #find active paths from other colliders to D
+    motifs = get_motifs(cid, info_path)
+    obs_paths = []
+    for i in range(len(info_path)):
+        motif = motifs[i]
+        if motif=='c':
+            coll_to_pa = _get_active_dirpath(cid, [info_path[i]], D)
+            obs_paths.append(coll_to_pa[:len(coll_to_pa)])
+    return obs_paths
 
 def get_infolinks(cid, path):
     #extract infolinks from a path
