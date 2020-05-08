@@ -98,6 +98,9 @@ class TestParameterize(unittest.TestCase):
         all_cpds = [c.copy() for a in all_cpds for b in a.values() for c in b.values()]
         merged_cpds = merge_all_nodes(cid, all_cpds)
         cid.add_cpds(*merged_cpds.values())
+        ev1, ev2 = verify_incentive(cid, D, X)
+        self.assertEqual(ev1, 1)
+        self.assertEqual(ev2, .5)
 
     def test_param5(self):
         cid = get_5node_cid()

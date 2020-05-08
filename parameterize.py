@@ -10,6 +10,7 @@ from get_cpd import get_equals_func_cpd, get_random_cpd
 
 
 def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
+    assert (H_cpd and Hprime_cpd) or (not H_cpd and not Hprime_cpd), 'should either provide Hcpd and Hprime cpd or neither'
     system = systems[system_idx]
     control = system['control']
     info = system['info']
@@ -36,9 +37,11 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             info_cpds[C] = get_identity_cpd(cid, C, H_cpd, (system_idx, 'info'))
         else:
             info_cpds[C] = get_random_cpd((system_idx, 'info', C), variable_card)
+
+
         #parameterize nodes before C to equal their parents
         for j in range(i_C-1,-1, -1):
-            paren, W = info[j+1:j-1]
+            W, parent = info[j:j+2]
             info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
         
         #parameterize nodes after C to equal their parents
@@ -47,15 +50,20 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
         #parameterize decision
-        control_cpds[D] = get_identity_cpd(cid, D, info_cpds[info[0]], (system_idx, 'control'))
-        #parameterize control path
-        for j in range(1, len(control)-1):
-            parent, W = control[j-1:j+1]
-            control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
+        if not H_cpd:
+            control_cpds[D] = get_identity_cpd(cid, D, info_cpds[info[0]], (system_idx, 'control'))
+            #parameterize control path
+            for j in range(1, len(control)-1):
+                parent, W = control[j-1:j+1]
+                control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
+
         #parameterize utility node
         U = control[-1]
-        info_cpd = control_cpds[control[-2]]
-        control_cpd = info_cpds[info[-2]]
+        info_cpd = info_cpds[info[-2]]
+        if H_cpd:
+            control_cpd = Hprime_cpd
+        else:
+            control_cpd = control_cpds[control[-2]]
         control_cpds[U] = get_equality_cpd(U, info_cpd, control_cpd, (system_idx, 'control'))
 
     else:
@@ -108,6 +116,14 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             parent, W = control[j-1:j+1]
             control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
 
+        #parameterize obs paths
+        if 'obs_paths' in system:
+            for path in system['obs_paths']:
+                for j,W in enumerate(path):
+                    if j!=0:
+                        X = path[j-1]
+                        info_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'info'))
+
         #parameterize utility
         U = control[-1]
         control_cpds[U] = get_equals_func_cpd(U, Hprime_cpd, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
@@ -144,7 +160,7 @@ def parameterize_systems(cid, systems):
     for i in range(1,len(systems)):
         Hcpd = get_Hcpd(systems, all_cpds, i)
         Hprimecpd = get_Hprimecpd(systems, all_cpds, i)
-        print(Hcpd.variable, Hprimecpd.variable)
+        #print(Hcpd.variable, Hprimecpd.variable)
         all_cpds.append(_parameterize_system(cid, systems, i, Hcpd, Hprimecpd))
     return all_cpds
 

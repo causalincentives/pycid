@@ -310,7 +310,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
             merging = [i for i in old_evidence if isinstance(i, tuple) and i[2]==name]
             non_merging = [i for i in old_evidence if i not in merging]
             child_cpd.reorder_parents(merging+non_merging, inplace=True)
-            node_dims = [np.where([i==W for i in node_names])[0][0] for W in merging]
+            node_dims = sorted([np.where([i==W for i in node_names])[0][0] for W in merging]) #TODO: is sorted correct?
             dims = node_dims + list(range(len(node_cards),len(node_cards)+len(non_merging)))
             assert len(set(dims))==len(dims)
             evidence_card_unflat = node_cards + child_cpd.cardinality.tolist()[1+len(merging):]

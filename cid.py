@@ -58,17 +58,8 @@ class CID(BayesianModel):
         return decisions
 
     def _get_valid_order(self, nodes:List[str]):
-        def compare(node1, node2): 
-            if node1==node2:
-                return 0
-            elif node1 in self._get_ancestors_of(node2):
-                return -1
-            elif node2 in self._get_ancestors_of(node1):
-                return 1
-            else:
-                return 0
-        ordering = sorted(nodes, key=functools.cmp_to_key(compare))
-        return ordering
+        srt = [i for i in nx.topological_sort(self) if i in nodes]
+        return srt
 
 
     def check_sufficient_recall(self):
