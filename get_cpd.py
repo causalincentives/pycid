@@ -6,12 +6,12 @@ from cid import NullCPD
 from typing import List
 from functools import reduce
 
-def get_H_cpd(sys_cpds, systems, h_pointer):
-    H_cpd = sys_cpds[h_pointer[0]][h_pointer[1]]
-    hist = systems[h_pointer[0]]
-    H = hist[np.where(np.array(hist[h_pointer[1]])==paths[paths['i_C']])[0][0]-1]
-    H_cpd = systems[h_pointer[0]][h_pointer[1]]
-    return H_cpd
+#def get_H_cpd(sys_cpds, systems, h_pointer):
+#    H_cpd = sys_cpds[h_pointer[0]][h_pointer[1]]
+#    hist = systems[h_pointer[0]]
+#    H = hist[np.where(np.array(hist[h_pointer[1]])==paths[paths['i_C']])[0][0]-1]
+#    H_cpd = systems[h_pointer[0]][h_pointer[1]]
+#    return H_cpd
 
 
 def __get_identity_values(size):
@@ -274,13 +274,16 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
             assert np.all([isinstance(i, str) for i in node_cpd.get_evidence()])
             useful_idx = [i for i in range(len(evidence)) if evidence[i] in node_cpd.get_evidence()]
             useful_parents = [evidence[i] for i in useful_idx]
-            if useful_parents:
-                node_cpd.reorder_parents(useful_parents, inplace=True)
+            if evidence_card:
+                if useful_parents:
+                    node_cpd.reorder_parents(useful_parents, inplace=True)
                 projection = project_values(evidence_card, useful_idx, node_cpd.get_values())
                 all_values.append(projection)
             else:
                 #evidence_card = []
                 all_values.append(node_cpd.get_values())
+            #if node_cpd.variable[2]=='S0':
+            #    import ipdb; ipdb.set_trace()
         
         #merge the values
         if all_values:
@@ -297,7 +300,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
                         variable_card=variable_card,
                         evidence=evidence,
                         evidence_card=evidence_card,
-                        values=values.reshape(1, -2)
+                        values=values.reshape(1, -1)
                         )
 
 
@@ -339,5 +342,3 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     return merged_cpds, flat_cpds, new_cpd, new_children
 
 
-#TODO: change utility nodes to a sum
-#TODO: add family of paths from W to D

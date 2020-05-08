@@ -20,5 +20,8 @@ class NullCPD(BaseFactor):
     def marginalize(self, variables, inplace=True): #TODO (maybe): decrease cardinality by len(variables)
         if not inplace:
             return self
+
+    def __repr__(self):
+        return "<NullCPD {}:{}".format(self.variable, self.variable_card)
     #def to_factor(self):
     #    return self

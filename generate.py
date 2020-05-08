@@ -59,6 +59,7 @@ def random_cids(
         n_cids:int=10,
         seed:int=None,
         add_sr_edges=True,
+        require_connected=True,
         ):
     # generates a bunch of CID skeletons with sufficient recall
     # if add_sr_edges=True, then sufficient recall is ensured by adding edges
@@ -76,7 +77,8 @@ def random_cids(
             cids.append(add_sufficient_recalls(cid))
         else:
             if cid.check_sufficient_recall():
-                cids.append(cid)
+                if (not require_connected) or nx.is_connected(cid.to_undirected()):
+                    cids.append(cid)
 
     return cids
 

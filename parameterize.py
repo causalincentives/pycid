@@ -72,11 +72,13 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         #parameterize utility node
         U = control[-1]
         if H_cpd:
-            if system['h_pointer'][1]=='control':
+            if info[-2]==H_cpd.variable[2]:
+                info_cpd = H_cpd
+            else:
                 info_cpd = info_cpds[info[-2]]
+            if control[-2]==Hprime_cpd.variable[2]:
                 control_cpd = Hprime_cpd
             else:
-                info_cpd = Hprime_cpd
                 control_cpd = control_cpds[control[-2]]
         else:
             info_cpd = info_cpds[info[-2]]
@@ -151,27 +153,27 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     return cpds
 
 
-def get_Hcpd_idx(systems, idx):
+def get_Hcpd_idx(systems, idx, directed_path):
     system = systems[idx]
     h_pointer = system['h_pointer']
     C = system['info'][system['i_C']]
     path = systems[h_pointer[0]][h_pointer[1]]
     loc = np.where(np.array(path)==C)[0][0]
-    if loc==0:
-        #if C is S on a previous infopath, then set H=C
-        warnings.warn('C is S for previous infopath') 
-        loc += 1 #TODO: is this correct?
-    Hcpd_idx = h_pointer + tuple([loc-1])
+    if not directed_path:
+        loc -= 1
+    Hcpd_idx = h_pointer + tuple([loc])
     return Hcpd_idx
 
-def get_Hcpd(systems, systems_cpds, system_idx):
-    cpd_idx, path_type, node_idx = get_Hcpd_idx(systems, system_idx)
+def get_Hcpd(systems, systems_cpds, system_idx, directed_path):
+    cpd_idx, path_type, node_idx = get_Hcpd_idx(systems, system_idx, directed_path)
     H = systems[cpd_idx][path_type][node_idx]
     Hcpd = systems_cpds[cpd_idx][path_type][H]
+    #if Hcpd.variable[2]=='S2':
+    #    import ipdb; ipdb.set_trace()
     return Hcpd
 
-def get_Hprimecpd(systems, systems_cpds, system_idx):
-    cpd_idx, path_type, _ = get_Hcpd_idx(systems, system_idx)
+def get_Hprimecpd(systems, systems_cpds, system_idx, directed_path):
+    cpd_idx, path_type, _ = get_Hcpd_idx(systems, system_idx, directed_path)
     Hprime = systems[cpd_idx][path_type][-2]
     Hprimecpd = systems_cpds[cpd_idx][path_type][Hprime]
     return Hprimecpd
@@ -180,8 +182,11 @@ def parameterize_systems(cid, systems):
     all_cpds = []
     all_cpds.append(_parameterize_system(cid, systems, 0, None, None))
     for i in range(1,len(systems)):
-        Hcpd = get_Hcpd(systems, all_cpds, i)
-        Hprimecpd = get_Hprimecpd(systems, all_cpds, i)
+        info = systems[i]['info']
+        i_C = systems[i]['i_C']
+        directed_path = is_directed(cid, info[i_C:])
+        Hcpd = get_Hcpd(systems, all_cpds, i, directed_path)
+        Hprimecpd = get_Hprimecpd(systems, all_cpds, i, directed_path)
         #print(Hcpd.variable, Hprimecpd.variable)
         all_cpds.append(_parameterize_system(cid, systems, i, Hcpd, Hprimecpd))
     return all_cpds
