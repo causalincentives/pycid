@@ -5,6 +5,7 @@ import random
 from typing import List, Tuple
 from cid import CID, NullCPD
 from get_paths import find_active_path_recurse
+import networkx as nx
 
 
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
@@ -59,7 +60,6 @@ def random_cids(
         n_cids:int=10,
         seed:int=None,
         add_sr_edges=True,
-        require_connected=True,
         ):
     # generates a bunch of CID skeletons with sufficient recall
     # if add_sr_edges=True, then sufficient recall is ensured by adding edges
@@ -74,11 +74,11 @@ def random_cids(
         cid = random_cid(n_all, n_decisions, n_utilities, edge_density, seed=seed)
 
         if add_sr_edges:
-            cids.append(add_sufficient_recalls(cid))
+            cid = add_sufficient_recalls(cid)
+            cids.append(cid)
         else:
             if cid.check_sufficient_recall():
-                if (not require_connected) or nx.is_connected(cid.to_undirected()):
-                    cids.append(cid)
+                cids.append(cid)
 
     return cids
 
