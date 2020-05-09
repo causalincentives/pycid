@@ -94,7 +94,7 @@ def __get_xor_values(size):#(dims, axes)
     #return projected
 
 def get_xor_cpd(node, cpd1, cpd2, path_name):
-    evidence = [cpd1.variable_name, cpd2.variable_name]
+    evidence = [cpd1.variable, cpd2.variable]
     evidence_card = [cpd1.variable_card, cpd2.variable_card]
     values = __get_xor_values(cpd1.variable_card)
     cpd = TabularCPD(variable=path_name + (node,),

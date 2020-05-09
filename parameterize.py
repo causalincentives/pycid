@@ -139,7 +139,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         if 'obs_paths' in system: #TODO: can this be deleted?
             for path in system['obs_paths']:
                 #if path[0]!=C: #TODO: is it correct to leave this out?
-                for j,W in enumerate(path):
+                for j,W in enumerate(path[:-1]):
                     if j!=0:
                         X = path[j-1]
                         info_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'info'))
