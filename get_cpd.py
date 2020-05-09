@@ -84,11 +84,11 @@ def project_values(dims, axes, values):
 
 def __get_xor_values(size):#(dims, axes)
     #size = dims[axes[0]]
-    vec_of_bitstrings = [int(np.binary_repr(i)) for i in range(hsize)]
+    vec_of_bitstrings = [int(np.binary_repr(i)) for i in range(size)]
     one_hot_to_xor_table= np.bitwise_xor.outer(vec_of_bitstrings, vec_of_bitstrings)
     str_vec = one_hot_to_xor_table.ravel().astype(str)
     int_vec = [int(s, 2) for s in str_vec]
-    values = np.eye(hsize)[int_vec].T
+    values = np.eye(size)[int_vec].T
     #projected = project_values(dims, axes, values)
     return values
     #return projected
@@ -98,7 +98,7 @@ def get_xor_cpd(node, cpd1, cpd2, path_name):
     evidence_card = [cpd1.variable_card, cpd2.variable_card]
     values = __get_xor_values(cpd1.variable_card)
     cpd = TabularCPD(variable=path_name + (node,),
-            variable_card=evidence_card,
+            variable_card=evidence_card[0],
             evidence=evidence,
             evidence_card=evidence_card,
             values=values
@@ -218,15 +218,15 @@ def _merge_values(A, B):
 def get_cpds(flat_cpds, name):
     return [i for i in flat_cpds if i.variable[2]==name]
 
-def merge_children(cpd):
-    merging = [i for i in cpd.get_evidence() if i[2]==name]
-    non_merging = [i for i in cpd.get_evidence() if i[2]!=name]
-    cpd.reorder_parents(merging+non_merging, inplace=True)
-    dims = node_cards + [cpd.cardinality[1+len(merging):]]
-    values = project_values(dims, np.arange(1+len(merging),len(cpd.get_evidence())), 
-                            cpd.get_values())
-    
-    return cpd
+#def merge_children(cpd):
+#    merging = [i for i in cpd.variables[1:] if i[2]==name]
+#    non_merging = [i for i in cpd.variables[1:] if i[2]!=name]
+#    cpd.reorder_parents(merging+non_merging, inplace=True)
+#    dims = node_cards + [cpd.cardinality[1+len(merging):]]
+#    values = project_values(dims, np.arange(1+len(merging),len(cpd.variables[1:])), 
+#                            cpd.get_values())
+#    
+#    return cpd
     
 def get_names(names, allow_singles=True):
     if allow_singles:
@@ -255,7 +255,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     #merges cpds to fit cid
     node_cpds = get_cpds(flat_cpds, name)
     graphical_children = [i for i in flat_cpds if i.variable[2] in cid.get_children(name)]
-    child_cpds = [i for i in graphical_children if isinstance(i, NullCPD) or name in get_names(i.get_evidence())]
+    child_cpds = [i for i in graphical_children if isinstance(i, NullCPD) or name in get_names(i.variables[1:])]
     
     #make merged cpd for`name`
     node_names = [W.variable for W in node_cpds]
@@ -271,8 +271,8 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     else:
         all_values = []
         for node_cpd in node_cpds:
-            assert np.all([isinstance(i, str) for i in node_cpd.get_evidence()])
-            useful_idx = [i for i in range(len(evidence)) if evidence[i] in node_cpd.get_evidence()]
+            assert np.all([isinstance(i, str) for i in node_cpd.variables[1:]])
+            useful_idx = [i for i in range(len(evidence)) if evidence[i] in node_cpd.variables[1:]]
             useful_parents = [evidence[i] for i in useful_idx]
             if evidence_card:
                 if useful_parents:
@@ -309,11 +309,12 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     new_children = []
     for child_cpd in child_cpds:
         if isinstance(child_cpd, TabularCPD):
-            old_evidence = child_cpd.get_evidence()
-            merging = [i for i in old_evidence if isinstance(i, tuple) and i[2]==name]
+            old_evidence = child_cpd.variables[1:]
+            merging = [i for i in node_names if i in old_evidence]
             non_merging = [i for i in old_evidence if i not in merging]
             child_cpd.reorder_parents(merging+non_merging, inplace=True)
-            node_dims = sorted([np.where([i==W for i in node_names])[0][0] for W in merging]) #TODO: is sorted correct?
+            node_dims = [np.where([i==W for i in node_names])[0][0] for W in merging] #TODO: should this be sorted?
+            assert node_dims==sorted(node_dims), 'unsorted'
             dims = node_dims + list(range(len(node_cards),len(node_cards)+len(non_merging)))
             assert len(set(dims))==len(dims)
             evidence_card_unflat = node_cards + child_cpd.cardinality.tolist()[1+len(merging):]

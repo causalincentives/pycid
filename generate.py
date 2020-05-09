@@ -36,6 +36,16 @@ def get_edges(names: List[str], edge_density: float, seed=None):
                 edges.append((names[j], name1))
     return edges
 
+def load_cid(
+        edges:List[Tuple[str,str]],
+        dnames:List[str],
+        unames:List[str],
+        ):
+    cid = CID(edges, unames)
+    nullcpds = [NullCPD(dname, 0) for dname in dnames]
+    cid.add_cpds(*nullcpds)
+    return cid
+
 def random_cid(
         n_all:int, 
         n_decisions:int, 
@@ -45,10 +55,7 @@ def random_cid(
     
     allnames, dnames, unames = get_node_names(n_all, n_decisions, n_utilities)
     edges = get_edges(allnames, edge_density, seed=seed)
-    
-    cid = CID(edges, unames)
-    nullcpds = [NullCPD(dname, 0) for dname in dnames]
-    cid.add_cpds(*nullcpds)
+    cid = load_cid(edges,dnames,unames)
     return cid
 
 

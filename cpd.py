@@ -22,6 +22,6 @@ class NullCPD(BaseFactor):
             return self
 
     def __repr__(self):
-        return "<NullCPD {}:{}".format(self.variable, self.variable_card)
+        return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
     #def to_factor(self):
     #    return self
