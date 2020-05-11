@@ -30,6 +30,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
 
     info_cpds = {} #maps from node name to TabularCPD or NullCPD
     control_cpds = {}
+    obs_cpds = {}
 
     #create CPDs for each node, 
     if is_directed(cid, info[i_C:]):
@@ -61,10 +62,23 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
                 parent, W = info[j-1:j+1]
                 info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
 
-        #parameterize decision
-        if not H_cpd:
+        #parameterize decision and control path
+        if H_cpd:
+            #control path (if needed)
+            if Hprime_cpd.variable[2] in control:
+                Hprime_idx = np.where(np.array(control)==Hprime_cpd.variable[2])[0][0]
+                for j in range(Hprime_idx+1,len(control)-1):
+                    if j==Hprime_idx+1:
+                        W = control[Hprime_idx+1]
+                        control_cpds[W] = get_identity_cpd(cid, W, Hprime_cpd, (system_idx, 'control'))
+                    else:
+                        parent, W = control[j-1:j+1]
+                        control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
+
+        else:
+            #decision
             control_cpds[D] = get_identity_cpd(cid, D, info_cpds[info[0]], (system_idx, 'control'))
-            #parameterize control path
+            #control path
             for j in range(1, len(control)-1):
                 parent, W = control[j-1:j+1]
                 control_cpds[W] = get_identity_cpd(cid, W, control_cpds[parent], (system_idx, 'control'))
@@ -115,6 +129,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
                 #parameterize right-chains
                 elif motif in ['l']:
                     info_cpds[W] = get_identity_cpd(cid, W, info_cpds[Y], (system_idx, 'info'))
+                    #import ipdb; ipdb.set_trace()
                 elif motif is 'r':
                     X = info[j-1]
                     info_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'info'))
@@ -140,20 +155,22 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
             for path in system['obs_paths']:
                 #if path[0]!=C: #TODO: is it correct to leave this out?
                 for j,W in enumerate(path[:-1]):
-                    if j!=0:
-                        X = path[j-1]
-                        info_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'info'))
+                    X = path[j-1]
+                    if j==1:
+                        obs_cpds[W] = get_identity_cpd(cid, W, info_cpds[X], (system_idx, 'obs'))
+                    if j>1:
+                        obs_cpds[W] = get_identity_cpd(cid, W, obs_cpds[X], (system_idx, 'obs'))
 
         #parameterize utility
         U = control[-1]
         control_cpds[U] = get_equals_func_cpd(U, Hprime_cpd, info_cpds[info[-2]], control_cpds[control[-2]], (system_idx, 'control'))
 
 
-    cpds = {'info':info_cpds, 'control':control_cpds}
+    cpds = {'info':info_cpds, 'control':control_cpds, 'obs':obs_cpds}
     return cpds
 
 
-def get_Hcpd_idx(systems, idx, directed_path):
+def get_H_idx(systems, idx, directed_path): #TODO: factor this code with h_pointer selection code
     system = systems[idx]
     h_pointer = system['h_pointer']
     C = system['info'][system['i_C']]
@@ -165,18 +182,38 @@ def get_Hcpd_idx(systems, idx, directed_path):
     return Hcpd_idx
 
 def get_Hcpd(systems, systems_cpds, system_idx, directed_path):
-    cpd_idx, path_type, node_idx = get_Hcpd_idx(systems, system_idx, directed_path)
+    cpd_idx, path_type, node_idx = get_H_idx(systems, system_idx, directed_path)
     H = systems[cpd_idx][path_type][node_idx]
     Hcpd = systems_cpds[cpd_idx][path_type][H]
-    #if Hcpd.variable[2]=='S2':
-    #    import ipdb; ipdb.set_trace()
     return Hcpd
 
-def get_Hprimecpd(systems, systems_cpds, system_idx, directed_path):
-    cpd_idx, path_type, _ = get_Hcpd_idx(systems, system_idx, directed_path)
-    Hprime = systems[cpd_idx][path_type][-2]
-    Hprimecpd = systems_cpds[cpd_idx][path_type][Hprime]
-    return Hprimecpd
+def get_Hprime_idx(systems, idx):
+    system = systems[idx]
+    controlpath = system['control']
+    h_pointer = system['h_pointer']
+    hpath = systems[h_pointer[0]][h_pointer[1]]
+    for i in range(len(hpath)-1, 0, -1):
+        suffix = hpath[i:]
+        if suffix != controlpath[-len(suffix):]:
+            i += 1
+            break
+    Hprime_idx = min(i, len(hpath)-1)
+    return Hprime_idx
+
+def get_Hprime_cpd(systems, systems_cpds, system_idx, directed_path):
+    cpd_idx, path_type, _ = get_H_idx(systems, system_idx, directed_path)
+    if directed_path:
+        Hprime_idx = get_Hprime_idx(systems, system_idx)
+    else:
+        Hprime_idx = -2
+    Hprime = systems[cpd_idx][path_type][Hprime_idx]
+    assert not Hprime.startswith('U')
+    #if Hprime in systems_cpds[cpd_idx][path_type]:
+    Hprime_cpd = systems_cpds[cpd_idx][path_type][Hprime]
+    #else:
+    #    assert Hprime.variable[3].startswith('U')
+    #    Hprime_cpd = systems_cpds[cpd_idx]['control'][Hprime]
+    return Hprime_idx, Hprime_cpd
 
 def parameterize_systems(cid, systems):
     all_cpds = []
@@ -186,7 +223,7 @@ def parameterize_systems(cid, systems):
         i_C = systems[i]['i_C']
         directed_path = is_directed(cid, info[i_C:])
         Hcpd = get_Hcpd(systems, all_cpds, i, directed_path)
-        Hprimecpd = get_Hprimecpd(systems, all_cpds, i, directed_path)
+        _, Hprimecpd = get_Hprime_cpd(systems, all_cpds, i, directed_path)
         #print(Hcpd.variable, Hprimecpd.variable)
         all_cpds.append(_parameterize_system(cid, systems, i, Hcpd, Hprimecpd))
     return all_cpds

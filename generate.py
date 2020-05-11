@@ -6,6 +6,7 @@ from typing import List, Tuple
 from cid import CID, NullCPD
 from get_paths import find_active_path_recurse
 import networkx as nx
+import numpy as np
 
 
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
@@ -13,17 +14,24 @@ def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
     snames = ['S{}'.format(i) for i in range(n_structural)]
     dnames = ['D{}'.format(i) for i in range(n_decisions)]
     unames = ['U{}'.format(i) for i in range(n_utilities)]
-    allnames = snames+dnames+unames
-    random.shuffle(allnames)
-    return allnames, dnames, unames
+    nonunames = snames+dnames
+    random.shuffle(nonunames)
+    return nonunames+unames, dnames, unames
 
-def get_edges(names: List[str], edge_density: float, seed=None):
+def get_edges(
+        names: List[str], 
+        unames: List[str], 
+        edge_density: float, 
+        seed=None,
+        allow_u_edges=False,
+        ):
     random.seed(seed)
     edges = []
     for i, name1 in enumerate(names):
         for name2 in names[i+1:]:
             if random.random()<edge_density:
-                edges.append((name1, name2))
+                if allow_u_edges or name1 not in unames:
+                    edges.append((name1, name2))
 
         #connect any nodes lacking edges
         nodes_with_edges = [i for j in names[i+1:] for i in j]
@@ -31,9 +39,11 @@ def get_edges(names: List[str], edge_density: float, seed=None):
             other_node_indices = list(set(range(len(names)))-set([i]))
             j = random.choice(other_node_indices)
             if i<j:
-                edges.append((name1, names[j]))
+                if allow_u_edges or (name1 not in unames):
+                    edges.append((name1, names[j]))
             else:
-                edges.append((names[j], name1))
+                if allow_u_edges or (names[j] not in unames):
+                    edges.append((names[j], name1))
     return edges
 
 def load_cid(
@@ -41,7 +51,8 @@ def load_cid(
         dnames:List[str],
         unames:List[str],
         ):
-    cid = CID(edges, unames)
+    unames_present = [u for u in unames if u in np.array(edges).ravel()]
+    cid = CID(edges, unames_present)
     nullcpds = [NullCPD(dname, 0) for dname in dnames]
     cid.add_cpds(*nullcpds)
     return cid
@@ -54,8 +65,12 @@ def random_cid(
         seed:int=None):
     
     allnames, dnames, unames = get_node_names(n_all, n_decisions, n_utilities)
-    edges = get_edges(allnames, edge_density, seed=seed)
+    edges = get_edges(allnames, unames, edge_density, seed=seed, allow_u_edges=False)
     cid = load_cid(edges,dnames,unames)
+
+    for uname in unames:
+        for edge in edges:
+            assert uname!= edge[0]
     return cid
 
 
@@ -83,6 +98,9 @@ def random_cids(
         if add_sr_edges:
             cid = add_sufficient_recalls(cid)
             cids.append(cid)
+            for uname in cid.utilities:
+                for edge in cid.edges:
+                    assert uname!= edge[0]
         else:
             if cid.check_sufficient_recall():
                 cids.append(cid)

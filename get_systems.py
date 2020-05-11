@@ -54,10 +54,9 @@ def augment_paths(cid, history_path, D, info_path, i_C0):
                 i_C = i
                 break
         #find path from C to parent of D
-        active_C_to_Pa = _get_active_dirpath(cid, [C], D)
         C = info_path[i_C]
         C_to_D = _get_active_dirpath(cid, [C], D)
-        active_C_to_Pa = C_to_D[:len(C_to_D)]
+        active_C_to_Pa = C_to_D[:-1]
 
         history_final = history_path[:-i_C0] + info_path[i_C0:i_C] + active_C_to_Pa
         info_final = active_C_to_Pa[::-1] + info_path[i_C+1:]
@@ -89,7 +88,7 @@ def _find_systems_along_history(cid, systems, full_history):
             new_infolinks.append((X_new,D))
             i = j
     if i: #decision encountered
-        new_history += paths['control']
+        new_history += full_history[i:]
         return new_history, new_infolinks
     else:
         return full_history, new_infolinks
@@ -107,10 +106,8 @@ def _choose_systems_recurse(cid, systems, system_idx, history_pointer):
     
 def choose_systems(cid, decision, obs):
     #recursively choose paths where infopaths are directed or backdoor from combiner node C
-    systems = []
-    system = _get_path_pair(cid, decision, obs)
-    assert system is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
-    systems.append(system)
+    systems = [_get_path_pair(cid, decision, obs)]
+    assert systems[0] is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
     
     _choose_systems_recurse(cid, systems, 0, None)
     return systems
