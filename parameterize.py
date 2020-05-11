@@ -192,12 +192,20 @@ def get_Hprime_idx(systems, idx):
     controlpath = system['control']
     h_pointer = system['h_pointer']
     hpath = systems[h_pointer[0]][h_pointer[1]]
+    max_len = len(hpath)-1 #because U should use Hprime, not equal it.
+
+    #remove the tail of each path that is not present in the other path
+    while controlpath[-1] not in hpath:
+        controlpath = controlpath[:-1]
+    while hpath[-1] not in controlpath:
+        hpath = hpath[:-1]
+
     for i in range(len(hpath)-1, 0, -1):
         suffix = hpath[i:]
         if suffix != controlpath[-len(suffix):]:
             i += 1
             break
-    Hprime_idx = min(i, len(hpath)-1)
+    Hprime_idx = min(i, max_len)
     return Hprime_idx
 
 def get_Hprime_cpd(systems, systems_cpds, system_idx, directed_path):
