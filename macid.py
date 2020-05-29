@@ -32,9 +32,9 @@ class MACID(BayesianModel):
         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))        
         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))        
    
-        self.ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
-        self.reversed_ordering = list(reversed(self.ordering))     ## clearly need to change these!
-        self.numDecisions = len(self.ordering)
+        #self.ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
+        #self.reversed_ordering = list(reversed(self.ordering))     ## clearly need to change these!
+        #self.numDecisions = len(self.ordering)
 
 
         print(f"This example has {len(self.agents)} agents")
@@ -198,7 +198,7 @@ class MACID(BayesianModel):
      
 
     def _is_s_reachable(self, dec_pair):
-        """ - dec_pair is a list of tow deicsion nodes ie ['D1', 'D2']
+        """ - dec_pair is a list of two deicsion nodes ie ['D1', 'D2']
             - this method determines whether 'D2' is s-reachable from 'D1'
         
         A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
@@ -213,13 +213,16 @@ class MACID(BayesianModel):
         con_nodes = [dec_pair[0]] + self.get_parents(dec_pair[0]) 
         if any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities]):
             self.remove_node('temp_par')
+            print("yes")
             return True
         else:
             self.remove_node('temp_par')
+            print("no")
             return False
 
     def strategic_rel_graph(self):
         # finds the strategic relevance graph of the MAID
+        # an edge D' -> D exists iff D' is s-reachable from D
         G = nx.DiGraph()
         dec_pair_perms = list(itertools.permutations(self.all_decision_nodes, 2))
         for dec_pair in dec_pair_perms:
