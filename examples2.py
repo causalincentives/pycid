@@ -58,9 +58,10 @@ def basic2agent_2():
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
         {'D1': 2, 'D2': 2}, #defines the decision cardinalities
-        {1:[2,3,1,3], 2:[4,1,2,3]})     #defines utilities 
+        {1:[2,3,1,3], 2:[4,1,2,3]})
 
-    
+        #{1:[2,5,1,3], 2:[4,4,2,3]})     #defines utilities 
+
     for dec in macid.all_decision_nodes:
         cpd_d = NullCPD(dec, 2)
         macid.add_cpds(cpd_d)
@@ -75,6 +76,7 @@ def basic2agent_2():
                             evidence=parents,
                             evidence_card=parents_card
                             )
+        print(f"cpd_u = {cpd_u}")
         macid.add_cpds(cpd_u)
     # cpd_u1 = TabularCPD(variable='U1', variable_card=4,
     #                     values=np.eye(4),
@@ -208,7 +210,8 @@ def basic2agent_3():
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'C': [], 'U': ['U2']}, 3: {'D': ['D3'], 'U': ['U3']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
         {'D1': 2, 'D2': 2, 'D3':2},     #defines the decision cardinalities
-        {1:[1,1,3,0,5,2,1,0], 2:[3,2,2,2,1,4,1,3], 3:[6,4,1,5,3,6,1,0]})     
+        #{1:[1,1,3,0,5,2,1,0], 2:[3,2,2,2,1,4,1,3], 3:[6,4,1,5,3,6,1,0]}) 
+        {1:[1,1,3,0,5,2,1,1], 2:[3,2,2,2,1,4,1,1], 3:[6,4,1,5,3,6,1,1]})     
 
 
     

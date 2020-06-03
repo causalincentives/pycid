@@ -4,14 +4,16 @@ from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD
 import networkx as nx
 from cpd import NullCPD
-from examples2 import road_example
+from examples2 import basic2agent_3
 import matplotlib.pyplot as plt
 from incentives import Information, Response, Control, Influence
 from pgmpy.inference import BeliefPropagation
 
+
 import itertools
 from collections import defaultdict
 import operator
+import matplotlib.cm as cm
 
 
 
@@ -38,16 +40,36 @@ def main():
 
     
     
-    m = road_example()
+    m = basic2agent_3()
     m.draw()
     plt.figure(1)
     plt.show()
 
-    m.draw_strategic_rel_graph()
+    m.get_all_PSNE()
+    m.get_acyclic_topological_ordering()
+    m.ordering
+    #m.draw_SCCs()
+    #m.component_graph()
+    #m.get_KM_NE()
 
+
+    #m.get_all_PSNE()
+    #m.get_KM_NE2()
+
+    #m.get_KM_NE3()
+
+    #m.draw_strategic_rel_graph()
+    #m.draw_SCCs()
+    #m.find_SCCs()
+    #m._set_color_SCC()
     #print(len(m.edges()))
 
-    m._is_s_reachable(['B2E', 'B3E'])
+    #m._is_s_reachable(['B2E', 'B3E'])
+
+
+ 
+
+
 
 
 
@@ -60,6 +82,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 

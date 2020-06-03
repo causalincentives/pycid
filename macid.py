@@ -17,6 +17,10 @@ from cpd import NullCPD
 import matplotlib.pyplot as plt
 import operator
 from collections import defaultdict
+import copy
+
+import matplotlib.cm as cm
+
 
 
 class MACID(BayesianModel):
@@ -32,9 +36,9 @@ class MACID(BayesianModel):
         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))        
         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))        
    
-        #self.ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
-        #self.reversed_ordering = list(reversed(self.ordering))     ## clearly need to change these!
-        #self.numDecisions = len(self.ordering)
+        self.acyclic_ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
+        self.reversed_acyclic_ordering = list(reversed(self.acyclic_ordering))     
+        self.numDecisions = len(self.acyclic_ordering)
 
 
         print(f"This example has {len(self.agents)} agents")
@@ -109,6 +113,24 @@ class MACID(BayesianModel):
         return True
 
 
+    def _get_color(self, node):
+    # This colour codes the decision, chance and utility nodes of each agent
+        for i in self.node_types:
+            if i == 'C':
+                if node in self.node_types['C']:
+                    return 'lightgray'
+            else:
+                if node in self.node_types[i]['D']:
+                    return 'lightblue'
+                if node in self.node_types[i]['U']:
+                    return 'yellow'
+
+    def draw(self):
+    # This draws the DAG for the CID
+        l = nx.kamada_kawai_layout(self)
+        colors = [self._get_color(node) for node in self.nodes]
+        nx.draw_networkx(self, pos=l, node_color=colors)
+
 
     def random_instantiation_dec_nodes(self):
         #imputes random uniform policy to all decision nodes (NullCPDs) - arbitrary fully mixed strategy profile for MACID   #perhaps add something checking whether it's "isinstance(cpd, NullCPD)" is true
@@ -121,6 +143,7 @@ class MACID(BayesianModel):
                             values=table, evidence=parents,
                             evidence_card=parents_card
                             )
+            print(uniform_cpd)
             self.add_cpds(uniform_cpd)
     
         print("added decision probs --")
@@ -139,12 +162,16 @@ class MACID(BayesianModel):
                 return agent
 
 
+
+# -------------Methods for reuturning Koller & Milch NE (alg6.1) ------------------------------------------------------------
+
+
     def _get_max_child(self, row, col, decArray, bp):
         # selects the child (ie the action at that dection) which will give maximum EV for the agent making that decision.
         # updates the decision-array with the list of optimal descendent decisions.
         l = []
-        dec_num_act = self.decision_cardinalities[self.reversed_ordering[row]]  # number of possible actions for that decision
-        for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # *dec_num_act and +dec_num_act to iterate over actions they're considering  #FIX
+        dec_num_act = self.decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
+        for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # *dec_num_act and +dec_num_act to iterate over actions that agent is considering 
             l.append(self._get_ev(decArray[row+1][indx], row, bp))  
         maxl = max(l)
         max_index = l.index(maxl)
@@ -152,11 +179,14 @@ class MACID(BayesianModel):
 
     def _get_ev(self, dec_list, row, bp):
         # returns the expected value of that decision for the agent making the decision
-        dec = self.reversed_ordering[row]   #gets the decision being made on this row
+        dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
         agent = self._get_dec_agent(dec)      #gets the agent making that decision
         # self.random_instantiation_dec_nodes()
         # bp = BeliefPropagation(self)
-        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_ordering, dec_list)))  #FIX this needs to generalise for all utilities and decisions
+        print(f"dec_list is {dec_list}")
+        print(f"type is {type(dec_list)}")
+
+        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
         ev = 0
         for idx, prob in np.ndenumerate(h.values):
                 if prob != 0:
@@ -169,33 +199,137 @@ class MACID(BayesianModel):
         bp = BeliefPropagation(self)  #instantiates belief propogation class
 
         action_space_list = list(itertools.accumulate(self.decision_cardinalities.values(), operator.mul))  #gives number of pure strategies for each decision node (ie taking into account prev decisions)
-        cols_in_decArray_row = [1] + action_space_list
+        cols_in_each_decArray_row = [1] + action_space_list
 
 
         actions_for_dec_list = []
         for card in self.decision_cardinalities.values():
             actions_for_dec_list.append(list(range(card)))     # appending the range of actions each decion can make as a list
         final_row_actions = list(itertools.product(*actions_for_dec_list))     # creates entry for final row of decision array (cartesian product of actions_seq_list))
+        #final_row_actions = [list(item) for item in final_row_actions]
 
         decArray = defaultdict(dict)   # creates a nested dictionary
         for i in range(0, self.numDecisions+1):
-            for j in range(cols_in_decArray_row[i]):     #initialises entire decision/action array with empty tuples.
+            for j in range(cols_in_each_decArray_row[i]):     #initialises entire decision/action array with empty tuples.
                 decArray[i][j] = ()
 
-        for i in range(cols_in_decArray_row[-1]):
+        for i in range(cols_in_each_decArray_row[-1]):
             decArray[self.numDecisions][i] = final_row_actions[i]
 
         print(f"starting decision array for this MACID is {decArray}")   
 
-        decArray_rows = len(self.ordering) + 1
+        decArray_rows = len(self.acyclic_ordering) + 1
         for row in range(decArray_rows -2, -1,-1):
-            for col in range (0, cols_in_decArray_row[row]):
+            for col in range (0, len(decArray[row])):
+                print(f"made change")
                 decArray[row][col] = self._get_max_child(row, col, decArray, bp)
                 #print(f"after update for row {row} and col {col} numArray is {decArray}")
 
-        print(f"\nKM_NE = {dict(zip(self.reversed_ordering, decArray[0][0]))}")
+        print(f"\nKM_NE = {dict(zip(self.reversed_acyclic_ordering, decArray[0][0]))}")
         print(f"final decision array for this MACID is {decArray}")
      
+
+
+     # -------------Methods for reuturning all Pure Strategy subgame perfect NE ------------------------------------------------------------
+
+
+    def _instantiate_initial_tree(self):
+        #creates a tree (a nested dictionary) which we use to fill up with the subgame perfect NE of each sub-tree. 
+        action_space_list = list(itertools.accumulate(self.decision_cardinalities.values(), operator.mul))  #gives number of pure strategies for each decision node (ie taking into account prev decisions)
+        cols_in_each_tree_row = [1] + action_space_list
+
+        actions_for_dec_list = []
+        for card in self.decision_cardinalities.values():
+            actions_for_dec_list.append(list(range(card)))     # appending the range of actions each decion can make as a list
+        final_row_actions = list(itertools.product(*actions_for_dec_list))     # creates entry for final row of decision array (cartesian product of actions_seq_list))
+
+        tree_initial = defaultdict(dict)   # creates a nested dictionary
+        for i in range(0, self.numDecisions+1):
+            for j in range(cols_in_each_tree_row[i]):     #initialises entire decision/action array with empty tuples.
+                tree_initial[i][j] = ()
+
+        for i in range(cols_in_each_tree_row[-1]):
+            tree_initial[self.numDecisions][i] = final_row_actions[i]
+
+        trees_queue = []         # list of all possible decision trees
+        trees_queue.append(tree_initial)
+        return trees_queue
+
+
+    def _reduce_tree_once(self, queue, bp):
+        #updates one node in the tree - we apply this recursively to fill up all nodes in the tree
+        tree = queue.pop(0)
+        for row in range(len(tree) -2, -1,-1):
+            for col in range (0, len(tree[row])):
+                node_full = bool(tree[row][col])
+                if node_full:
+                    continue
+                else:    # if node is empty => update it by finding maximum children        
+                    queue_update = self.max_childen(tree, row, col, queue, bp)
+                    return queue_update
+
+    def _max_childen(self, tree, row, col, queue, bp):
+        # adds to the queue the tree(s) filled with the node updated with whichever child(ren) yield the most utilty for the agent making the decision.
+        l = []
+        dec_num_act = self.decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
+        for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering 
+            l.append(self._get_ev(tree[row+1][indx], row, bp))  
+        maxl = max(l)
+        max_indexes = [i for i, j in enumerate(l) if j == maxl]
+
+        for i in range(len(max_indexes)):
+            tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
+            print(f"updating with {tree[row+1][(col*dec_num_act)+max_indexes[i]]}")
+            new_tree = copy.deepcopy(tree)   
+            queue.append(new_tree)
+        return queue
+
+
+    def _get_ev(self, dec_list, row, bp):
+        # returns the expected value of that decision for the agent making the decision
+        dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
+        agent = self._get_dec_agent(dec)      #gets the agent making that decision
+        print(f"dec_list is {dec_list}")
+        print(f"type is {type(dec_list)}")
+
+        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+        ev = 0
+        for idx, prob in np.ndenumerate(h.values):
+                if prob != 0:
+                    ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+        return ev
+
+    def _stopping_condition(self, queue):
+        """stopping condition for recursive tree filling"""
+        tree = queue[0]
+        root_node_full = bool(tree[0][0])
+        if root_node_full:
+            return True
+        else:
+            return False
+
+    def _PSNE_finder(self):
+        """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        - first initialises the maid with uniform random conditional probability distributions at every decision.
+        - then fills up a queue with trees containing each solution
+        - the queue will contain only entry (tree) if there's only one pure strategy subgame perfect NE"""
+        self.random_instantiation_dec_nodes()
+        bp = BeliefPropagation(self)
+        queue = self._instantiate_initial_tree()
+        while not self._stopping_condition(queue):
+            queue = self.reduce_tree_once(queue, bp)
+        return queue
+
+    def get_all_PSNE(self):
+        """yields all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        !!!!still need to decide how the solutions are best displayed!!! """
+        solutions = self.PSNE_finder()
+        for tree in solutions:
+            #print(f"solution #{tree} is:")
+            print(tree)
+    
+
+ # -------------Methods for finding the MAID's strategic relevance graph and checking cyclicity ------------------------------------------------------------
 
     def _is_s_reachable(self, dec_pair):
         """ - dec_pair is a list of two deicsion nodes ie ['D1', 'D2']
@@ -213,11 +347,11 @@ class MACID(BayesianModel):
         con_nodes = [dec_pair[0]] + self.get_parents(dec_pair[0]) 
         if any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities]):
             self.remove_node('temp_par')
-            print("yes")
+            #print("yes")
             return True
         else:
             self.remove_node('temp_par')
-            print("no")
+            #print("no")
             return False
 
     def strategic_rel_graph(self):
@@ -254,39 +388,73 @@ class MACID(BayesianModel):
             return list(nx.topological_sort(rg))
         else:
             return 'The strategic relevance graph for this MACID is not acyclic and so \
-                        no topological ordering can be given'
+                        no topological ordering can be immediately given. Use .. method instead.'
 
 
-    def _get_color(self, node):
-    # This colour codes the decision, chance and utility nodes of each agent
-        for i in self.node_types:
-            if i == 'C':
-                if node in self.node_types['C']:
-                    return 'lightgray'
-            else:
-                if node in self.node_types[i]['D']:
-                    return 'lightblue'
-                if node in self.node_types[i]['U']:
-                    return 'yellow'
-
-    def draw(self):
-    # This draws the DAG for the CID
-        l = nx.kamada_kawai_layout(self)
-        colors = [self._get_color(node) for node in self.nodes]
-        nx.draw_networkx(self, pos=l, node_color=colors)
+#----------------cyclic relevance graph methods:--------------------------------------
 
 
 
+    def find_SCCs(self):
+        """
+        Uses Tarjan’s algorithm with Nuutila’s modifications
+        - complexity is linear in the number of edges and nodes """
+        rg = self.strategic_rel_graph()
+        l = list(nx.strongly_connected_components(rg))
+        print('B1W' in l[0])
+        # for idx, i in enumerate(l):
+        #     print(f"idx = {idx} and i = {i}")
+        print(f"lenght of l = {len(l)}")
+        
+        #print(list_SCCs)
+
+        
+        numSCCs = nx.number_strongly_connected_components(rg)
+        print(f"num = {numSCCs}")
+
+        
+    def _set_color_SCC(self, node, list_SCCs):
+        colors = cm.rainbow(np.linspace(0, 1, len(list_SCCs)))
+        for SCC in list_SCCs:         
+            idx = list_SCCs.index(SCC)
+            if node in SCC:
+                col = colors[idx]
+        return col   
+
+    def draw_SCCs(self):
+        # This shows the strategic relevance graph's SCCs
+        rg = self.strategic_rel_graph()
+        list_SCCs = list(nx.strongly_connected_components(rg)) 
+        layout = nx.kamada_kawai_layout(rg)
+        colors = [self._set_color_SCC(node, list_SCCs) for node in rg.nodes]
+        nx.draw_networkx(rg, pos=layout, node_color=colors) 
+        plt.figure(3)
+        plt.draw()
+
+    def component_graph(self):
+        # draws and returns the component graph whose nodes are the maximal SCCs of the relevance graph
+        # the component graph will always be acyclic. Therefore, we can return a topological ordering.
+        # comp_graph.graph['mapping'] returns a dictionary matching the original nodes to the nodes in the new component (condensation) graph
+        rg = self.strategic_rel_graph()
+        comp_graph = nx.condensation(rg)
+        nx.draw_networkx(comp_graph, with_labels=True)
+        plt.figure(4)
+        plt.draw()
+        return comp_graph
+
+    def get_cyclic_topological_ordering(self):
+        # first checks whether the strategic relevance graph is cyclic
+        # if it's acyclic 
+        # returns a topological ordering (which might not be unique) of the decision nodes
+        rg = self.strategic_rel_graph()
+        if self.strategically_acyclic():
+            return "Relevance graph is acyclic"
+        else:
+            comp_graph = self.component_graph()
+            return list(nx.topological_sort(comp_graph))
 
 
 
-# def _get_color(self, node):
-    # # This colour codes the decision, chance and utility nodes of each agent
-    #     for i in self.node_types:
-    #         if node in self.node_types[i]['D']:
-    #             return 'lightblue'
-    #         if node in self.node_types[i]['U']:   ## FIX!!!
-    #             return 'yellow'
-    #         if node in self.node_types[i]['C']:
-    #             return 'lightgray'
+   
+
 
