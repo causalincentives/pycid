@@ -18,7 +18,7 @@ class Information:
         try:
             assert isinstance(model, BayesianModel)
         except AssertionError:
-            raise AssertionError("Observation instantiation's first argument must be a BayesianModel")
+            raise AssertionError("information instantiation's first argument must be a BayesianModel")
 
         self.dag = model
         self.graph = self.dag.to_directed()
@@ -263,7 +263,7 @@ class Paths:
         self.dag = model
 
     def _find_dirpath_recurse(self, path: List[str], finish: str, all_paths):
-
+        
         if path[-1] == finish:
             return path
         else:

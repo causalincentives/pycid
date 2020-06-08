@@ -35,7 +35,7 @@ class MACID(BayesianModel):
         self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))        
         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))        
-   
+
         self.acyclic_ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
         self.reversed_acyclic_ordering = list(reversed(self.acyclic_ordering))     
         self.numDecisions = len(self.acyclic_ordering)

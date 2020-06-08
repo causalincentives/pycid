@@ -351,13 +351,116 @@ print("loaded examples")
 
 
 
-
-
-
-
-
-
-
-
 # %%
 
+def basic_reason_agent1():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('D1', 'U1')
+        ],
+        {1: {'D': ['D1'],'U': ['U1']},'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+def basic_reason_agent2():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D2', 'U1')
+        ],
+        {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': []}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+def basic_reason_agent3():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D1', 'U2'),
+        ('D2', 'U1'),
+        ('D2', 'U2')
+        ],
+        {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+def basic_reason_agent4():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('C', 'D1'),
+        ('C', 'U1'),
+        ('C', 'U2'),
+        ('D1', 'D2'),
+        ('D2', 'U1'),
+        ('D2', 'U2')
+        ],
+        {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['C']},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+def basic_reason_agent5():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('C', 'E'),
+        ('C', 'U2'),
+        ('D1', 'E'),
+        ('E', 'D2'),
+        ('D2', 'U1'),
+        ('D2', 'U2'),
+        ],
+        {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['C', 'E']},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+
+def simplify_MAID():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('J', 'A'),
+        ('J', 'C'),
+        ('J', 'U_B'),
+        ('A', 'B'),
+        ('C', 'B'),
+        ('C', 'U_C'),
+        ('B', 'U_C'),
+        ('B', 'U_A'),
+        ('B', 'U_B'),
+        ],
+        {1: {'D': ['A'],'U': ['U_A']}, 2: {'D': ['B'], 'U': ['U_B']}, 3: {'D': ['C'], 'U': ['U_C']}, 'C': ['J']},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid
+
+def two_stage_PA():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('r0', 'r1'),
+        ('r0', 'P1'),
+        ('type', 'U_D1'),
+        ('type', 'D1'),
+        ('type', 'U_D2'),
+        ('type', 'D2'),
+        ('D1', 'U_D1'),
+        ('D1', 'U_P1'),
+        ('D1', 'r1'),
+        ('P1', 'D1'),
+        ('P1', 'U_D1'),
+        ('P1', 'U_P1'),
+        ('P1', 'r1'),
+        ('r1', 'P2'),
+        ('P2', 'D2'),
+        ('P2', 'U_D2'),
+        ('P2', 'U_P2'),   
+        ('D2', 'U_D2'),
+        ('D2', 'U_P2'),
+        
+        ],
+        {1: {'D': ['P1', 'P2'],'U': ['U_P1', 'U_P2']}, 2: {'D': ['D1', 'D2'], 'U': ['U_D1', 'U_D2']}, 'C': ['type', 'r0', 'r1']},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     
+
+    return macid

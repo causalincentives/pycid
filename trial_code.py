@@ -1,19 +1,35 @@
 #%%
 import numpy as np
 from pgmpy.models import BayesianModel
+from pgmpy.base import DAG
 from pgmpy.factors.discrete import TabularCPD
 import networkx as nx
 from cpd import NullCPD
-from examples2 import basic2agent_3
+from examples2 import basic_reason_agent1, basic_reason_agent2, basic_reason_agent3, basic_reason_agent4, basic_reason_agent5, two_stage_PA
 import matplotlib.pyplot as plt
 from incentives import Information, Response, Control, Influence
-from pgmpy.inference import BeliefPropagation
 
+from pgmpy.inference import BeliefPropagation
+from pgmpy.inference.CausalInference import CausalInference
 
 import itertools
 from collections import defaultdict
 import operator
 import matplotlib.cm as cm
+
+from functools import lru_cache
+
+
+
+#from reasoning import Reasoning
+
+
+
+from typing import List
+from collections import Iterable
+
+import copy
+
 
 
 
@@ -33,55 +49,27 @@ def main():
     # plt.figure(1)
     # plt.show()
 
-    # #m.strategically_acyclic()
-    # m.strategic_rel_graph()
-    # print(m.get_acyclic_topological_ordering())
-    # m.get_KM_NE()
-
-    
-    
-    m = basic2agent_3()
-    m.draw()
-    plt.figure(1)
-    plt.show()
-
-    m.get_all_PSNE()
-    m.get_acyclic_topological_ordering()
-    m.ordering
-    #m.draw_SCCs()
-    #m.component_graph()
-    #m.get_KM_NE()
-
-
-    #m.get_all_PSNE()
-    #m.get_KM_NE2()
-
-    #m.get_KM_NE3()
-
-    #m.draw_strategic_rel_graph()
-    #m.draw_SCCs()
-    #m.find_SCCs()
-    #m._set_color_SCC()
-    #print(len(m.edges()))
-
-    #m._is_s_reachable(['B2E', 'B3E'])
 
 
  
+    model = basic_reason_agent3()
+    model.draw()
+    plt.figure(1)
+    plt.show()
+    
 
+   
 
-
-
-
-    print("finished running")
-
-
-
+    
 
 #%%
 
 if __name__ == '__main__':
     main()
+
+
+
+
 
 
 
