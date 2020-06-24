@@ -435,8 +435,8 @@ def umbrella():
         ('UM', 'A'),
         ],
         {1: {'D': ['UM'], 'U': ['A']}, 'C': ['W', 'F']},     #defines the decisions, chance nodes and utility nodes for each agent
-        {'UM': 2}, #defines the decision cardinalities
-        )     #defines utilities 
+        
+        )      
 
 
     cpd_W = TabularCPD('W',2,np.array([[.6],[.4]]))
@@ -473,9 +473,8 @@ def c2d():
         ('D2', 'U2'),
         ('C1', 'D2'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['C1']},     #defines the decisions, chance nodes and utility nodes for each agent
-         
-        {0:np.arange(6), 1:-np.arange(6)})     #defines utility ranges 
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['C1']},     #defines the decisions, chance nodes and utility nodes for each agent   
+        {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utility ranges 
 
 
     cpd_C1 = TabularCPD('C1',2,np.array([[.5],[.5]]))
@@ -513,8 +512,8 @@ def signal():
         ('D2', 'U2'),
         ],
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['X']},     #defines the decisions, chance nodes and utility nodes for each agent
-         #defines the decision cardinalities
-        )     #defines utilities 
+        
+        {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utilities 
 
 
     cpd_X = TabularCPD('X',2,np.array([[.5],[.5]]))

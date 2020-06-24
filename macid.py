@@ -920,21 +920,45 @@ class MACID(BayesianModel):
         return queue
 
 
+    # def _get_ev(self, dec_list:List[int], row: int, bp):
+    #     # returns the expected value of that decision for the agent making the decision
+    #     dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
+    #     agent = self._get_dec_agent(dec)      #gets the agent making that decision
+    #     utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+
+    #     h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+    #     ev = 0
+    #     print(f"h.values = {h.values}")
+    #     for idx, prob in np.ndenumerate(h.values):
+    #         print(f"idx = {idx}, prob = {prob}")
+    #         print(f"agent = {agent}")
+    #         if prob != 0:
+    #             ev += prob*self.utility_ranges[agent][idx[agent]]     
+
+    #                 #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+    #     return ev
+
     def _get_ev(self, dec_list:List[int], row: int, bp):
         # returns the expected value of that decision for the agent making the decision
         dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
         agent = self._get_dec_agent(dec)      #gets the agent making that decision
+        utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
 
-        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+        h = bp.query(variables=utils, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
         ev = 0
-        print(f"h.values = {h.values}")
         for idx, prob in np.ndenumerate(h.values):
-            print(f"idx = {idx}, prob = {prob}")
-            if prob != 0:
-                ev += prob*self.utility_ranges[agent][idx[agent]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+            
+            for i in range(len(utils)): # account for each agent having multiple utilty nodes
+                if prob != 0:
+                    ev += prob*self.utility_ranges[utils[i]][idx[i]]     
 
-                    #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+                        #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
         return ev
+
+
+
+
+
 
     def _stopping_condition(self, queue):
         """stopping condition for recursive tree filling"""
@@ -1152,11 +1176,30 @@ class MACID(BayesianModel):
         evidences = dict(zip(node_order, node_selection))
         leaf_utilities = []
         for agent in range(len(self.agents)):
-            h = bp.query(variables=[self.all_utility_nodes[agent]], evidence=evidences)
+            utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+            h = bp.query(variables=utils, evidence=evidences)
             ev = 0
             for idx, prob in np.ndenumerate(h.values):
-                if prob != 0:
-                    ev += prob*self.utility_ranges[agent][idx[0]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+                for i in range(len(utils)):
+                    if prob != 0:
+                        ev += prob*self.utility_ranges[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+            leaf_utilities.append(ev)
+        return leaf_utilities
+
+    def _get_leaf_utilities(self, node_selection, node_order, bp):
+        # finds leaf utilities by querying (doing propabalistic inference) on the BN described by the MACID
+        evidences = dict(zip(node_order, node_selection))
+        leaf_utilities = []
+
+        for agent in range(len(self.agents)):
+            utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+
+            h = bp.query(variables=utils, evidence=evidences)
+            ev = 0
+            for idx, prob in np.ndenumerate(h.values):
+                for i in range(len(utils)):  #accounts for each agent potentially having multiple utility nodes
+                    if prob != 0:
+                        ev += prob*self.utility_ranges[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
             leaf_utilities.append(ev)
         return leaf_utilities
 
@@ -1215,7 +1258,7 @@ class MACID(BayesianModel):
         # writes EFG to a "macid_game.efg" file for GAMBIT. Can use GAMBIT's NE finders + GAMBIT's GUI for investigating game properties.
         cardinalities = map(self.get_cardinality, macid_node_order)
         node_cardinalities = dict(zip(macid_node_order, cardinalities))
-        f = open("macid_game.efg", "w")
+        f = open("macid_game1.efg", "w")
 
         f.write("EFG 2 R \"Game\" { ")    #creates the necessary ".efg" header
         for i in range(len(self.agents)):
