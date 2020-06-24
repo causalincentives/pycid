@@ -16,11 +16,11 @@ from collections import defaultdict
 import operator
 
 
-import gambit
+
+#import gambit
 import subprocess
+
 from collections import deque
-
-
 
 
 
@@ -51,7 +51,9 @@ def main():
     # m2.random_instantiation_dec_nodes()
     # m2.MACID_to_Gambit_file()
 
-
+    m = basic2agent_3()
+    m.draw()
+    m.get_all_PSNE()
    
 
     
