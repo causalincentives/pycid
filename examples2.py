@@ -110,39 +110,39 @@ def basic2agent_2():
         ('D2', 'U1'),
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-        {'U1' :list(range(5)), 'U2': list(range(5))} 
+        {'U1' :list(range(6)), 'U2': list(range(6))} 
         )
         
         
-        # {1:[2,3,1,3], 2:[4,1,2,3]})     #defines utilities 
 
     
     cpd_D1 = NullCPD('D1', 2)
     cpd_D2 = NullCPD('D2', 2)
 
-    cpd_U1 = TabularCPD('U1', 5, np.array([[0, 0, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 1], [0, 0, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
-    cpd_U2 = TabularCPD('U2', 5, np.array([[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 0, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
+    cpd_U1 = TabularCPD('U1', 6, np.array([[0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 0], [1, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
+    cpd_U2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
 
     macid.add_cpds(cpd_D1, cpd_D2, cpd_U1, cpd_U2)
 
 
 
 
-    for dec in macid.all_decision_nodes:
-        cpd_d = NullCPD(dec, 2)
-        macid.add_cpds(cpd_d)
+    # for dec in macid.all_decision_nodes:
+    #     cpd_d = NullCPD(dec, 2)
+    #     macid.add_cpds(cpd_d)
 
-    for util in macid.all_utility_nodes:
-        #num_unique_utilities = functools.reduce(operator.mul, macid.decision_cardinalities.values())   # I think need to include chance nodes in this too!
-        parents = macid.get_parents(util)
-        parents_card = [macid.get_cardinality(par) for par in parents]
-        num_unique_utilities = functools.reduce(operator.mul, parents_card)   # think about this when defining utility dictionary to feed in.
-        cpd_u = TabularCPD(variable=util, variable_card=num_unique_utilities,
-                            values=np.eye(num_unique_utilities),
-                            evidence=parents,
-                            evidence_card=parents_card
-                            )
-        macid.add_cpds(cpd_u)
+    # for util in macid.all_utility_nodes:
+    #     #num_unique_utilities = functools.reduce(operator.mul, macid.decision_cardinalities.values())   # I think need to include chance nodes in this too!
+    #     parents = macid.get_parents(util)
+    #     parents_card = [macid.get_cardinality(par) for par in parents]
+    #     num_unique_utilities = functools.reduce(operator.mul, parents_card)   # think about this when defining utility dictionary to feed in.
+    #     cpd_u = TabularCPD(variable=util, variable_card=num_unique_utilities,
+    #                         values=np.eye(num_unique_utilities),
+    #                         evidence=parents,
+    #                         evidence_card=parents_card
+    #                         )
+    #     macid.add_cpds(cpd_u)
+
     # cpd_u1 = TabularCPD(variable='U1', variable_card=4,
     #                     values=np.eye(4),
     #                     evidence=['D1', 'D2'], evidence_card=[2, 2])
@@ -491,6 +491,26 @@ def c2d():
     return macid
 
 
+def sequential():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D1', 'D2'),
+        ('D2', 'U1'),
+        ('D2', 'U2'),
+        ],
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': []},     #defines the decisions, chance nodes and utility nodes for each agent   
+       )     #defines utility ranges 
+
+
+    
+
+
+
+    return macid
+
+
 
 
 print("loaded examples")
@@ -503,7 +523,7 @@ def signal():
     from pgmpy.factors.discrete.CPD import TabularCPD
     macid = MACID([
         ('X', 'D1'),
-        ('X', 'U2'),
+        ('X', 'U2'),    
         ('X', 'U1'),
         ('D1', 'U2'),
         ('D1', 'U1'),
@@ -511,27 +531,127 @@ def signal():
         ('D2', 'U1'),
         ('D2', 'U2'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['X']},     #defines the decisions, chance nodes and utility nodes for each agent
-        
-        {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utilities 
-
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': ['X']},             
+        {'U1':np.arange(6), 'U2':-np.arange(6)})     
 
     cpd_X = TabularCPD('X',2,np.array([[.5],[.5]]))
     cpd_D1 = NullCPD('D1', 2)
     cpd_D2 = NullCPD('D1', 2)
-    cpd_U1 = TabularCPD('U1', 6, np.array([[0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 1, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0]]), evidence=['X', 'D1', 'D2'], evidence_card=[2,2,2])
-    cpd_U2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 1, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0]]), evidence=['X', 'D1', 'D2'], evidence_card=[2,2,2])
 
+    U1_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0], 
+                            [0, 0, 0, 1, 0, 0, 1, 0], 
+                            [0, 1, 0, 0, 0, 0, 0, 0], 
+                            [0, 0, 1, 0, 0, 1, 0, 0], 
+                            [0, 0, 0, 0, 0, 0, 0, 1], 
+                            [1, 0, 0, 0, 0, 0, 0, 0]])
+
+    U2_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0], 
+                            [0, 0, 0, 1, 0, 0, 1, 0],
+                            [0, 1, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 1, 0, 0, 1, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 1],
+                            [1, 0, 0, 0, 0, 0, 0, 0]])
+
+    cpd_U1 = TabularCPD('U1', 6, U1_cpd_array, evidence=['X', 'D1', 'D2'], evidence_card=[2,2,2])
+    cpd_U2 = TabularCPD('U2', 6, U2_cpd_array, evidence=['X', 'D1', 'D2'], evidence_card=[2,2,2])
 
     macid.add_cpds(cpd_X, cpd_D1, cpd_D2, cpd_U1, cpd_U2)
-
-
-
 
     return macid
 
 
 # %%
+
+
+def triage():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    macid = MACID([
+        
+        ('H1', 'D1'),  
+        ('H1', 'U1'),
+        
+        ('H2', 'D2'),  
+        ('H2', 'U2'),
+
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D1', 'D3'),
+        ('D1', 'D4'),
+        ('D1', 'U3'),
+        ('D1', 'U4'),
+
+        ('D2', 'U1'),
+        ('D2', 'U2'),
+        ('D2', 'D4'),
+        ('D2', 'D3'),
+        ('D2', 'U3'),
+        ('D2', 'U4'),
+
+        ('H3', 'D3'),  
+        ('H3', 'U3'),
+        
+        ('H4', 'D4'),  
+        ('H4', 'U4'),
+
+        ('D3', 'U3'),
+        ('D3', 'U4'),
+        ('D3', 'U1'),
+        ('D3', 'U2'),
+        ('D4', 'U3'),
+        ('D4', 'U4'),  
+        ('D4', 'U1'),
+        ('D4', 'U2'),
+
+
+
+
+        ('D3', 'U5'),
+        ('D3', 'U6'),
+        ('D4', 'U5'),
+        ('D4', 'U6'),
+
+        ('D1', 'U5'),
+        ('D1', 'U6'),
+        ('D2', 'U5'),
+        ('D2', 'U6'),
+        
+        ('H5', 'D5'),  
+        ('H5', 'U5'),
+        
+        ('H6', 'D6'),  
+        ('H6', 'U6'),
+
+        ('D1', 'D5'),
+        ('D1', 'D6'),
+        ('D2', 'D5'),
+        ('D2', 'D6'),
+        
+        ('D3', 'D5'),
+        ('D3', 'D6'),
+        ('D4', 'D5'),
+        ('D4', 'D6'),
+
+
+        ('D5', 'U3'),
+        ('D5', 'U4'),
+        ('D5', 'U1'),
+        ('D5', 'U2'),
+        ('D5', 'U5'),
+        ('D5', 'U6'),
+        ('D6', 'U3'),
+        ('D6', 'U4'),  
+        ('D6', 'U1'),
+        ('D6', 'U2'),
+        ('D6', 'U5'),
+        ('D6', 'U6'),
+
+    
+        ],
+        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 3: {'D': ['D3'], 'U': ['U3']}, 4: {'D': ['D4'], 'U': ['U4']}, 5: {'D': ['D5'], 'U': ['U5']}, 6: {'D': ['D6'], 'U': ['U6']}, 'C': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']},     #defines the decisions, chance nodes and utility nodes for each agent
+        )     #defines utilities 
+
+    return macid
+
 
 
 

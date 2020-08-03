@@ -17,33 +17,45 @@ from cpd import NullCPD
 import matplotlib.pyplot as plt
 import operator
 from collections import defaultdict
+<<<<<<< HEAD
 from collections import deque
 import copy
 import matplotlib.cm as cm
 from itertools import compress
 
+=======
+import copy
+
+import matplotlib.cm as cm
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
 
 
 class MACID(BayesianModel):
-    def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_ranges:Dict=None ):
+    def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_domains:Dict=None ):
         super(MACID, self).__init__(ebunch=ebunch)
         self.node_types = node_types
-        self.utility_ranges = utility_ranges
-        self.utility_nodes = dict((i, node_types[i]['U']) for i in node_types if i != 'C')     # this gives a dictionary matching each agent with their decision and utility nodes
-        self.decision_nodes = dict((i, node_types[i]['D']) for i in node_types if i != 'C')     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
+        self.utility_domains = utility_domains
+        self.utility_nodes = {i:node_types[i]['U'] for i in node_types if i != 'C'}     # this gives a dictionary matching each agent with their decision and utility nodes
+        self.decision_nodes = {i:node_types[i]['D'] for i in node_types if i != 'C'}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}    
         self.chance_nodes = node_types['C']     # list of chance nodes
         self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))        
         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))        
-   
+<<<<<<< HEAD
+        self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))     
+        self.numDecisions = len(self.reversed_acyclic_ordering)  
+=======
+
         self.acyclic_ordering = self.get_acyclic_topological_ordering()       # ordering in which you should consider the decisions
         self.reversed_acyclic_ordering = list(reversed(self.acyclic_ordering))     
         self.numDecisions = len(self.acyclic_ordering)
 
 
-     
+        print(f"This example has {len(self.agents)} agents")
+        print("loaded")
         
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
     def copy(self):
         model_copy = MACID(node_types=self.node_types)
@@ -113,10 +125,17 @@ class MACID(BayesianModel):
         return True
 
 
+<<<<<<< HEAD
 # --------------   methods for plotting MACID ----------------
 
     def _get_color(self, node: str):
+        """ 
+        Colour codes the decision, chance and utility nodes of each agent
+        """
+=======
+    def _get_color(self, node):
     # This colour codes the decision, chance and utility nodes of each agent
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         for i in self.node_types:
             if i == 'C':
                 if node in self.node_types['C']:
@@ -127,21 +146,32 @@ class MACID(BayesianModel):
                 if node in self.node_types[i]['U']:
                     return 'yellow'
 
+<<<<<<< HEAD
 
     def draw(self):
-    # This draws the DAG for the MACID
+        """
+        This draws the DAG for the MACID
+        """
+=======
+    def draw(self):
+    # This draws the DAG for the CID
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         l = nx.kamada_kawai_layout(self)
         colors = [self._get_color(node) for node in self.nodes]
         nx.draw_networkx(self, pos=l, node_color=colors)
 
+<<<<<<< HEAD
 
 # ---------- methods setting up MACID for probabilistic inference ------
 
 
+=======
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
     def random_instantiation_dec_nodes(self):
-        #imputes random uniform policy to all decision nodes (NullCPDs) - arbitrary fully mixed strategy profile for MACID   #perhaps add something checking whether it's "isinstance(cpd, NullCPD)" is true
-        
+        """
+        imputes random uniform policy to all decision nodes (NullCPDs) - arbitrary fully mixed strategy profile for MACID   #perhaps add something checking whether it's "isinstance(cpd, NullCPD)" is true
+        """
         for dec in self.all_decision_nodes:
             dec_card = self.get_cardinality(dec)
             parents = self.get_parents(dec)
@@ -151,6 +181,7 @@ class MACID(BayesianModel):
                             values=table, evidence=parents,
                             evidence_card=parents_card
                             )
+            print(uniform_cpd)
             self.add_cpds(uniform_cpd)
     
         print("added decision probs --")
@@ -178,7 +209,9 @@ class MACID(BayesianModel):
             return all_paths
 
     def find_all_dir_path(self, start, finish, revisedmacid=None):
-        # finds all direct paths from start node to end node that exist in the MAID
+        """
+        finds all direct paths from start node to end node that exist in the MAID
+        """
         all_paths = []
         if revisedmacid == None:
             return self._find_dirpath_recurse([start], finish, all_paths)
@@ -365,18 +398,25 @@ class MACID(BayesianModel):
 # ----------- methods for finding MACID properties -----------
 
     def _get_dec_agent(self, dec: str):
-        # finds which agent this decision node belongs to
+        """ 
+        finds which agent a decision node belongs to
+        """
         for agent, decisions in self.decision_nodes.items():
             if dec in decisions:
                 return agent
 
     def _get_util_agent(self, util: str):
-        # finds which agent this utility node belongs to
+        """
+        finds which agent a utility node belongs to
+        """
         for agent, utilities in self.utility_nodes.items():
             if util in utilities:
                 return agent
 
     def get_node_type(self, node):
+        """
+        finds a node's type
+        """
         if node in self.chance_nodes:
             return 'c'
         elif node in self.all_decision_nodes:
@@ -404,8 +444,10 @@ class MACID(BayesianModel):
 
     """
 
-    def _inf_node(self, node: str, agent_dec:List[str], agent_utils:List[str]):
-    # returns True if a node faces an information incentive
+    def has_info_inc(self, node: str, agent_dec:List[str], agent_utils:List[str]):
+        """
+        returns True if a node faces an information incentive
+        """
         
         # #condition (i)
         if node in agent_dec or node in agent_utils:
@@ -428,7 +470,9 @@ class MACID(BayesianModel):
             
     
     def all_inf_inc_nodes(self, agent):
-        #returns all nodes which this agent has an information incentive for according to the single agent information incentive graphical criterion
+        """
+        returns all nodes which this agent has an information incentive for according to the single agent information incentive graphical criterion
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
 
@@ -439,7 +483,7 @@ class MACID(BayesianModel):
             return "This incentive currently only applies to the single decision case"
 
         else:
-            return [x for x in list(self.nodes) if self._inf_node(x, agent_dec, agent_utils)]
+            return [x for x in list(self.nodes) if self.has_info_inc(x, agent_dec, agent_utils)]
     ##
 
 
@@ -453,8 +497,10 @@ class MACID(BayesianModel):
     (iii) W is d-connected to U | Fa_D \ {W}
     """
 
-    def all_res_inc_nodes(self, agent):
-        #returns all nodes which this agent has a response incentive for according to the single agent information incentive graphical criterion
+    def all_response_inc_nodes(self, agent):
+        """
+        returns all nodes which this agent has a response incentive for according to the single agent information incentive graphical criterion
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
@@ -479,6 +525,16 @@ class MACID(BayesianModel):
 
         return res_list
 
+    def has_response_node(self, node):
+        """
+        returns True if a node faces a response incentive
+        """
+        if node in self.all_response_inc_nodes():
+            return True
+        else:
+            return False
+
+
 # Control Incentive
     """Control incentive 
     Criterion for a control incentive on X: 
@@ -499,20 +555,28 @@ class MACID(BayesianModel):
     A feasible control incentive exists iff there exists a directed path D --> X --> U  
     """
 
-    def trim(self, agent_dec:List[str], agent_utils:List[str]):
-        # returns the DAG which has been trimmed of all irrelevant information links.
+    def dreduction(self, agent_dec:List[str], agent_utils:List[str]):
+        """
+        returns the DAG which has been trimmed of all irrelevant information links.
+        """
+        assert (len(self.all_decision_nodes) ==1) ,"The theory currently only works for the single-decision case!"  
+        
         trimmed_graph = self.copy()
         d_par = self.get_parents(*agent_dec)
-        no_info_bool = [not self._inf_node(n, agent_dec, agent_utils) for n in d_par]
-        d_par_no_inf = list(compress(d_par, no_info_bool))
+        # no_info_bool = [not self.has_info_inc(n, agent_dec, agent_utils) for n in d_par]
+        # d_par_no_inf = list(compress(d_par, no_info_bool))
 
-        for node in d_par_no_inf:
+        nonrequisite_nodes = [n for n in d_par if not self.has_info_inc(n, agent_dec, agent_utils)]
+
+        for node in nonrequisite_nodes:
             trimmed_graph.remove_edge(node, *agent_dec)
         return trimmed_graph
 
     
-    def con_node(self, node: str, agent):
-        # returns True if a node faces a control incentive or "positive value of control"
+    def has_control_inc(self, node: str, agent):
+        """
+        returns True if a node faces a control incentive or "positive value of control"
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
@@ -525,7 +589,7 @@ class MACID(BayesianModel):
         if [node] == agent_dec:  #condition (i)
             return False
 
-        trimmed_MACID = self.trim(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
         
         for util in agent_utils:       
             if node == util or util in nx.descendants(trimmed_MACID, node): # condition (ii)
@@ -534,14 +598,16 @@ class MACID(BayesianModel):
         return False
 
 
-    def indir_con_node(self, node, agent): #!!! need to update to this to reflect new def in UndAgInc paper (backdoor)
-        # returns True if a node faces an indirect control incentive 
+    def has_indir_control_inc(self, node, agent):
+        """
+        returns True if a node faces an indirect control incentive 
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
-        trimmed_MACID = self.trim(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
         for util in agent_utils:
-            if self.con_node(node, agent):
+            if self.has_control_inc(node, agent):
 
                 Fa_d = self.get_parents(*agent_dec) + agent_dec
                 con_nodes = [i for i in Fa_d if i != node]
@@ -552,14 +618,16 @@ class MACID(BayesianModel):
         
         return False
 
-    def dir_con_node(self, node, agent):
-        # returns True if a node faces a direct control incentive
+    def has_dir_control_inc(self, node, agent):
+        """
+        returns True if a node faces a direct control incentive
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
-        trimmed_MACID = self.trim(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
         for util in agent_utils:
-            if self.con_node(node, agent):
+            if self.has_control_inc(node, agent):
                 x_u_paths = self.find_all_dir_path(node, util, trimmed_MACID)
                 for path in x_u_paths:
                     if set(agent_dec).isdisjoint(set(path)):
@@ -567,8 +635,10 @@ class MACID(BayesianModel):
         return False
 
 
-    def feasible_con_node(self, node, agent):
-        # returns True if a node faces a feasible control incentive
+    def has_feasible_control_inc(self, node, agent):
+        """
+        returns True if a node faces a feasible control incentive
+        """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
 
@@ -582,23 +652,22 @@ class MACID(BayesianModel):
         return False
 
                  
-
-
     def all_con_inc_nodes(self, agent):
 
-        return [x for x in list(self.nodes) if self.con_node(x, agent)]
+        return [x for x in list(self.nodes) if self.has_control_inc(x, agent)]
 
     def all_dir_con_inc_nodes(self, agent):
       
-        return [x for x in list(self.nodes) if self.dir_con_node(x, agent)]
+        return [x for x in list(self.nodes) if self.has_dir_control_inc(x, agent)]
 
     def all_indir_con_inc_nodes(self, agent):
             
-        return [x for x in list(self.nodes) if self.indir_con_node(x, agent)]
+        return [x for x in list(self.nodes) if self.has_indir_control_inc(x, agent)]
 
+<<<<<<< HEAD
     def all_feasible_con_inc_nodes(self, agent):
 
-        return [x for x in list(self.nodes) if self.feasible_con_node(x, agent)]
+        return [x for x in list(self.nodes) if self.has_feasible_control_inc(x, agent)]
 
 
 
@@ -607,8 +676,6 @@ class MACID(BayesianModel):
     def _directed_decision_free_path(self, start: str, finish: str):
         """
         checks to see if a directed decision free path exists
-
-        
         """
         start_finish_paths = self.find_all_dir_path(start, finish)
         dec_free_path_exists = any(set(self.all_decision_nodes).isdisjoint(set(path[1:-1])) for path in start_finish_paths)  # ignore path's start and finish node
@@ -884,7 +951,7 @@ class MACID(BayesianModel):
         for i in range(cols_in_each_tree_row[-1]):
             tree_initial[self.numDecisions][i] = final_row_actions[i]
 
-        trees_queue = []         # list of all possible decision trees
+        trees_queue = []         # list of all possible decision trees 
         trees_queue.append(tree_initial)
         return trees_queue
 
@@ -910,6 +977,19 @@ class MACID(BayesianModel):
         dec_num_act = decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
         for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering 
             l.append(self._get_ev(tree[row+1][indx], row, bp))  
+=======
+
+# -------------Methods for reuturning Koller & Milch NE (alg6.1) ------------------------------------------------------------
+
+
+    def _get_max_child(self, row, col, decArray, bp):
+        # selects the child (ie the action at that dection) which will give maximum EV for the agent making that decision.
+        # updates the decision-array with the list of optimal descendent decisions.
+        l = []
+        dec_num_act = self.decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
+        for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # *dec_num_act and +dec_num_act to iterate over actions that agent is considering 
+            l.append(self._get_ev(decArray[row+1][indx], row, bp))  
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         maxl = max(l)
         max_indexes = [i for i, j in enumerate(l) if j == maxl]
 
@@ -920,6 +1000,7 @@ class MACID(BayesianModel):
         return queue
 
 
+<<<<<<< HEAD
     # def _get_ev(self, dec_list:List[int], row: int, bp):
     #     # returns the expected value of that decision for the agent making the decision
     #     dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
@@ -933,29 +1014,42 @@ class MACID(BayesianModel):
     #         print(f"idx = {idx}, prob = {prob}")
     #         print(f"agent = {agent}")
     #         if prob != 0:
-    #             ev += prob*self.utility_ranges[agent][idx[agent]]     
+    #             ev += prob*self.utility_domains[agent][idx[agent]]     
 
     #                 #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
     #     return ev
 
     def _get_ev(self, dec_list:List[int], row: int, bp):
-        # returns the expected value of that decision for the agent making the decision
+        #returns the expected value of that decision for the agent making the decision
         dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
         agent = self._get_dec_agent(dec)      #gets the agent making that decision
         utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
 
         h = bp.query(variables=utils, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+=======
+    def _get_ev(self, dec_list, row, bp):
+        # returns the expected value of that decision for the agent making the decision
+        dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
+        agent = self._get_dec_agent(dec)      #gets the agent making that decision
+        # self.random_instantiation_dec_nodes()
+        # bp = BeliefPropagation(self)
+        print(f"dec_list is {dec_list}")
+        print(f"type is {type(dec_list)}")
+
+        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         ev = 0
         for idx, prob in np.ndenumerate(h.values):
             
             for i in range(len(utils)): # account for each agent having multiple utilty nodes
                 if prob != 0:
-                    ev += prob*self.utility_ranges[utils[i]][idx[i]]     
+                    ev += prob*self.utility_domains[utils[i]][idx[i]]     
 
                         #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
         return ev
 
 
+<<<<<<< HEAD
 
 
 
@@ -968,17 +1062,37 @@ class MACID(BayesianModel):
             return True
         else:
             return False
+=======
+        action_space_list = list(itertools.accumulate(self.decision_cardinalities.values(), operator.mul))  #gives number of pure strategies for each decision node (ie taking into account prev decisions)
+        cols_in_each_decArray_row = [1] + action_space_list
+
+
+        actions_for_dec_list = []
+        for card in self.decision_cardinalities.values():
+            actions_for_dec_list.append(list(range(card)))     # appending the range of actions each decion can make as a list
+        final_row_actions = list(itertools.product(*actions_for_dec_list))     # creates entry for final row of decision array (cartesian product of actions_seq_list))
+        #final_row_actions = [list(item) for item in final_row_actions]
+
+        decArray = defaultdict(dict)   # creates a nested dictionary
+        for i in range(0, self.numDecisions+1):
+            for j in range(cols_in_each_decArray_row[i]):     #initialises entire decision/action array with empty tuples.
+                decArray[i][j] = ()
+
+        for i in range(cols_in_each_decArray_row[-1]):
+            decArray[self.numDecisions][i] = final_row_actions[i]
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
     def _PSNE_finder(self):
         """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
         - first initialises the maid with uniform random conditional probability distributions at every decision.
         - then fills up a queue with trees containing each solution
-        - the queue will contain only entry (tree) if there's only one pure strategy subgame perfect NE"""
+        - the queue will contain only one entry (tree) if there's only one pure strategy subgame perfect NE"""
         self.random_instantiation_dec_nodes()
         print(self.get_cpds('U1'))
         print(self.get_cpds('U2'))
-        print(self.get_cpds('U3'))
+        
 
+<<<<<<< HEAD
 
         bp = BeliefPropagation(self)
         queue = self._instantiate_initial_tree()
@@ -1002,6 +1116,124 @@ class MACID(BayesianModel):
     def _is_s_reachable(self, dec_pair:List[str]):
         """ - dec_pair is a list of two deicsion nodes ie ['D1', 'D2']
             - this method determines whether 'D2' is s-reachable from 'D1' (Koller and Milch 2001)
+=======
+        decArray_rows = len(self.acyclic_ordering) + 1
+        for row in range(decArray_rows -2, -1,-1):
+            for col in range (0, len(decArray[row])):
+                print(f"made change")
+                decArray[row][col] = self._get_max_child(row, col, decArray, bp)
+                #print(f"after update for row {row} and col {col} numArray is {decArray}")
+
+        print(f"\nKM_NE = {dict(zip(self.reversed_acyclic_ordering, decArray[0][0]))}")
+        print(f"final decision array for this MACID is {decArray}")
+     
+
+
+     # -------------Methods for reuturning all Pure Strategy subgame perfect NE ------------------------------------------------------------
+
+
+    def _instantiate_initial_tree(self):
+        #creates a tree (a nested dictionary) which we use to fill up with the subgame perfect NE of each sub-tree. 
+        action_space_list = list(itertools.accumulate(self.decision_cardinalities.values(), operator.mul))  #gives number of pure strategies for each decision node (ie taking into account prev decisions)
+        cols_in_each_tree_row = [1] + action_space_list
+
+        actions_for_dec_list = []
+        for card in self.decision_cardinalities.values():
+            actions_for_dec_list.append(list(range(card)))     # appending the range of actions each decion can make as a list
+        final_row_actions = list(itertools.product(*actions_for_dec_list))     # creates entry for final row of decision array (cartesian product of actions_seq_list))
+
+        tree_initial = defaultdict(dict)   # creates a nested dictionary
+        for i in range(0, self.numDecisions+1):
+            for j in range(cols_in_each_tree_row[i]):     #initialises entire decision/action array with empty tuples.
+                tree_initial[i][j] = ()
+
+        for i in range(cols_in_each_tree_row[-1]):
+            tree_initial[self.numDecisions][i] = final_row_actions[i]
+
+        trees_queue = []         # list of all possible decision trees
+        trees_queue.append(tree_initial)
+        return trees_queue
+
+
+    def _reduce_tree_once(self, queue, bp):
+        #updates one node in the tree - we apply this recursively to fill up all nodes in the tree
+        tree = queue.pop(0)
+        for row in range(len(tree) -2, -1,-1):
+            for col in range (0, len(tree[row])):
+                node_full = bool(tree[row][col])
+                if node_full:
+                    continue
+                else:    # if node is empty => update it by finding maximum children        
+                    queue_update = self.max_childen(tree, row, col, queue, bp)
+                    return queue_update
+
+    def _max_childen(self, tree, row, col, queue, bp):
+        # adds to the queue the tree(s) filled with the node updated with whichever child(ren) yield the most utilty for the agent making the decision.
+        l = []
+        dec_num_act = self.decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
+        for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering 
+            l.append(self._get_ev(tree[row+1][indx], row, bp))  
+        maxl = max(l)
+        max_indexes = [i for i, j in enumerate(l) if j == maxl]
+
+        for i in range(len(max_indexes)):
+            tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
+            print(f"updating with {tree[row+1][(col*dec_num_act)+max_indexes[i]]}")
+            new_tree = copy.deepcopy(tree)   
+            queue.append(new_tree)
+        return queue
+
+
+    def _get_ev(self, dec_list, row, bp):
+        # returns the expected value of that decision for the agent making the decision
+        dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
+        agent = self._get_dec_agent(dec)      #gets the agent making that decision
+        print(f"dec_list is {dec_list}")
+        print(f"type is {type(dec_list)}")
+
+        h = bp.query(variables=self.all_utility_nodes, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
+        ev = 0
+        for idx, prob in np.ndenumerate(h.values):
+                if prob != 0:
+                    ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+        return ev
+
+    def _stopping_condition(self, queue):
+        """stopping condition for recursive tree filling"""
+        tree = queue[0]
+        root_node_full = bool(tree[0][0])
+        if root_node_full:
+            return True
+        else:
+            return False
+
+    def _PSNE_finder(self):
+        """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        - first initialises the maid with uniform random conditional probability distributions at every decision.
+        - then fills up a queue with trees containing each solution
+        - the queue will contain only entry (tree) if there's only one pure strategy subgame perfect NE"""
+        self.random_instantiation_dec_nodes()
+        bp = BeliefPropagation(self)
+        queue = self._instantiate_initial_tree()
+        while not self._stopping_condition(queue):
+            queue = self.reduce_tree_once(queue, bp)
+        return queue
+
+    def get_all_PSNE(self):
+        """yields all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        !!!!still need to decide how the solutions are best displayed!!! """
+        solutions = self.PSNE_finder()
+        for tree in solutions:
+            #print(f"solution #{tree} is:")
+            print(tree)
+    
+
+ # -------------Methods for finding the MAID's strategic relevance graph and checking cyclicity ------------------------------------------------------------
+
+    def _is_s_reachable(self, dec_pair):
+        """ - dec_pair is a list of two deicsion nodes ie ['D1', 'D2']
+            - this method determines whether 'D2' is s-reachable from 'D1'
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         
         A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
         such that if a new parent D2' were added to D2, there would be an active path in M from
@@ -1023,8 +1255,15 @@ class MACID(BayesianModel):
             return False
 
     def strategic_rel_graph(self):
+<<<<<<< HEAD
+        """
+        finds the strategic relevance graph of the MAID
+        an edge D' -> D exists iff D' is s-reachable from D
+        """
+=======
         # finds the strategic relevance graph of the MAID
         # an edge D' -> D exists iff D' is s-reachable from D
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
         G = nx.DiGraph()
         dec_pair_perms = list(itertools.permutations(self.all_decision_nodes, 2))
         for dec_pair in dec_pair_perms:
@@ -1033,7 +1272,9 @@ class MACID(BayesianModel):
         return G
 
     def draw_strategic_rel_graph(self):
-        # draws a MACID's strategic relevance graph
+        """
+        draws a MACID's strategic relevance graph
+        """
         rg = self.strategic_rel_graph()
         nx.draw_networkx(rg, with_labels=True)
         plt.figure(2)
@@ -1041,7 +1282,9 @@ class MACID(BayesianModel):
         
 
     def strategically_acyclic(self):
-        #finds whether the MACID has an acyclic strategic relevance graph.
+        """
+        finds whether the MACID has an acyclic strategic relevance graph.
+        """
         rg = self.strategic_rel_graph()
         if nx.is_directed_acyclic_graph(rg):
             return True
@@ -1049,8 +1292,10 @@ class MACID(BayesianModel):
             return False
 
     def get_acyclic_topological_ordering(self):
-        # first checks whether the strategic relevance graph is acyclic
-        # returns a topological ordering (which might not be unique) of the decision nodes
+        """
+        first checks whether the strategic relevance graph is acyclic
+        returns a topological ordering (which might not be unique) of the decision nodes
+        """
         rg = self.strategic_rel_graph()
         if self.strategically_acyclic():
             return list(nx.topological_sort(rg))
@@ -1059,6 +1304,10 @@ class MACID(BayesianModel):
                         no topological ordering can be immediately given. Use .. method instead.'
 
 
+<<<<<<< HEAD
+=======
+#----------------cyclic relevance graph methods:--------------------------------------
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
 
 #----------------cyclic relevance graph methods:--------------------------------------
@@ -1090,6 +1339,71 @@ class MACID(BayesianModel):
         return col   
 
     def draw_SCCs(self):
+        """
+        This shows the strategic relevance graph's SCCs
+        """
+        rg = self.strategic_rel_graph()
+        list_SCCs = list(nx.strongly_connected_components(rg)) 
+        layout = nx.kamada_kawai_layout(rg)
+        colors = [self._set_color_SCC(node, list_SCCs) for node in rg.nodes]
+        nx.draw_networkx(rg, pos=layout, node_color=colors) 
+        plt.figure(4)
+        plt.draw()
+
+    def component_graph(self):
+        """
+        draws and returns the component graph whose nodes are the maximal SCCs of the relevance graph
+        the component graph will always be acyclic. Therefore, we can return a topological ordering.
+        comp_graph.graph['mapping'] returns a dictionary matching the original nodes to the nodes in the new component (condensation) graph
+        """
+        rg = self.strategic_rel_graph()
+        comp_graph = nx.condensation(rg)
+        nx.draw_networkx(comp_graph, with_labels=True)
+        plt.figure(4)
+        plt.draw()
+        return comp_graph
+
+<<<<<<< HEAD
+    def get_cyclic_topological_ordering(self):
+        """first checks whether the strategic relevance graph is cyclic
+        if it's acyclic 
+        returns a topological ordering (which might not be unique) of the decision nodes
+        """
+        rg = self.strategic_rel_graph()
+        if self.strategically_acyclic():
+            return "Relevance graph is acyclic"
+        else:
+            comp_graph = self.component_graph()
+            return list(nx.topological_sort(comp_graph))
+=======
+    def find_SCCs(self):
+        """
+        Uses Tarjan’s algorithm with Nuutila’s modifications
+        - complexity is linear in the number of edges and nodes """
+        rg = self.strategic_rel_graph()
+        l = list(nx.strongly_connected_components(rg))
+        print('B1W' in l[0])
+        # for idx, i in enumerate(l):
+        #     print(f"idx = {idx} and i = {i}")
+        print(f"lenght of l = {len(l)}")
+        
+        #print(list_SCCs)
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
+
+        
+        numSCCs = nx.number_strongly_connected_components(rg)
+        print(f"num = {numSCCs}")
+
+        
+    def _set_color_SCC(self, node, list_SCCs):
+        colors = cm.rainbow(np.linspace(0, 1, len(list_SCCs)))
+        for SCC in list_SCCs:         
+            idx = list_SCCs.index(SCC)
+            if node in SCC:
+                col = colors[idx]
+        return col   
+
+    def draw_SCCs(self):
         # This shows the strategic relevance graph's SCCs
         rg = self.strategic_rel_graph()
         list_SCCs = list(nx.strongly_connected_components(rg)) 
@@ -1099,6 +1413,9 @@ class MACID(BayesianModel):
         plt.figure(3)
         plt.draw()
 
+<<<<<<< HEAD
+# ----------- Methods for converting MACID to EFG for Gambit to solve ---------
+=======
     def component_graph(self):
         # draws and returns the component graph whose nodes are the maximal SCCs of the relevance graph
         # the component graph will always be acyclic. Therefore, we can return a topological ordering.
@@ -1123,7 +1440,8 @@ class MACID(BayesianModel):
 
 
 
-# ----------- Methods for converting MACID to EFG for Gambit to solve ---------
+   
+>>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
 
 
@@ -1164,7 +1482,9 @@ class MACID(BayesianModel):
 
 
     def _add_utilities(self, tree, node_order):
-        # adds the utilities as leaves in the EFG 
+        """
+        adds the utilities as leaves in the EFG 
+        """
         bp = BeliefPropagation(self)
         for idx, leaf in enumerate(tree[len(tree)-1].values()):    # iterate over leaves of EFG structure 
             tree['u'][idx] = self._get_leaf_utilities(leaf.values(), node_order, bp)
@@ -1182,7 +1502,7 @@ class MACID(BayesianModel):
             for idx, prob in np.ndenumerate(h.values):
                 for i in range(len(utils)):
                     if prob != 0:
-                        ev += prob*self.utility_ranges[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+                        ev += prob*self.utility_domains[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
             leaf_utilities.append(ev)
         return leaf_utilities
 
@@ -1199,12 +1519,14 @@ class MACID(BayesianModel):
             for idx, prob in np.ndenumerate(h.values):
                 for i in range(len(utils)):  #accounts for each agent potentially having multiple utility nodes
                     if prob != 0:
-                        ev += prob*self.utility_ranges[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+                        ev += prob*self.utility_domains[utils[i]][idx[i]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
             leaf_utilities.append(ev)
         return leaf_utilities
 
     def _preorder_traversal(self, shell, node_order):
-        """returns the EFG node location ordering consistent with a prefix-order traversal of the EFG tree"""   
+        """
+        returns the EFG node location ordering consistent with a prefix-order traversal of the EFG tree
+        """   
         cardinalities = map(self.get_cardinality, node_order)
         node_cardinalities = dict(zip(node_order, cardinalities))
         
@@ -1231,8 +1553,10 @@ class MACID(BayesianModel):
         return preorder
 
     def _trim_efg(self, efg, node_order):
-        """trims the EFG so at each efg node we only contain the instantiation of the splits made by the nodes' parents in the macid.
-        This is necessary for determining the information sets """    
+        """
+        trims the EFG so at each efg node we only contain the instantiation of the splits made by the nodes' parents in the macid.
+        This is necessary for determining the information sets.
+        """    
         for row in range(1,len(node_order)):
             for node_splits in efg[row].values():
                 for node in list(node_splits.keys()):
@@ -1303,7 +1627,9 @@ class MACID(BayesianModel):
 
 
     def MACID_to_Gambit_file(self):
-        # this converts MACID to ".efg" file for use with GAMBIT.
+        """
+        Converts MACID to a ".efg" file for use with GAMBIT.
+        """
         efg_structure, node_order, shell = self._create_EFG_structure()   
         efg_with_utilities = self._add_utilities(efg_structure, node_order)
         preorder = self._preorder_traversal(shell, node_order)
