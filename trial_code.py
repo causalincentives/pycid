@@ -6,11 +6,7 @@ from pgmpy.factors.discrete import TabularCPD
 import networkx as nx
 
 from cpd import NullCPD
-<<<<<<< HEAD
 from examples2 import umbrella, sequential, politician, c2d, signal, road_example, fitness_tracker2, car_accident_predictor, content_reccomender, modified_content_reccomender, basic2agent_2, triage
-=======
-from examples2 import basic_reason_agent1, basic_reason_agent2, basic_reason_agent3, basic_reason_agent4, basic_reason_agent5, two_stage_PA
->>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 import matplotlib.pyplot as plt
 from incentives import Information, Response, Control, Influence
 
@@ -52,38 +48,8 @@ from collections import deque
 #%%
 def main():
 
-  
 
 
-
-<<<<<<< HEAD
-=======
-    # m = basic2agent_2()
-    # m.draw()
-    # plt.figure(1)
-    # plt.show()
->>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
-
-
-
- 
-    model = basic_reason_agent3()
-    model.draw()
-    plt.figure(1)
-    plt.show()
-    
-
-   
-
-    
-
-#%%
-
-<<<<<<< HEAD
-=======
-if __name__ == '__main__':
-    main()
->>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
     #m2 = modified_content_reccomender()
     m2 = content_reccomender()
@@ -102,7 +68,6 @@ if __name__ == '__main__':
     # m2.MACID_to_Gambit_file()
 
 
-<<<<<<< HEAD
     m = basic2agent_2()
     # m.draw()
     m.get_all_PSNE()
@@ -115,8 +80,6 @@ if __name__ == '__main__':
     
 
 #%%
-=======
->>>>>>> 8b15a79a53a4b16dc9184fbfd8e8ee6c2ebb6ac9
 
 
 
