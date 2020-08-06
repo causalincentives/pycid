@@ -109,7 +109,7 @@ def basic2agent_2():
         ('D2', 'U2'),
         ('D2', 'U1'),
         ],
-        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
         {'U1' :list(range(6)), 'U2': list(range(6))} 
         )
         
@@ -244,7 +244,7 @@ def tree_doctor():
         ('TDoc', 'BP'),
         ('BP', 'V'),
         ],
-        {1: {'D': ['PT', 'BP'], 'U': ['E', 'V']}, 2: {'D': ['TDoc'], 'U': ['Tree', 'Cost']}, 'C': ['TS', 'TDead']},     #defines the decisions, chance nodes and utility nodes for each agent
+        {0: {'D': ['PT', 'BP'], 'U': ['E', 'V']}, 1: {'D': ['TDoc'], 'U': ['Tree', 'Cost']}, 'C': ['TS', 'TDead']},     #defines the decisions, chance nodes and utility nodes for each agent
         )     #defines utilities 
 
     return macid

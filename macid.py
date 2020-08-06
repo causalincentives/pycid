@@ -21,6 +21,7 @@ from collections import deque
 import copy
 import matplotlib.cm as cm
 from itertools import compress
+from get_paths import get_motifs, get_motif
 
 
 
@@ -109,19 +110,57 @@ class MACID(BayesianModel):
 
 # --------------   methods for plotting MACID ----------------
 
-    def _get_color(self, node: str):
+    def _set_single_agent_node_color(self, node: str):
+        """ 
+        Colour codes the decision, chance nodes to match the single-agent conventions:
+        - decision nodes are blue
+        - utility nodes are yellow
+        """
+        if self.get_node_type(node) == 'p':  # 'p' is a player/decision node to match with gambit's notation
+            return 'lightblue'
+        if self.get_node_type(node) == 'u':  # utility node
+            return 'yellow'
+
+    def _get_shape(self, node: str):
         """ 
         Colour codes the decision, chance and utility nodes of each agent
         """
         for i in self.node_types:
             if i == 'C':
                 if node in self.node_types['C']:
-                    return 'lightgray'
+                    return 'o'
             else:
                 if node in self.node_types[i]['D']:
-                    return 'lightblue'
+                    return 's'
                 if node in self.node_types[i]['U']:
-                    return 'yellow'
+                    return 'D'
+
+   
+    def _set_multi_agent_node_color(self, node):
+        """
+        This matches a unique colour with each new agent's decision and utility nodes 
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.node_types)))
+        if self.get_node_type(node) == 'p':  # 'p' is a player/decision node to match with gambit's notation
+            return colors[self._get_dec_agent(node)]
+        if self.get_node_type(node) == 'u':  # utility node
+            return colors[self._get_util_agent(node)]
+
+
+    def _get_cmap(self, n, name='hsv'):
+        '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
+        RGB color; the keyword argument name must be a standard mpl colormap name.'''
+        return plt.cm.get_cmap(name, n) 
+
+
+    def _get_node_shape(self, node):
+        """
+        finds a node's shape
+        """
+        if self.get_node_type(node) == 'p':  #decision nodes should be squares ('p' matches gambit's player node notation)
+            return 's'
+        elif self.get_node_type(node) == 'u': #utility nodes should be diamonds 
+            return 'D'
 
 
     def draw(self):
@@ -129,10 +168,19 @@ class MACID(BayesianModel):
         This draws the DAG for the MACID
         """
         l = nx.kamada_kawai_layout(self)
-        colors = [self._get_color(node) for node in self.nodes]
-        nx.draw_networkx(self, pos=l, node_color=colors)
+        G = self.to_undirected()
+        nx.draw_networkx(self, pos=l, node_size=700, node_color='lightgray', node_shape='o')  #chance nodes should be gray circles
+        if len(self.agents) == 1:
+            for node in self.nodes:
+                if self.get_node_type(node) != 'c':
+                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=700, node_color=self._set_single_agent_node_color(node), node_shape=self._get_node_shape(node))
 
-
+        else:
+            for node in self.nodes:
+                if self.get_node_type(node) != 'c':
+                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=700, node_color=self._set_multi_agent_node_color(node).reshape(1,-1), node_shape=self._get_node_shape(node))
+       
+            
 # ---------- methods setting up MACID for probabilistic inference ------
 
 
@@ -158,62 +206,52 @@ class MACID(BayesianModel):
 
 # -------- Methods for finding MACID graphical properties --------------------
 
-    def _find_dirpath_recurse(self, path: List[str], finish: str, all_paths, revisedmacid=None):
-        if revisedmacid == None:
-            macid = self
-        else:
-            macid = revisedmacid  #this allows one to pass in macids different from the original (eg after edges have been removed)
-
+    def _find_dirpath_recurse(self, path: List[str], finish: str, all_paths):
+       
         if path[-1] == finish:
             return path
         else:
-            children = macid.get_children(path[-1])
+            children = self.get_children(path[-1])
             for child in children:
                 ext = path + [child]
-                ext = macid._find_dirpath_recurse(ext, finish, all_paths, macid)
+                ext = self._find_dirpath_recurse(ext, finish, all_paths)
                 if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full directed path.
                     all_paths.append(ext)
                 else:
                     continue
             return all_paths
 
-    def find_all_dir_path(self, start, finish, revisedmacid=None):
+    def find_all_dir_path(self, start, finish):
         """
         finds all direct paths from start node to end node that exist in the MAID
         """
-        all_paths = []
-        if revisedmacid == None:
-            return self._find_dirpath_recurse([start], finish, all_paths)
-        else:
-            return self._find_dirpath_recurse([start], finish, all_paths, revisedmacid)
+        all_paths = []    
+        return self._find_dirpath_recurse([start], finish, all_paths)
+        
 
 
-    def _find_undirpath_recurse(self, path: List[str], finish: str, all_paths: str, revisedmacid=None):
-        if revisedmacid == None:
-            macid = self
-        else:
-            macid = revisedmacid  #this allows one to pass in macids different from the original (eg after edges have been removed)
+    def _find_undirpath_recurse(self, path: List[str], finish: str, all_paths: str):
 
         if path[-1] == finish:
             return path
         else:
-            neighbours = list(macid.get_children(path[-1])) + list(macid.get_parents(path[-1]))
+            neighbours = list(self.get_children(path[-1])) + list(self.get_parents(path[-1]))
             new = set(neighbours).difference(set(path))
             for child in new:
                 ext = path + [child]
-                ext = self._find_undirpath_recurse(ext, finish, all_paths, macid)
+                ext = self._find_undirpath_recurse(ext, finish, all_paths)
                 if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full directed path.
                     all_paths.append(ext)
                 else:
                     continue
             return all_paths
 
-    def find_all_undir_path(self, start: str, finish: str, revisedmacid=None):
+    def find_all_undir_path(self, start: str, finish: str):
         """
         finds all direct paths from start node to end node that exist in the MAID
         """
         all_paths = []
-        return self._find_undirpath_recurse([start], finish, all_paths, revisedmacid)
+        return self._find_undirpath_recurse([start], finish, all_paths)
 
 
     def _directed_decision_free_path(self, start: str, finish: str):
@@ -240,57 +278,25 @@ class MACID(BayesianModel):
                 structure.append((path[i+1], path[i]))
         return structure
 
-    def path_d_separated_by_Z(self, path:List[str], Z:List[str]=[], revisedmacid=None):
+    def path_d_separated_by_Z(self, path:List[str], Z:List[str]=[]):
         """
         Check if a path is d-separated by set of variables Z.
         """
-        if revisedmacid == None:
-            macid = self
-        else:
-            macid = revisedmacid  #this allows one to pass in macids different from the original (eg after edges have been removed)
-
-
         if len(path) < 3:
             return False
 
         for a, b, c in zip(path[:-2], path[1:-1], path[2:]):
-            structure = self._classify_three_structure(a, b, c, macid)
+            structure = get_motif(self, path, path.index(b))
 
             if structure in ("chain", "fork") and b in Z:
                 return True
 
             if structure == "collider":
-                descendants = (nx.descendants(macid, b) | {b})
+                descendants = (nx.descendants(self, b) | {b})
                 if not descendants & set(Z):
                     return True
 
         return False
-
-
-    def _classify_three_structure(self, a: str, b: str, c: str, revisedmacid=None):
-        """
-        Classify three node structure as a chain, fork or collider.
-        """
-        if revisedmacid == None:
-            macid = self
-        else:
-            macid = revisedmacid  #this allows one to pass in macids different from the original (eg after edges have been removed)
-
-
-        if macid.has_edge(a, b) and macid.has_edge(b, c):
-            return "chain"
-
-        if macid.has_edge(c, b) and macid.has_edge(b, a):
-            return "chain"
-
-        if macid.has_edge(a, b) and macid.has_edge(c, b):
-            return "collider"
-
-        if macid.has_edge(b, a) and macid.has_edge(b, c):
-            return "fork"
-
-        raise ValueError(f"Unsure how to classify ({a},{b},{c})")
-
 
     def frontdoor_indirect_path_not_blocked_by_W(self, start: str, finish: str, W:List[str]=[]):
         """checks whether an indirect frontdoor path exists that isn't blocked by the nodes in set W."""
@@ -298,24 +304,12 @@ class MACID(BayesianModel):
         for path in start_finish_paths:
             is_frontdoor_path = path[0] in self.get_parents(path[1])
             not_blocked_by_W = not self.path_d_separated_by_Z(path, W)
-            contains_collider = self._path_contains_collider(path)
+            contains_collider = "collider" in get_motifs(self, path)
             if is_frontdoor_path and not_blocked_by_W and contains_collider:   #default (if w = [] is going to be false since any unobserved collider blocks path
                 return True
         else:
             return False
-
-    
-    def _path_contains_collider(self, path:List[str]):
-        """checks whether the path contains a collider"""
-        if len(path) < 3:
-            return False
-
-        for a, b, c in zip(path[:-2], path[1:-1], path[2:]):
-            structure = self._classify_three_structure(a, b, c)
-            if structure == "collider":
-                return True
-        else:
-            return False
+        
 
     def parents_of_Y_not_descended_from_X(self, X: str,Y: str):
         """finds the parents of Y not descended from X"""
@@ -328,40 +322,46 @@ class MACID(BayesianModel):
     def get_key_node(self, path:List[str]):
         """ The key node of a path is the first "fork" node in the path"""
         for a, b, c in zip(path[:-2], path[1:-1], path[2:]):
-            structure = self._classify_three_structure(a, b, c)
+            structure = get_motif(self, path, path.index(b))
             if structure == "fork":
                 return b
 
-    def backdoor_path_active_when_conditioning_on_W(self, start: str, finish: str, W:List[str]=[], revisedmacid=None):
+    def backdoor_path_active_when_conditioning_on_W(self, start: str, finish: str, W:List[str]=[]):
         """
         returns true if there is a backdoor path that's active when conditioning on nodes in set W. 
         """
-        if revisedmacid == None:
-            macid = self
-
-        else:
-            macid = revisedmacid  #this allows one to pass in macids different from the original (eg after edges have been removed)
-
-        start_finish_paths = self.find_all_undir_path(start, finish, macid)
-        print(f"start_finish_paths = {start_finish_paths}")
+        start_finish_paths = self.find_all_undir_path(start, finish)
         for path in start_finish_paths:
-            print(f"path1 = {path}")
+            
             if len(path) > 1:   #must have path of at least 2 nodes
-                is_backdoor_path = path[1] in macid.get_parents(path[0])
-                print(f"is_bd_path {is_backdoor_path}")
-                not_blocked_by_W = not self.path_d_separated_by_Z(path, W, macid)
-                print(f"not_blocked = {not_blocked_by_W}")
+                is_backdoor_path = path[1] in self.get_parents(path[0]) 
+                not_blocked_by_W = not self.path_d_separated_by_Z(path, W) 
                 if is_backdoor_path and not_blocked_by_W:
-                    print(f"path is {path}")
                     return True
 
         else:
             return False
 
+    def backdoor_path_active_when_conditioning_on_W2(self, start: str, finish: str, W:List[str]=[]):
+        """
+        returns true if there is a backdoor path that's active when conditioning on nodes in set W. 
+        """
 
+        start_finish_paths = self.find_all_undir_path(start, finish)
+        for path in start_finish_paths:
+            #print(f"path1 = {path}")
+            if len(path) > 1:   #must have path of at least 2 nodes
+                is_backdoor_path = path[1] in self.get_parents(path[0])
+                #print(f"is_bd_path {is_backdoor_path}")
+                not_blocked_by_W = not self.path_d_separated_by_Z(path, W)
+                #print(f"not_blocked = {not_blocked_by_W}")
+                if is_backdoor_path and not_blocked_by_W:
+                    #print(f"path is {path}")
 
+                    return True
 
-
+        else:
+            return False
 
 
 # ----------- methods for finding MACID properties -----------
@@ -532,9 +532,6 @@ class MACID(BayesianModel):
         
         trimmed_graph = self.copy()
         d_par = self.get_parents(*agent_dec)
-        # no_info_bool = [not self.has_info_inc(n, agent_dec, agent_utils) for n in d_par]
-        # d_par_no_inf = list(compress(d_par, no_info_bool))
-
         nonrequisite_nodes = [n for n in d_par if not self.has_info_inc(n, agent_dec, agent_utils)]
 
         for node in nonrequisite_nodes:
@@ -566,22 +563,21 @@ class MACID(BayesianModel):
         
         return False
 
-
     def has_indir_control_inc(self, node, agent):
         """
         returns True if a node faces an indirect control incentive 
         """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
-        
         trimmed_MACID = self.dreduction(agent_dec, agent_utils)
-        for util in agent_utils:
-            if self.has_control_inc(node, agent):
 
-                Fa_d = self.get_parents(*agent_dec) + agent_dec
+        for util in agent_utils:
+            if trimmed_MACID.has_control_inc(node, agent):
+
+                Fa_d = trimmed_MACID.get_parents(*agent_dec) + agent_dec
                 con_nodes = [i for i in Fa_d if i != node]
-                backdoor_exists = self.backdoor_path_active_when_conditioning_on_W(node, util, con_nodes, trimmed_MACID)
-                x_u_paths = self.find_all_dir_path(node, util, trimmed_MACID)
+                backdoor_exists = trimmed_MACID.backdoor_path_active_when_conditioning_on_W(node, util, con_nodes)
+                x_u_paths = trimmed_MACID.find_all_dir_path(node, util)
                 if any(agent_dec[0] in paths for paths in x_u_paths) and backdoor_exists:  #agent_dec[0] as it should only have one entry because we've currently restricted it to the single dec case
                     return True
         
@@ -592,12 +588,12 @@ class MACID(BayesianModel):
         returns True if a node faces a direct control incentive
         """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-        agent_utils = self.utility_nodes[agent] #this agent's utility nodes
-        
+        agent_utils = self.utility_nodes[agent] #this agent's utility nodes  
         trimmed_MACID = self.dreduction(agent_dec, agent_utils)
+        
         for util in agent_utils:
-            if self.has_control_inc(node, agent):
-                x_u_paths = self.find_all_dir_path(node, util, trimmed_MACID)
+            if trimmed_MACID.has_control_inc(node, agent):
+                x_u_paths = trimmed_MACID.find_all_dir_path(node, util)
                 for path in x_u_paths:
                     if set(agent_dec).isdisjoint(set(path)):
                         return True
@@ -616,7 +612,7 @@ class MACID(BayesianModel):
 
         for util in agent_utils:
             D_u_paths = self.find_all_dir_path(agent_dec[0], util)
-            if any(node in paths for paths in D_u_paths):
+            if any(node in path for path in D_u_paths):
                 return True
         return False
 
@@ -865,28 +861,26 @@ class MACID(BayesianModel):
         motivations = {'dir_effect':[], 'sig':[], 'manip':[], 'rev_den':[]}
         effective_set = list(self.all_decision_nodes)
         while True:
-            nodes_not_effective = []
-            for node in effective_set:
-                if not self.direct_effect(node, effective_set) and not self.manipulation(node, effective_set) \
-                    and not self.signaling(node, effective_set) and not self.revealing_or_denying(node, effective_set):
-                    nodes_not_effective.append(node)
-            if len(nodes_not_effective) > 0:
-                effective_set = [node for node in effective_set if node not in nodes_not_effective]
-            elif len(nodes_not_effective) ==0:
+            new_set = [D for D in effective_set if self.direct_effect(D, effective_set) or self.manipulation(D, effective_set) \
+                or self.signaling(D, effective_set) or self.revealing_or_denying(D, effective_set)]
+            
+            if len(new_set)==len(effective_set):
                 break
+            effective_set = new_set
 
 
-        for node in effective_set:
-            if self.direct_effect(node, effective_set):
-                motivations['dir_effect'].append(node)
-            elif self.signaling(node, effective_set):
-                motivations['sig'].append(node)
-            elif self.manipulation(node, effective_set):
-                motivations['manip'].append(node)
-            elif self.revealing_or_denying(node, effective_set):
-                motivations['rev_den'].append(node)
+        for decision in effective_set:
+            if self.direct_effect(decision, effective_set):
+                motivations['dir_effect'].append(decision)
+            elif self.signaling(decision, effective_set):
+                motivations['sig'].append(decision)
+            elif self.manipulation(decision, effective_set):
+                motivations['manip'].append(decision)
+            elif self.revealing_or_denying(decision, effective_set):
+                motivations['rev_den'].append(decision)
 
         return motivations
+
 
 
 
@@ -918,9 +912,8 @@ class MACID(BayesianModel):
 
         for i in range(cols_in_each_tree_row[-1]):
             tree_initial[self.numDecisions][i] = final_row_actions[i]
-
-        trees_queue = []         # list of all possible decision trees 
-        trees_queue.append(tree_initial)
+               
+        trees_queue = [tree_initial]  # list of all possible decision trees 
         return trees_queue
 
 
@@ -945,8 +938,7 @@ class MACID(BayesianModel):
         dec_num_act = decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
         for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering 
             l.append(self._get_ev(tree[row+1][indx], row, bp))  
-        maxl = max(l)
-        max_indexes = [i for i, j in enumerate(l) if j == maxl]
+        max_indexes = [i for i, j in enumerate(l) if j == max(l)]
 
         for i in range(len(max_indexes)):
             tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
@@ -981,8 +973,7 @@ class MACID(BayesianModel):
 
         h = bp.query(variables=utils, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))  
         ev = 0
-        for idx, prob in np.ndenumerate(h.values):
-            
+        for idx, prob in np.ndenumerate(h.values):   
             for i in range(len(utils)): # account for each agent having multiple utilty nodes
                 if prob != 0:
                     ev += prob*self.utility_domains[utils[i]][idx[i]]     
@@ -999,10 +990,7 @@ class MACID(BayesianModel):
         """stopping condition for recursive tree filling"""
         tree = queue[0]
         root_node_full = bool(tree[0][0])
-        if root_node_full:
-            return True
-        else:
-            return False
+        return root_node_full
 
     def _PSNE_finder(self):
         """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
@@ -1034,28 +1022,23 @@ class MACID(BayesianModel):
 
  # -------------Methods for finding the MAID's strategic relevance graph and checking cyclicity ------------------------------------------------------------
 
-    def _is_s_reachable(self, dec_pair:List[str]):
-        """ - dec_pair is a list of two deicsion nodes ie ['D1', 'D2']
-            - this method determines whether 'D2' is s-reachable from 'D1' (Koller and Milch 2001)
+    def _is_s_reachable(self, d1: str, d2: str):
+        """ 
+        
+        - this method determines whether 'D2' is s-reachable from 'D1' (Koller and Milch 2001)
         
         A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
         such that if a new parent D2' were added to D2, there would be an active path in M from
         D2′ to U given Pa(D)∪{D}, where a path is active in a MAID if it is active in the same graph, viewed as a BN.
 
-
         """
-        self.add_edge('temp_par', dec_pair[1])
-        agent = self._get_dec_agent(dec_pair[0])
+        self.add_edge('temp_par', d2)
+        agent = self._get_dec_agent(d1)
         agent_utilities = self.utility_nodes[agent]
-        con_nodes = [dec_pair[0]] + self.get_parents(dec_pair[0]) 
-        if any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities]):
-            self.remove_node('temp_par')
-            #print("yes")
-            return True
-        else:
-            self.remove_node('temp_par')
-            #print("no")
-            return False
+        con_nodes = [d1] + self.get_parents(d1) 
+        is_active_trail = any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities])
+        self.remove_node('temp_par')
+        return is_active_trail
 
     def strategic_rel_graph(self):
         """
@@ -1065,7 +1048,7 @@ class MACID(BayesianModel):
         G = nx.DiGraph()
         dec_pair_perms = list(itertools.permutations(self.all_decision_nodes, 2))
         for dec_pair in dec_pair_perms:
-            if self._is_s_reachable(dec_pair):
+            if self._is_s_reachable(dec_pair[0], dec_pair[1]):
                 G.add_edge(dec_pair[1], dec_pair[0])
         return G
 
@@ -1117,17 +1100,17 @@ class MACID(BayesianModel):
         #     print(f"idx = {idx} and i = {i}")
         print(f"lenght of l = {len(l)}")
         
-        #print(list_SCCs)
+        #print(SCCs)
 
         
         numSCCs = nx.number_strongly_connected_components(rg)
         print(f"num = {numSCCs}")
 
         
-    def _set_color_SCC(self, node, list_SCCs):
-        colors = cm.rainbow(np.linspace(0, 1, len(list_SCCs)))
-        for SCC in list_SCCs:         
-            idx = list_SCCs.index(SCC)
+    def _set_color_SCC(self, node, SCCs):
+        colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
+        for SCC in SCCs:         
+            idx = SCCs.index(SCC)
             if node in SCC:
                 col = colors[idx]
         return col   
@@ -1137,9 +1120,9 @@ class MACID(BayesianModel):
         This shows the strategic relevance graph's SCCs
         """
         rg = self.strategic_rel_graph()
-        list_SCCs = list(nx.strongly_connected_components(rg)) 
+        SCCs = list(nx.strongly_connected_components(rg)) 
         layout = nx.kamada_kawai_layout(rg)
-        colors = [self._set_color_SCC(node, list_SCCs) for node in rg.nodes]
+        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
         nx.draw_networkx(rg, pos=layout, node_color=colors) 
         plt.figure(4)
         plt.draw()
@@ -1159,12 +1142,12 @@ class MACID(BayesianModel):
 
     def get_cyclic_topological_ordering(self):
         """first checks whether the strategic relevance graph is cyclic
-        if it's acyclic 
+        if it's cyclic 
         returns a topological ordering (which might not be unique) of the decision nodes
         """
         rg = self.strategic_rel_graph()
         if self.strategically_acyclic():
-            return "Relevance graph is acyclic"
+            return TypeError(f"Relevance graph is acyclic")
         else:
             comp_graph = self.component_graph()
             return list(nx.topological_sort(comp_graph))
@@ -1174,20 +1157,20 @@ class MACID(BayesianModel):
         print(f"num = {numSCCs}")
 
         
-    def _set_color_SCC(self, node, list_SCCs):
-        colors = cm.rainbow(np.linspace(0, 1, len(list_SCCs)))
-        for SCC in list_SCCs:         
-            idx = list_SCCs.index(SCC)
+    def _set_color_SCC(self, node, SCCs):
+        colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
+        for SCC in SCCs:         
             if node in SCC:
-                col = colors[idx]
+                col = colors[SCCs.index(SCC)]
         return col   
+
 
     def draw_SCCs(self):
         # This shows the strategic relevance graph's SCCs
         rg = self.strategic_rel_graph()
-        list_SCCs = list(nx.strongly_connected_components(rg)) 
+        SCCs = list(nx.strongly_connected_components(rg)) 
         layout = nx.kamada_kawai_layout(rg)
-        colors = [self._set_color_SCC(node, list_SCCs) for node in rg.nodes]
+        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
         nx.draw_networkx(rg, pos=layout, node_color=colors) 
         plt.figure(3)
         plt.draw()

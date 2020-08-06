@@ -9,21 +9,36 @@ def get_motifs(cid, path):
     for i in range(len(path)):
         if i==0:
             if path[i] in cid.get_parents(path[i+1]):
-                shapes.append('f')
+                shapes.append('forward')
             else:
-                shapes.append('l')
-        elif i==len(path)-1:
-            shapes.append('end')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('f')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('c')
-        elif path[i-1] in cid.get_parents(path[i]) and path[i] in cid.get_parents(path[i+1]):
-            shapes.append('r')
-        elif path[i] in cid.get_parents(path[i-1]) and path[i+1] in cid.get_parents(path[i]):
-            shapes.append('l')
+                shapes.append('backward')
+        else:
+            shapes.append(get_motif(cid, path, i))
     return shapes
 
+
+def get_motif(cid, path: List[str], i):
+        """
+        Classify three node structure as a forward (chain), backward (chain), fork or collider.
+        """
+        if len(path) == i+1:
+            return "endpoint"
+
+        elif cid.has_edge(path[i-1], path[i]) and cid.has_edge(path[i], path[i+1]):
+            return "forward"
+
+        elif cid.has_edge(path[i+1], path[i]) and cid.has_edge(path[i], path[i-1]):
+            return "backward"
+
+        elif cid.has_edge(path[i-1], path[i]) and cid.has_edge(path[i+1], path[i]):
+            return "collider"
+
+        elif cid.has_edge(path[i], path[i-1]) and cid.has_edge(path[i], path[i+1]):
+            return "fork"
+
+        else:
+            ValueError(f"unsure how to calssify this path at index {i}")
+    
 
 def _find_dirpath_recurse(bn, path: List[str], B: str):
     if path[-1]==B:
