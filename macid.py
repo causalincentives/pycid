@@ -169,16 +169,16 @@ class MACID(BayesianModel):
         """
         l = nx.kamada_kawai_layout(self)
         G = self.to_undirected()
-        nx.draw_networkx(self, pos=l, node_size=700, node_color='lightgray', node_shape='o')  #chance nodes should be gray circles
+        nx.draw_networkx(self, pos=l, node_size=400, arrowsize=20, node_color='lightgray', node_shape='o')  #chance nodes should be gray circles
         if len(self.agents) == 1:
             for node in self.nodes:
                 if self.get_node_type(node) != 'c':
-                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=700, node_color=self._set_single_agent_node_color(node), node_shape=self._get_node_shape(node))
+                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=400, node_color=self._set_single_agent_node_color(node), node_shape=self._get_node_shape(node))
 
         else:
             for node in self.nodes:
                 if self.get_node_type(node) != 'c':
-                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=700, node_color=self._set_multi_agent_node_color(node).reshape(1,-1), node_shape=self._get_node_shape(node))
+                    nx.draw_networkx(G.subgraph([node]), pos=l, node_size=400, node_color=self._set_multi_agent_node_color(node).reshape(1,-1), node_shape=self._get_node_shape(node))
        
             
 # ---------- methods setting up MACID for probabilistic inference ------
@@ -413,11 +413,16 @@ class MACID(BayesianModel):
 
     """
 
-    def has_info_inc(self, node: str, agent_dec:List[str], agent_utils:List[str]):
+    def has_info_inc(self, node: str, agent):
         """
         returns True if a node faces an information incentive
         """
+        agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
+        agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
+        if node not in self.nodes:
+            raise ValueError(f"{node} is not present in the macid's graph")
+
         # #condition (i)
         if node in agent_dec or node in agent_utils:
             return False
@@ -433,12 +438,12 @@ class MACID(BayesianModel):
                     con_nodes.remove(node)
                 if self.is_active_trail(node, util, con_nodes): #condition (iv)
                     return True
-            else:
-                 return False
+        else:
+            return False
 
             
     
-    def all_inf_inc_nodes(self, agent):
+    def all_info_inc_nodes(self, agent):
         """
         returns all nodes which this agent has an information incentive for according to the single agent information incentive graphical criterion
         """
@@ -452,7 +457,7 @@ class MACID(BayesianModel):
             return "This incentive currently only applies to the single decision case"
 
         else:
-            return [x for x in list(self.nodes) if self.has_info_inc(x, agent_dec, agent_utils)]
+            return [x for x in list(self.nodes) if self.has_info_inc(x, agent)]
     ##
 
 
@@ -461,47 +466,32 @@ class MACID(BayesianModel):
 
     """Response incentive
     Criterion for response incentive on X: 
-    (i) there is a directed path from X to an observation W ∈ Pa_D 
-    (ii) U∈Desc(D) (U must be a descendent of D)
-    (iii) W is d-connected to U | Fa_D \ {W}
+    (i) there is a directed path from X--> D in the reduced graph G* 
     """
 
-    def all_response_inc_nodes(self, agent):
+
+
+    def has_response_inc(self, node: str, agent):
         """
-        returns all nodes which this agent has a response incentive for according to the single agent information incentive graphical criterion
+        returns True if a node faces a control incentive or "positive value of control"
         """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
         
-        if not agent_dec or not agent_utils: #if the agent has no decision or no utility nodes, no node will face a response incentive
-            return []
-
         if len(agent_dec) > 1:
             return "This incentive currently only applies to the single decision case"
+
+        trimmed_MACID = self.dreduction(agent)
         
-        res_list = []
-        for util in agent_utils:
-            if util in nx.descendants(self, *agent_dec):  #condition (ii)
-                w_set = self.get_parents(*agent_dec)
-                for w in w_set:
-                    for x in list(self.nodes):
-                        if w == x or w in nx.descendants(self, x):  # condition (i)
-                            w_set2 = copy.deepcopy(w_set)
-                            w_set2.remove(w)
-                            con_nodes = w_set2 + agent_dec
-                            if self.is_active_trail(w, util, con_nodes):  # condition (iii)
-                                res_list.append(x)
+        if agent_dec[0] in nx.descendants(trimmed_MACID, node): 
+                return True
+        
+        return False
 
-        return res_list
+    def all_response_inc_nodes(self, agent):
 
-    def has_response_node(self, node):
-        """
-        returns True if a node faces a response incentive
-        """
-        if node in self.all_response_inc_nodes():
-            return True
-        else:
-            return False
+        return [x for x in list(self.nodes) if self.has_response_inc2(x, agent)]
+
 
 
 # Control Incentive
@@ -524,15 +514,17 @@ class MACID(BayesianModel):
     A feasible control incentive exists iff there exists a directed path D --> X --> U  
     """
 
-    def dreduction(self, agent_dec:List[str], agent_utils:List[str]):
+    def dreduction(self, agent):
         """
         returns the DAG which has been trimmed of all irrelevant information links.
         """
         assert (len(self.all_decision_nodes) ==1) ,"The theory currently only works for the single-decision case!"  
-        
+        agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
+        agent_utils = self.utility_nodes[agent] #this agent's utility nodes
+
         trimmed_graph = self.copy()
         d_par = self.get_parents(*agent_dec)
-        nonrequisite_nodes = [n for n in d_par if not self.has_info_inc(n, agent_dec, agent_utils)]
+        nonrequisite_nodes = [n for n in d_par if not self.has_info_inc(n, agent)]
 
         for node in nonrequisite_nodes:
             trimmed_graph.remove_edge(node, *agent_dec)
@@ -555,7 +547,7 @@ class MACID(BayesianModel):
         if [node] == agent_dec:  #condition (i)
             return False
 
-        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent)
         
         for util in agent_utils:       
             if node == util or util in nx.descendants(trimmed_MACID, node): # condition (ii)
@@ -569,7 +561,7 @@ class MACID(BayesianModel):
         """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes
-        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent)
 
         for util in agent_utils:
             if trimmed_MACID.has_control_inc(node, agent):
@@ -589,7 +581,7 @@ class MACID(BayesianModel):
         """
         agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
         agent_utils = self.utility_nodes[agent] #this agent's utility nodes  
-        trimmed_MACID = self.dreduction(agent_dec, agent_utils)
+        trimmed_MACID = self.dreduction(agent)
         
         for util in agent_utils:
             if trimmed_MACID.has_control_inc(node, agent):
@@ -617,19 +609,19 @@ class MACID(BayesianModel):
         return False
 
                  
-    def all_con_inc_nodes(self, agent):
+    def all_control_inc_nodes(self, agent):
 
         return [x for x in list(self.nodes) if self.has_control_inc(x, agent)]
 
-    def all_dir_con_inc_nodes(self, agent):
+    def all_dir_control_inc_nodes(self, agent):
       
         return [x for x in list(self.nodes) if self.has_dir_control_inc(x, agent)]
 
-    def all_indir_con_inc_nodes(self, agent):
+    def all_indir_control_inc_nodes(self, agent):
             
         return [x for x in list(self.nodes) if self.has_indir_control_inc(x, agent)]
 
-    def all_feasible_con_inc_nodes(self, agent):
+    def all_feasible_control_inc_nodes(self, agent):
 
         return [x for x in list(self.nodes) if self.has_feasible_control_inc(x, agent)]
 
@@ -1057,7 +1049,7 @@ class MACID(BayesianModel):
         draws a MACID's strategic relevance graph
         """
         rg = self.strategic_rel_graph()
-        nx.draw_networkx(rg, with_labels=True)
+        nx.draw_networkx(rg, node_size=400, arrowsize=20, edge_color='g', with_labels=True)
         plt.figure(2)
         plt.draw()
         
@@ -1123,8 +1115,7 @@ class MACID(BayesianModel):
         SCCs = list(nx.strongly_connected_components(rg)) 
         layout = nx.kamada_kawai_layout(rg)
         colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
-        nx.draw_networkx(rg, pos=layout, node_color=colors) 
-        plt.figure(4)
+        nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors) 
         plt.draw()
 
     def component_graph(self):
@@ -1163,17 +1154,6 @@ class MACID(BayesianModel):
             if node in SCC:
                 col = colors[SCCs.index(SCC)]
         return col   
-
-
-    def draw_SCCs(self):
-        # This shows the strategic relevance graph's SCCs
-        rg = self.strategic_rel_graph()
-        SCCs = list(nx.strongly_connected_components(rg)) 
-        layout = nx.kamada_kawai_layout(rg)
-        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
-        nx.draw_networkx(rg, pos=layout, node_color=colors) 
-        plt.figure(3)
-        plt.draw()
 
 # ----------- Methods for converting MACID to EFG for Gambit to solve ---------
 
