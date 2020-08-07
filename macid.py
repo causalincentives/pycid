@@ -201,7 +201,7 @@ class MACID(BayesianModel):
             print(uniform_cpd)
             self.add_cpds(uniform_cpd)
     
-        print("added decision probs --")
+        
         
 
 # -------- Methods for finding MACID graphical properties --------------------
@@ -490,7 +490,7 @@ class MACID(BayesianModel):
 
     def all_response_inc_nodes(self, agent):
 
-        return [x for x in list(self.nodes) if self.has_response_inc2(x, agent)]
+        return [x for x in list(self.nodes) if self.has_response_inc(x, agent)]
 
 
 
@@ -990,8 +990,7 @@ class MACID(BayesianModel):
         - then fills up a queue with trees containing each solution
         - the queue will contain only one entry (tree) if there's only one pure strategy subgame perfect NE"""
         self.random_instantiation_dec_nodes()
-        print(self.get_cpds('U1'))
-        print(self.get_cpds('U2'))
+        
         
 
 
@@ -1005,8 +1004,17 @@ class MACID(BayesianModel):
         """yields all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
         !should still decide how the solutions are best displayed! """
         solutions = self._PSNE_finder()
+        solution_array = []
         for tree in solutions:
-            print(tree)
+            for row in range(len(tree)-1):           
+                for col in tree[row]:
+                    chosen_dec = tree[row][col][:row]
+                    matching_of_chosen_dec = zip(self.reversed_acyclic_ordering, chosen_dec)
+                    matching_of_solution = zip(self.reversed_acyclic_ordering, tree[row][col])
+                    solution_array.append((list(matching_of_chosen_dec), list(matching_of_solution)))         
+        return solution_array
+
+
             # can adapt how it displays the result (perhaps break into each agent's information sets)
 
 
@@ -1087,12 +1095,6 @@ class MACID(BayesianModel):
         - complexity is linear in the number of edges and nodes """
         rg = self.strategic_rel_graph()
         l = list(nx.strongly_connected_components(rg))
-        print('B1W' in l[0])
-        # for idx, i in enumerate(l):
-        #     print(f"idx = {idx} and i = {i}")
-        print(f"lenght of l = {len(l)}")
-        
-        #print(SCCs)
 
         
         numSCCs = nx.number_strongly_connected_components(rg)
