@@ -55,13 +55,6 @@ class CID(BayesianModel):
                 break
         return cid
 
-    def _get_decisions(self):
-        raise Exception("Method deprecated")
-        decisions = [node.variable for node in self.cpds if isinstance(node, NullCPD)]
-        if not decisions: #TODO: can be deleted
-            raise ValueError('the cid has no NullCPDs')
-        return decisions
-
     def _get_valid_order(self, nodes:List[str]):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
