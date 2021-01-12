@@ -8,7 +8,9 @@ from cpd import NullCPD
 
 def get_minimal_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
-    cid = CID([('A', 'B')], ['B'])
+    cid = CID([('A', 'B')],
+              decision_nodes=['A'],
+              utility_nodes=['B'])
     cpd = TabularCPD('B',2,[[1., 0.], [0., 1.]], evidence=['A'], evidence_card = [2])
     nullcpd = NullCPD('A', 2)
     cid.add_cpds(nullcpd, cpd)
@@ -16,7 +18,9 @@ def get_minimal_cid():
 
 def get_3node_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
-    cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')], ['U'])
+    cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
+              decision_nodes=['D'],
+              utility_nodes=['U'])
     scpd = TabularCPD('S',2,np.array([[.5],[.5]]))#, evidence=[], evidence_card = [])
     mat = np.array([[0,1, 1,0], [1,0,0,1]])
     ucpd = TabularCPD('U', 2, mat, evidence=['S', 'D'], evidence_card=[2,2])
@@ -34,7 +38,8 @@ def get_5node_cid():
         ('D', 'U1'),
         ('D', 'U2')
         ],
-        ['U1', 'U2'])
+        decision_nodes = ['D'],
+        utility_nodes = ['U1', 'U2'])
     s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))
     s2cpd = TabularCPD('S2',2,np.array([[.5],[.5]]))
     mat = np.array([[0,1, 1,0], [1,0,0,1]])
@@ -53,8 +58,9 @@ def get_2dec_cid():
         ('S2', 'U'), 
         ('S2', 'D2'), 
         ('D2', 'U')
-        ], 
-        ['U'])
+        ],
+        decision_nodes=['D1', 'D2'],
+        utility_nodes=['U'])
     s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))#, evidence=[], evidence_card = [])
     d1cpd = NullCPD('D1', 2)
     d2cpd = NullCPD('D2', 2)
@@ -67,7 +73,7 @@ def get_2dec_cid():
 
 
 def get_insufficient_recall_cid():
-    cid = CID([('A','U'),('B','U')], ['U'])
+    cid = CID([('A','U'),('B','U')], decision_nodes=['A', 'B'], utility_nodes = ['U'])
     tabcpd = TabularCPD('U', 2, np.random.randn(2,4), evidence=['A','B'], evidence_card=[2,2])
     cid.add_cpds(NullCPD('A', 2), NullCPD('B', 2), tabcpd)
     return cid
@@ -84,7 +90,8 @@ def get_nested_cid():
         ('S3', 'D2'), 
         ('S4', 'D2'), 
         ('D2', 'U')],
-        ['U'])
+        decision_nodes = ['D1', 'D2'],
+        utility_nodes = ['U'])
     cpds = [
         TabularCPD('S1',2,np.array([[.5],[.5]])),
         TabularCPD('S2',2,np.array([[.5],[.5]])),

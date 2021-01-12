@@ -93,7 +93,7 @@ def _get_path_pair(cid, D, X):
     assert (X,D) in cid.edges, '{} is not a parent of {}'.format(X, D)
     #remove observations of previous decisions
     cid = cid.copy()
-    decisions = cid._get_valid_order(cid._get_decisions())
+    decisions = cid._get_valid_order(cid.decision_nodes)
     ind = np.argmax(np.array(decisions)==D)
     prior_decisions = decisions[:ind]
     for edge in list(cid.edges).copy(): #avoid dict size changed during iteration error
@@ -101,7 +101,7 @@ def _get_path_pair(cid, D, X):
             cid.remove_edge(*edge)
 
     #find infopath and control path to a downstream utility
-    downstream_utilities = set([i for i in cid.utilities if D in cid._get_ancestors_of(i)])
+    downstream_utilities = set([i for i in cid.utility_nodes if D in cid._get_ancestors_of(i)])
     parents = cid.get_parents(D)
     other_parents = list(set(parents+[D]) - set([X]))
     for utility in downstream_utilities:
@@ -134,7 +134,7 @@ def get_infolinks(cid, path):
     #extract infolinks from a path
     infolinks = []
     for start, end in zip(path[:-1], path[1:]):
-        if end in cid._get_decisions():
+        if end in cid.decision_nodes:
             if start in cid.get_parents(end):
                 infolinks.append((start, end))
     return infolinks
@@ -142,7 +142,7 @@ def get_infolinks(cid, path):
 def choose_all_paths(cid, decision, obs):
     paths = {}
     pair = _get_path_pair(cid, decision, obs)
-    assert pair is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
+    assert pair is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utility_nodes)
     paths[(obs, decision)] = pair
     infolinks = get_infolinks(cid, pair['control']) + get_infolinks(cid, pair['info'])
     new_infolinks = set(infolinks) - set(paths)

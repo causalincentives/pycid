@@ -79,7 +79,7 @@ def _find_systems_along_history(cid, systems, full_history):
     i = 0 #start of history fragment
     for j in range(1, len(full_history)):
         X, D = full_history[j-1:j+1]
-        if D in cid._get_decisions() and X in cid.get_parents(D):
+        if D in cid.decision_nodes and X in cid.get_parents(D):
             history_fragment = full_history[i:j]
             paths = get_system(cid, history_fragment, D, X)
             new_history += paths.pop('history')
@@ -123,7 +123,7 @@ def check_systems(cid, paths, decision, obs):
         for path in paths:
             for i in range(len(path)-3):
                 X, D = path[ptype][i:i+2]
-                if X in cid.get_parents(D) and D in cid._get_decisions():
+                if X in cid.get_parents(D) and D in cid.decision_nodes:
                     if (X,D) not in [(path['info'][0],path['control'][0]) for path in paths]:
                         print("{} not in {}".format((X,D),paths.keys()))
                         return False

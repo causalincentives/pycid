@@ -17,9 +17,12 @@ import warnings
 from pgmpy.models import MarkovModel
 
 class CID(BayesianModel):
-    def __init__(self, ebunch:List[Tuple[str, str]]=None, utilities:List[str]=None):
+    def __init__(self, ebunch:List[Tuple[str, str]],
+                 decision_nodes: List[str],
+                 utility_nodes:List[str]):
         super(CID, self).__init__(ebunch=ebunch)
-        self.utilities = utilities
+        self.decision_nodes = decision_nodes
+        self.utility_nodes = utility_nodes
 
     def nr_observations(self, decision):
         #get nonrequisite observations
@@ -28,7 +31,7 @@ class CID(BayesianModel):
         for obs in parents:
             observed = list(set(parents+ [decision]) - set([obs]))
             connected = set(self.active_trail_nodes([obs], observed=observed)[obs])
-            downstream_utilities = set([i for i in self.utilities if decision in self._get_ancestors_of(i)])
+            downstream_utilities = set([i for i in self.utility_nodes if decision in self._get_ancestors_of(i)])
             #if len([u for u in downstream_utilities if u in connected])==0:
             #import ipdb; ipdb.set_trace()
             if not connected.intersection(downstream_utilities):
@@ -40,7 +43,7 @@ class CID(BayesianModel):
         #based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
         #using the assumption that the graph is soluble
         cid = self.copy()
-        decisions = cid._get_decisions()
+        decisions = cid.decision_nodes
         while True:
             removed = 0
             for decision in decisions:
@@ -53,6 +56,7 @@ class CID(BayesianModel):
         return cid
 
     def _get_decisions(self):
+        raise Exception("Method deprecated")
         decisions = [node.variable for node in self.cpds if isinstance(node, NullCPD)]
         if not decisions: #TODO: can be deleted
             raise ValueError('the cid has no NullCPDs')
@@ -64,10 +68,10 @@ class CID(BayesianModel):
 
 
     def check_sufficient_recall(self):
-        decision_ordering = self._get_valid_order(self._get_decisions())
+        decision_ordering = self._get_valid_order(self.decision_nodes)
         for i, decision1 in enumerate(decision_ordering):
             for j, decision2 in enumerate(decision_ordering[i+1:]):
-                for utility in self.utilities:
+                for utility in self.utility_nodes:
                     if decision2 in self._get_ancestors_of(utility):
                         cid_with_policy = self.copy()
                         cid_with_policy.add_edge('pi',decision1)
@@ -172,7 +176,7 @@ class CID(BayesianModel):
         #returns dictionary with subgame perfect global policy
         new_cid = self.copy()
         # get ordering
-        decisions = self._get_valid_order(self._get_decisions())
+        decisions = self._get_valid_order(self.decision_nodes)
         # solve in reverse ordering
         sp_policies = {}
         for decision in reversed(decisions):
@@ -254,7 +258,7 @@ class CID(BayesianModel):
         # for example: 
         # cid = get_minimal_cid()
         # out = self.expected_utility({'D':1}) #TODO: give example that uses context
-        factor = self._query(self.utilities, context)
+        factor = self._query(self.utility_nodes, context)
         factor.normalize() #make probs add to one
 
         ev = 0
@@ -265,9 +269,7 @@ class CID(BayesianModel):
         return ev
 
     def copy(self):
-        model_copy = CID(utilities=self.utilities)
-        model_copy.add_nodes_from(self.nodes())
-        model_copy.add_edges_from(self.edges())
+        model_copy = CID(self.edges(), decision_nodes=self.decision_nodes, utility_nodes=self.utility_nodes, )
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
