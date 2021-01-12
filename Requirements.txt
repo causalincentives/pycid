@@ -1,4 +1,4 @@
-pylab
+matplotlib
 pgmpy
 networkx
 numpy
