@@ -143,7 +143,7 @@ class CID(BayesianModel):
     #    pass
 
     def _impute_random_policy(self):
-        #imputes random uniform policy to all NullCPDs
+        """Impute a uniform random policy to all NullCPDs"""
         new = self.copy()
         for cpd in new.get_cpds():
             if isinstance(cpd, NullCPD):
@@ -160,6 +160,10 @@ class CID(BayesianModel):
                         )
                 new.add_cpds(uniform_policy)
         return new
+
+    def impute_optimal_policy(self):
+        """Impute an optimal policy to all decisions"""
+        self.add_cpds(*self.solve().values())
 
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
