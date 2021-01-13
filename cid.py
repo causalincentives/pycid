@@ -173,7 +173,7 @@ class CID(BayesianModel):
         # solve in reverse ordering
         sp_policies = {}
         for decision in reversed(decisions):
-            sp_policy = new_cid._get_sp_policy(decision)
+            sp_policy = new_cid._get_sp_policy(decision)  # TODO make more efficient by just instantiating one BP object
             new_cid.add_cpds(sp_policy)
             sp_policies[decision] = sp_policy
         # input each policy once it's solve
@@ -256,7 +256,7 @@ class CID(BayesianModel):
 
         ev = 0
         for idx, prob in np.ndenumerate(factor.values):
-            utils = idx #TODO: change utils to be arbitrary-valued and use idx as indices to retrieve them
+            utils = [factor.state_names[factor.variables[i]][j] for i,j in enumerate(idx) ]
             ev += np.sum(utils) * prob
         #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
@@ -279,7 +279,4 @@ class CID(BayesianModel):
         l = nx.kamada_kawai_layout(self)
         colors = [self.__get_color(node) for node in self.nodes]
         nx.draw_networkx(self, pos=l, node_color=colors)
-
-
-
 

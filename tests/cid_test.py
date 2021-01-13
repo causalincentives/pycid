@@ -8,7 +8,7 @@ import numpy as np
 
 #from models.two_decisions import TwoDecisions
 
-from examples import get_3node_cid, get_5node_cid, get_2dec_cid, get_nested_cid
+from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, get_nested_cid
 from pgmpy.factors.discrete import TabularCPD
 from get_systems import choose_systems, get_first_c_index
 from parameterize import parameterize_systems, merge_all_nodes
@@ -71,6 +71,10 @@ class TestCIDClass(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd.values, np.array([[1, 0], [0, 1]])))
         two_decisions.add_cpds(cpd)
         self.assertEqual(two_decisions.expected_utility({}), 1)
+
+    def test_scaled_utility(self):
+        cid = get_5node_cid_with_scaled_utility()
+        self.assertEqual(cid.expected_utility({}), 6.0)
 
 class TestParameterize(unittest.TestCase):
     def test_parameterization(self):

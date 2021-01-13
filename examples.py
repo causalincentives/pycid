@@ -49,6 +49,27 @@ def get_5node_cid():
     cid.add_cpds(nullcpd, s1cpd, s2cpd, u1cpd, u2cpd)
     return cid
 
+def get_5node_cid_with_scaled_utility():
+    from pgmpy.factors.discrete.CPD import TabularCPD
+    cid = CID([
+        ('S1', 'D'),
+        ('S1', 'U1'),
+        ('S2', 'D'),
+        ('S2', 'U2'),
+        ('D', 'U1'),
+        ('D', 'U2')
+        ],
+        decision_nodes = ['D'],
+        utility_nodes = ['U1', 'U2'])
+    s1cpd = TabularCPD('S1',2,np.array([[.5],[.5]]))
+    s2cpd = TabularCPD('S2',2,np.array([[.5],[.5]]))
+    mat = np.array([[0,1, 1,0], [1,0,0,1]])
+    u1cpd = TabularCPD('U1', 2, mat, evidence=['S1', 'D'], evidence_card=[2,2], state_names={'U1': [0, 10]})
+    u2cpd = TabularCPD('U2', 2, mat, evidence=['S2', 'D'], evidence_card=[2,2], state_names={'U2': [0, 2]})
+    nullcpd = NullCPD('D', 2)
+    cid.add_cpds(nullcpd, s1cpd, s2cpd, u1cpd, u2cpd)
+    return cid
+
 def get_2dec_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
@@ -103,4 +124,3 @@ def get_nested_cid():
     ]
     cid.add_cpds(*cpds)
     return cid
-
