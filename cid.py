@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 import numpy as np
@@ -149,8 +149,8 @@ class CID(BayesianModel):
                 parents_card = [self.get_cardinality(p) for p in parents]
                 transition_probs = np.ones((n_actions, np.product(parents_card).astype(int)))/n_actions
                 uniform_policy = TabularCPD(
-                        cpd.variable, 
-                        cpd.variable_card, 
+                        cpd.variable,
+                        cpd.variable_card,
                         transition_probs,
                         evidence=parents,
                         evidence_card = parents_card
@@ -208,7 +208,7 @@ class CID(BayesianModel):
         evidence = self.get_parents(decision)
         evidence_card = [self.get_cardinality(e) for e in evidence]
         cpd = TabularCPD(
-                decision, 
+                decision,
                 variable_card,
                 prob_table,
                 evidence,
@@ -232,7 +232,7 @@ class CID(BayesianModel):
         return acts[indices]
 
     def _query(self, query, context):
-        #outputs P(U|context)*P(context). 
+        #outputs P(U|context)*P(context).
         #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
 
         #query fails if graph includes nodes not in moralized graph, so we remove them
@@ -241,14 +241,14 @@ class CID(BayesianModel):
         for node in self.nodes:
             if node not in mm.nodes:
                 cid.remove_node(node)
-        filtered_context = {k:v for k,v in context.items() if k in mm.nodes} 
+        filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
 
-        bp = BeliefPropagation(cid._impute_random_policy()) 
+        bp = BeliefPropagation(cid._impute_random_policy())
         factor = bp.query(query, filtered_context)
         return factor
 
     def expected_utility(self, context:dict):
-        # for example: 
+        # for example:
         # cid = get_minimal_cid()
         # out = self.expected_utility({'D':1}) #TODO: give example that uses context
         factor = self._query(self.utility_nodes, context)
@@ -279,4 +279,3 @@ class CID(BayesianModel):
         l = nx.kamada_kawai_layout(self)
         colors = [self.__get_color(node) for node in self.nodes]
         nx.draw_networkx(self, pos=l, node_color=colors)
-

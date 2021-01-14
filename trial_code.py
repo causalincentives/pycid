@@ -62,7 +62,7 @@ def main():
     print(get_motifs(m2, ['D1', 'I', 'T', 'U2']))
     print(m2.path_d_separated_by_Z(['D1', 'I', 'T', 'U2']))
     print(m2._path_contains_collider(['I', 'T', 'U2']))
-    
+
     #print(G.subgraph(['F', 'C', 'TD', 'TF']).edges)
     # print(m2.all_inf_inc_nodes(1))
     # print(f"con_nodes {m2.all_con_inc_nodes(1)}")
@@ -85,17 +85,13 @@ def main():
     # m.get_all_PSNE()
 
 
-   
+
     # m3 = triage()
     # #m3.draw()
     # m3.draw_strategic_rel_graph()
     # m3.draw_SCCs()
-    
+
 
 #%%
 
 main()
-
-
-
-

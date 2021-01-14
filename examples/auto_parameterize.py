@@ -18,17 +18,17 @@ import matplotlib.pyplot as plt
 import time
 #TODO: allow multiple utility nodes
 
-def draw_path(cid, path): 
-    out = path[0] 
-    for j in range(1, len(path)): 
-        pred, node = path[j-1:j+1] 
-        if pred in cid.get_parents(node): 
-            out = out + "->{}".format(node) 
-        elif node in cid.get_parents(pred): 
-            out = out + "<-{}".format(node) 
-        else: 
-            raise ValueError('no edge {}--{}'.format(pred, node)) 
-    return out 
+def draw_path(cid, path):
+    out = path[0]
+    for j in range(1, len(path)):
+        pred, node = path[j-1:j+1]
+        if pred in cid.get_parents(node):
+            out = out + "->{}".format(node)
+        elif node in cid.get_parents(pred):
+            out = out + "<-{}".format(node)
+        else:
+            raise ValueError('no edge {}--{}'.format(pred, node))
+    return out
 
 def main():
     rand_cids = random_cids(n_cids=1000, ns_range = (12, 12), nu_range=(2, 2), nd_range=(2, 2), edge_density=.3)

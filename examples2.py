@@ -46,7 +46,7 @@ def car_accident_predictor():
         ('AP', 'Accu'),
         ],
         {1: {'D': ['AP'],'U': ['Accu']}, 'C': ['B', 'N', 'P', 'Racc', 'Adt', 'Age', 'M']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     
+        )
 
     return macid
 
@@ -61,7 +61,7 @@ def content_reccomender():
         ('P', 'C'),
         ],
         {1: {'D': ['P'],'U': ['C']}, 'C': ['O', 'M', 'I']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     
+        )
 
     return macid
 
@@ -77,7 +77,7 @@ def modified_content_reccomender():
         ('M', 'C')
         ],
         {1: {'D': ['P'],'U': ['C']}, 'C': ['O', 'M', 'I']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     
+        )
 
     return macid
 
@@ -110,12 +110,12 @@ def basic2agent_2():
         ('D2', 'U1'),
         ],
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-        {'U1' :list(range(6)), 'U2': list(range(6))} 
+        {'U1' :list(range(6)), 'U2': list(range(6))}
         )
-        
-        
 
-    
+
+
+
     cpd_D1 = NullCPD('D1', 2)
     cpd_D2 = NullCPD('D2', 2)
 
@@ -149,7 +149,7 @@ def basic2agent_2():
     # cpd_u2 = TabularCPD(variable='U2', variable_card=4,
     #                     values=np.eye(4),
     #                     evidence=['D1', 'D2'], evidence_card=[2, 2])
-    
+
     # macid.add_cpds(cpd_u1, cpd_u2)
     print("added cpds")
 
@@ -167,7 +167,7 @@ def basic_rel_agent():
         ('D2', 'U1'),
         ],
         {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-       )     #defines utilities 
+       )     #defines utilities
 
     return macid
 
@@ -183,7 +183,7 @@ def basic_rel_agent2():
         ('D2', 'U1')
         ],
         {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -202,7 +202,7 @@ def basic_rel_agent3():
         ('Ch', 'U2')
         ],
         {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['Ch']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -219,7 +219,7 @@ def basic_rel_agent4():
         ('D2', 'U2')
         ],
         {1: {'D': ['D1'],'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['Ch']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -245,7 +245,7 @@ def tree_doctor():
         ('BP', 'V'),
         ],
         {0: {'D': ['PT', 'BP'], 'U': ['E', 'V']}, 1: {'D': ['TDoc'], 'U': ['Tree', 'Cost']}, 'C': ['TS', 'TDead']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -305,12 +305,12 @@ def road_example():
         ('B3E', 'U2E'),
 
         ],
-        {'1W': {'D': ['B1W'], 'U': ['U1W']}, '1E': {'D': ['B1E'], 'U': ['U1E']}, 
+        {'1W': {'D': ['B1W'], 'U': ['U1W']}, '1E': {'D': ['B1E'], 'U': ['U1E']},
         '2W': {'D': ['B2W'], 'U': ['U2W']}, '2E': {'D': ['B2E'], 'U': ['U2E']},
-        '3W': {'D': ['B3W'], 'U': ['U3W']}, '3E': {'D': ['B3E'], 'U': ['U3E']}, 
+        '3W': {'D': ['B3W'], 'U': ['U3W']}, '3E': {'D': ['B3E'], 'U': ['U3E']},
         'C': ['S1W', 'S1E', 'S2W', 'S2E', 'S3W', 'S3E']},     #defines the decisions, chance nodes and utility nodes for each agent
-         
-         )     
+
+         )
 
     return macid
 
@@ -336,9 +336,9 @@ def basic2agent_3():
         ('D3', 'U3'),
         ],
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'C': [], 'U': ['U2']}, 2: {'D': ['D3'], 'U': ['U3']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-        {'U1':np.arange(7), 'U2':np.arange(7), 'U3':np.arange(7)} 
-        )    
-    
+        {'U1':np.arange(7), 'U2':np.arange(7), 'U3':np.arange(7)}
+        )
+
     cpd_D1 = NullCPD('D1', 2)
     cpd_D2 = NullCPD('D2', 2)
     cpd_D3 = NullCPD('D3', 2)
@@ -351,7 +351,7 @@ def basic2agent_3():
 
 
 
-    
+
     # cpd_d1 = NullCPD('D1', 2)
     # cpd_d2 = NullCPD('D2', 2)
     # cpd_d3 = NullCPD('D3', 2)
@@ -364,9 +364,9 @@ def basic2agent_3():
     # cpd_u3 = TabularCPD(variable='U3', variable_card=8,
     #                     values= np.eye(8),
     #                     evidence=['D1', 'D2', 'D3'], evidence_card=[2, 2, 2])
-    
+
     # macid.add_cpds(cpd_d1, cpd_d2, cpd_d3, cpd_u1, cpd_u2, cpd_u3)
-    
+
     # for dec in macid.all_decision_nodes:
     #     cpd_d = NullCPD(dec, 2)
     #     macid.add_cpds(cpd_d)
@@ -382,7 +382,7 @@ def basic2agent_3():
     #                         evidence_card=parents_card
     #                         )
     #     macid.add_cpds(cpd_u)
-    
+
     # print("added cpds")
 
     return macid
@@ -402,7 +402,7 @@ def prisoners_dilemma():
         ('D2', 'U2'),
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -419,7 +419,7 @@ def politician():
         ('D2', 'U2'),
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['R', 'I', 'T']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
 
@@ -435,8 +435,8 @@ def umbrella():
         ('UM', 'A'),
         ],
         {1: {'D': ['UM'], 'U': ['A']}, 'C': ['W', 'F']},     #defines the decisions, chance nodes and utility nodes for each agent
-        
-        )      
+
+        )
 
 
     cpd_W = TabularCPD('W',2,np.array([[.6],[.4]]))
@@ -445,12 +445,12 @@ def umbrella():
     cpd_A = TabularCPD('A', 3, np.array([[0, 1, 1, 0], [1, 0, 0, 0], [0,0,0,1]]), evidence=['W', 'UM'], evidence_card=[2,2])
 
 
-  
+
     macid.add_cpds(cpd_W, cpd_F, cpd_UM, cpd_A)
 
 
 
-    
+
 
 
 
@@ -473,8 +473,8 @@ def c2d():
         ('D2', 'U2'),
         ('C1', 'D2'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['C1']},     #defines the decisions, chance nodes and utility nodes for each agent   
-        {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utility ranges 
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['C1']},     #defines the decisions, chance nodes and utility nodes for each agent
+        {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utility ranges
 
 
     cpd_C1 = TabularCPD('C1',2,np.array([[.5],[.5]]))
@@ -500,11 +500,11 @@ def sequential():
         ('D2', 'U1'),
         ('D2', 'U2'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': []},     #defines the decisions, chance nodes and utility nodes for each agent   
-       )     #defines utility ranges 
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
+       )     #defines utility ranges
 
 
-    
+
 
 
 
@@ -523,7 +523,7 @@ def signal():
     from pgmpy.factors.discrete.CPD import TabularCPD
     macid = MACID([
         ('X', 'D1'),
-        ('X', 'U2'),    
+        ('X', 'U2'),
         ('X', 'U1'),
         ('D1', 'U2'),
         ('D1', 'U1'),
@@ -531,21 +531,21 @@ def signal():
         ('D2', 'U1'),
         ('D2', 'U2'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': ['X']},             
-        {'U1':np.arange(6), 'U2':-np.arange(6)})     
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': ['X']},
+        {'U1':np.arange(6), 'U2':-np.arange(6)})
 
     cpd_X = TabularCPD('X',2,np.array([[.5],[.5]]))
     cpd_D1 = NullCPD('D1', 2)
     cpd_D2 = NullCPD('D1', 2)
 
-    U1_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0], 
-                            [0, 0, 0, 1, 0, 0, 1, 0], 
-                            [0, 1, 0, 0, 0, 0, 0, 0], 
-                            [0, 0, 1, 0, 0, 1, 0, 0], 
-                            [0, 0, 0, 0, 0, 0, 0, 1], 
+    U1_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0],
+                            [0, 0, 0, 1, 0, 0, 1, 0],
+                            [0, 1, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 1, 0, 0, 1, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 1],
                             [1, 0, 0, 0, 0, 0, 0, 0]])
 
-    U2_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0], 
+    U2_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0],
                             [0, 0, 0, 1, 0, 0, 1, 0],
                             [0, 1, 0, 0, 0, 0, 0, 0],
                             [0, 0, 1, 0, 0, 1, 0, 0],
@@ -566,11 +566,11 @@ def signal():
 def triage():
     from pgmpy.factors.discrete.CPD import TabularCPD
     macid = MACID([
-        
-        ('H1', 'D1'),  
+
+        ('H1', 'D1'),
         ('H1', 'U1'),
-        
-        ('H2', 'D2'),  
+
+        ('H2', 'D2'),
         ('H2', 'U2'),
 
         ('D1', 'U1'),
@@ -587,10 +587,10 @@ def triage():
         ('D2', 'U3'),
         ('D2', 'U4'),
 
-        ('H3', 'D3'),  
+        ('H3', 'D3'),
         ('H3', 'U3'),
-        
-        ('H4', 'D4'),  
+
+        ('H4', 'D4'),
         ('H4', 'U4'),
 
         ('D3', 'U3'),
@@ -598,7 +598,7 @@ def triage():
         ('D3', 'U1'),
         ('D3', 'U2'),
         ('D4', 'U3'),
-        ('D4', 'U4'),  
+        ('D4', 'U4'),
         ('D4', 'U1'),
         ('D4', 'U2'),
 
@@ -614,18 +614,18 @@ def triage():
         ('D1', 'U6'),
         ('D2', 'U5'),
         ('D2', 'U6'),
-        
-        ('H5', 'D5'),  
+
+        ('H5', 'D5'),
         ('H5', 'U5'),
-        
-        ('H6', 'D6'),  
+
+        ('H6', 'D6'),
         ('H6', 'U6'),
 
         ('D1', 'D5'),
         ('D1', 'D6'),
         ('D2', 'D5'),
         ('D2', 'D6'),
-        
+
         ('D3', 'D5'),
         ('D3', 'D6'),
         ('D4', 'D5'),
@@ -639,19 +639,15 @@ def triage():
         ('D5', 'U5'),
         ('D5', 'U6'),
         ('D6', 'U3'),
-        ('D6', 'U4'),  
+        ('D6', 'U4'),
         ('D6', 'U1'),
         ('D6', 'U2'),
         ('D6', 'U5'),
         ('D6', 'U6'),
 
-    
+
         ],
         {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 3: {'D': ['D3'], 'U': ['U3']}, 4: {'D': ['D4'], 'U': ['U4']}, 5: {'D': ['D5'], 'U': ['U5']}, 6: {'D': ['D6'], 'U': ['U6']}, 'C': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']},     #defines the decisions, chance nodes and utility nodes for each agent
-        )     #defines utilities 
+        )     #defines utilities
 
     return macid
-
-
-
-

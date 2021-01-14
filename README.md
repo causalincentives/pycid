@@ -1,6 +1,6 @@
 # Causal Influence Diagram Representation
 
-This project implements causal influence diagrams, 
+This project implements causal influence diagrams,
 as studied in a number of recent papers and blog posts.
 
 * [The Incentives that Shape Behavior](https://arxiv.org/abs/2001.07118)
@@ -11,7 +11,7 @@ as studied in a number of recent papers and blog posts.
 
 The key class is CID.py, which extends [BayesianModel](http://pgmpy.org/models.html) from the well-established Python graphical models library [pgmpy](http://pgmpy.org).
 
-Just like BayesianModel, it can be flexibly initialized in a number of ways. 
+Just like BayesianModel, it can be flexibly initialized in a number of ways.
 It requires two additional parameters that specify the decision nodes and the utility nodes of the model.
 
 Building on pgmpy, it provides methods for computing

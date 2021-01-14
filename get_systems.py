@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse, get_motifs, _get_active_dirpath
@@ -19,7 +19,7 @@ def is_directed(cid, info_path):
 def _get_c_index(cid, history_fragment, info_path):
     i_C = 0
     assert info_path[0]==history_fragment[-1]
-    
+
     for i in range(min(len(info_path), len(history_fragment))):
         if info_path[i]==history_fragment[-i-1]:
             return i_C
@@ -40,7 +40,7 @@ def get_first_c_index(cid, info_path):
 def augment_paths(cid, history_path, D, info_path, i_C0):
     X0 = info_path[0]
     C0 = info_path[i_C0]
-    
+
     #follow the procedure for changing the path pair
     if is_backdoor(cid, info_path[i_C0:]) or is_directed(cid, info_path[i_C0:]):
         paths = {'history':history_path, 'info': info_path, 'i_C':i_C0, 'obs_paths':[]}
@@ -103,18 +103,18 @@ def _choose_systems_recurse(cid, systems, system_idx, history_pointer):
 
         for j in range(1, len(new_infolinks) + 1):
             _choose_systems_recurse(cid, systems, system_idx+j, history_pointer)
-    
+
 def choose_systems(cid, decision, obs):
     #recursively choose paths where infopaths are directed or backdoor from combiner node C
     systems = [_get_path_pair(cid, decision, obs)]
     assert systems[0] is not None, "paths not found from ({}->{}) to {}".format(obs, decision, cid.utilities)
-    
+
     _choose_systems_recurse(cid, systems, 0, None)
     return systems
 
 
 
-def check_systems(cid, paths, decision, obs): 
+def check_systems(cid, paths, decision, obs):
     #TODO: also check that i_C is the node where the history encounters the string
     #check that all infolinks have their own paths, and that they're directed or backdoor from C
     paths = paths.copy()

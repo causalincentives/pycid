@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 import random
@@ -19,9 +19,9 @@ def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
     return nonunames+unames, dnames, unames
 
 def get_edges(
-        names: List[str], 
-        unames: List[str], 
-        edge_density: float, 
+        names: List[str],
+        unames: List[str],
+        edge_density: float,
         seed=None,
         allow_u_edges=False,
         ):
@@ -58,12 +58,12 @@ def load_cid(
     return cid
 
 def random_cid(
-        n_all:int, 
-        n_decisions:int, 
-        n_utilities:int, 
+        n_all:int,
+        n_decisions:int,
+        n_utilities:int,
         edge_density:float=0.4,
         seed:int=None):
-    
+
     allnames, dnames, unames = get_node_names(n_all, n_decisions, n_utilities)
     edges = get_edges(allnames, unames, edge_density, seed=seed, allow_u_edges=False)
     cid = load_cid(edges,dnames,unames)
@@ -86,7 +86,7 @@ def random_cids(
     # generates a bunch of CID skeletons with sufficient recall
     # if add_sr_edges=True, then sufficient recall is ensured by adding edges
     # otherwise it is ensured by resampling graphs
-    cids = []    
+    cids = []
 
     while len(cids) < n_cids:
         n_all = random.randint(*ns_range)
@@ -115,7 +115,7 @@ def _add_sufficient_recall(cid, dec1, dec2, utility):
     if dec2 in cid._get_ancestors_of(dec1):
         raise ValueError('{} is an ancestor of {}'.format(dec2, dec1))
 
-    
+
     cid2 = cid.copy()
     cid2.add_edge('pi',dec1)
     if not cid2.is_active_trail('pi', utility, observed=cid2.get_parents(dec2) + [dec2]): #recall is already sufficient

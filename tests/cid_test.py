@@ -90,7 +90,7 @@ class TestParameterize(unittest.TestCase):
         ev1, ev2 = verify_incentive(cid, D, X)
         self.assertEqual(ev1, 1)
         self.assertEqual(ev2, .5)
-        
+
 class TestParameterize(unittest.TestCase):
     def test_param3(self):
         cid = get_3node_cid()

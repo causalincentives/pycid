@@ -2,3 +2,4 @@ matplotlib
 pgmpy
 networkx
 numpy
+pre-commit

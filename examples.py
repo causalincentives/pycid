@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 from pgmpy.factors.discrete import TabularCPD
@@ -73,11 +73,11 @@ def get_5node_cid_with_scaled_utility():
 def get_2dec_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
-        ('S1', 'S2'), 
-        ('S1','D1'), 
+        ('S1', 'S2'),
+        ('S1','D1'),
         ('D1','S2'),
-        ('S2', 'U'), 
-        ('S2', 'D2'), 
+        ('S2', 'U'),
+        ('S2', 'D2'),
         ('D2', 'U')
         ],
         decision_nodes=['D1', 'D2'],
@@ -98,18 +98,18 @@ def get_insufficient_recall_cid():
     tabcpd = TabularCPD('U', 2, np.random.randn(2,4), evidence=['A','B'], evidence_card=[2,2])
     cid.add_cpds(NullCPD('A', 2), NullCPD('B', 2), tabcpd)
     return cid
-        
+
 def get_nested_cid():
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
-        ('S1', 'D1'), 
-        ('S1', 'S3'), 
-        ('D1', 'S3'), 
-        ('S2', 'S4'), 
-        ('S2', 'U'), 
-        ('S3', 'S4'), 
-        ('S3', 'D2'), 
-        ('S4', 'D2'), 
+        ('S1', 'D1'),
+        ('S1', 'S3'),
+        ('D1', 'S3'),
+        ('S2', 'S4'),
+        ('S2', 'U'),
+        ('S3', 'S4'),
+        ('S3', 'D2'),
+        ('S4', 'D2'),
         ('D2', 'U')],
         decision_nodes = ['D1', 'D2'],
         utility_nodes = ['U'])

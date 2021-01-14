@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
@@ -166,7 +166,7 @@ def get_equals_func_cpd(node, arg_cpd, f_cpd, val_cpd, path_name):
 
 
 
-    
+
 
 def __get_equality_values(dim):
     return np.array((1-np.eye(dim).ravel(), np.eye(dim).ravel()))
@@ -205,7 +205,7 @@ def get_equality_cpd(U, info_cpd, control_cpd, path_name):
 
 
 def _merge_values(A, B):
-    #take a product of two prob tables, giving a prob table of 
+    #take a product of two prob tables, giving a prob table of
     #dims [A.shape[0]*B.shape[0], A.shape[1]]
     if len(A.shape)==1:
         A = A[:,np.newaxis]
@@ -223,11 +223,11 @@ def get_cpds(flat_cpds, name):
 #    non_merging = [i for i in cpd.variables[1:] if i[2]!=name]
 #    cpd.reorder_parents(merging+non_merging, inplace=True)
 #    dims = node_cards + [cpd.cardinality[1+len(merging):]]
-#    values = project_values(dims, np.arange(1+len(merging),len(cpd.variables[1:])), 
+#    values = project_values(dims, np.arange(1+len(merging),len(cpd.variables[1:])),
 #                            cpd.get_values())
-#    
+#
 #    return cpd
-    
+
 def get_names(names, allow_singles=True):
     if allow_singles:
         out = []
@@ -256,14 +256,14 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
     node_cpds = get_cpds(flat_cpds, name)
     graphical_children = [i for i in flat_cpds if i.variable[2] in cid.get_children(name)]
     child_cpds = [i for i in graphical_children if isinstance(i, NullCPD) or name in get_names(i.variables[1:])]
-    
+
     #make merged cpd for`name`
     node_names = [W.variable for W in node_cpds]
     node_cards = [W.variable_card for W in node_cpds]
     variable_card = np.product(node_cards, dtype=int)
     evidence = cid.get_parents(name)
-    evidence_card = [merged_cpds[k].variable_card if k in merged_cpds else 1 for k in evidence] 
-    
+    evidence_card = [merged_cpds[k].variable_card if k in merged_cpds else 1 for k in evidence]
+
     #project each cpd onto set of actual parents
     if name in cid._get_decisions():
         assert isinstance(variable_card, (int, np.int64))
@@ -284,7 +284,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
                 all_values.append(node_cpd.get_values())
             #if node_cpd.variable[2]=='S0':
             #    import ipdb; ipdb.set_trace()
-        
+
         #merge the values
         if all_values:
             values = reduce(_merge_values, all_values)
@@ -294,7 +294,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
         if name in cid.utilities:
             variable_card = int(np.log2(variable_card)+1)
             values = utility_values(values)
-        
+
         new_cpd = TabularCPD(
                         variable=name,
                         variable_card=variable_card,
@@ -304,7 +304,7 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
                         )
 
 
-    
+
     #change children
     new_children = []
     for child_cpd in child_cpds:
@@ -325,21 +325,19 @@ def merge_node(cid, merged_cpds, flat_cpds, name):
             else:
                 evidence_card = None
                 new_evidence = None
-            
+
             new_children.append(TabularCPD(
                 variable=child_cpd.variable,
                 evidence=new_evidence,
                 variable_card= child_cpd.variable_card,
                 evidence_card=evidence_card,
-                values = new_values            
+                values = new_values
             ))
         elif isinstance(child_cpd, NullCPD):
             new_children.append(child_cpd)
-        
+
     #remove `name` from flat_cpds
     #update parents and values of child nodes
     merged_cpds[new_cpd.variable] = new_cpd
     flat_cpds = [i for i in flat_cpds if i.variable[2]!=name and i not in child_cpds] + new_children
     return merged_cpds, flat_cpds, new_cpd, new_children
-
-

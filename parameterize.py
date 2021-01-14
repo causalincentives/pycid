@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 import numpy as np
@@ -32,7 +32,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
     control_cpds = {}
     obs_cpds = {}
 
-    #create CPDs for each node, 
+    #create CPDs for each node,
     if is_directed(cid, info[i_C:]):
         #parameterize C
         if not H_cpd:
@@ -46,7 +46,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         for j in range(i_C-1,-1, -1):
             W, parent = info[j:j+2]
             info_cpds[W] = get_identity_cpd(cid, W, info_cpds[parent], (system_idx, 'info'))
-        
+
         #parameterize nodes after C to equal their parents
         #if H_cpd:
         #    W = info[i_C+1]
@@ -100,7 +100,7 @@ def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):
         control_cpds[U] = get_equality_cpd(U, info_cpd, control_cpd, (system_idx, 'control'))
 
     else:
-        #if path from C is not directed, then sample a bistring 2^H_cpd.variable_card at S, F. 
+        #if path from C is not directed, then sample a bistring 2^H_cpd.variable_card at S, F.
         #XOR it at colliders, and slice it.
         #uniformly sample an integer, which will be interpreted as a function 2^H_cpd.variable_card->2
 
@@ -244,7 +244,3 @@ def merge_all_nodes(cid, all_cpds):
     for node in cid._get_valid_order(cid.nodes):
         merged_cpds, all_cpds, _, _ = merge_node(cid, merged_cpds, all_cpds, node)
     return merged_cpds
-
-
-
-

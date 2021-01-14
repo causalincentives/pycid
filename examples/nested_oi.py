@@ -79,6 +79,5 @@ print(ev1, ev2)
 
 
 #{(i,j):(k,new_cid._query(new_cid.utilities,{'S4':i,'S3':j}).values) for (i,j),k in zip(
-#    [(a,b) for a in range(16) for b in range(4)], 
+#    [(a,b) for a in range(16) for b in range(4)],
 #    d2cpd.get_values().argmax(axis=0)) if new_cid._query(new_cid.utilities,{'S4':i,'S3':j}).values.sum()}
-

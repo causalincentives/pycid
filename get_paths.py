@@ -1,4 +1,4 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license 
+#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
 from typing import List
@@ -38,7 +38,7 @@ def get_motif(cid, path: List[str], i):
 
         else:
             ValueError(f"unsure how to calssify this path at index {i}")
-    
+
 
 def _find_dirpath_recurse(bn, path: List[str], B: str):
     if path[-1]==B:
@@ -58,7 +58,7 @@ def _active_neighbours(bn, path: List[str], E: List[str]):
     #find possibly active extensions of path conditional on E
     A = path[-1]
     last_forward = len(path) > 1 and A in bn.get_children(path[-2])
-    
+
     if A in E: #implies that last step was forward
         active_children= []
         active_parents = [i for i in bn.get_parents(A) if i not in E]
@@ -68,11 +68,11 @@ def _active_neighbours(bn, path: List[str], E: List[str]):
     else:
         active_children = bn.get_children(A)
         active_parents = [i for i in bn.get_parents(A) if i not in E]
-        
+
     active_neighbours = active_parents + active_children
     new_active_neighbours = [i for i in active_neighbours if i not in path]
     return new_active_neighbours
-    
+
 
 def find_active_path_recurse(bn, path:List, B:str, E:List):
     #find active path from `path' to `B' given `E'
@@ -85,7 +85,7 @@ def find_active_path_recurse(bn, path:List, B:str, E:List):
             ext = find_active_path_recurse(bn, ext, B, E)
             if ext and ext[-1]==B and B not in E:
                 return ext
-            
+
 #def find_active_path(bn, A, B, E):
 #    return _find_active_path_recurse(bn, [A], B, E)
 
@@ -157,5 +157,3 @@ def choose_all_paths(cid, decision, obs):
 
 #TODO: why does step (1) advise removing all other nodes?
 #TODO: why does step (1) advise choosing the info path so that X \neq S?
-
-
