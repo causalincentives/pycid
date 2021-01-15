@@ -3,18 +3,17 @@
 
 import numpy as np
 from pgmpy.models import BayesianModel
-from pgmpy.factors.discrete import TabularCPD
+from pgmpy.factors.discrete import TabularCPD, DiscreteFactor
 from pgmpy.factors.continuous import ContinuousFactor
 import logging
-import typing
 from typing import List, Tuple
 import itertools
 from pgmpy.inference.ExactInference import BeliefPropagation
-import functools
 import networkx as nx
-from cpd import NullCPD
+from cpd import NullCPD, FunctionCPD
 import warnings
 from pgmpy.models import MarkovModel
+
 
 class CID(BayesianModel):
     def __init__(self, ebunch:List[Tuple[str, str]],
@@ -59,7 +58,6 @@ class CID(BayesianModel):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
 
-
     def check_sufficient_recall(self):
         decision_ordering = self._get_valid_order(self.decision_nodes)
         for i, decision1 in enumerate(decision_ordering):
@@ -79,10 +77,11 @@ class CID(BayesianModel):
                             return False
         return True
 
-    def add_cpds(self, *cpds):
+    def add_cpds(self, *cpds: DiscreteFactor) -> None:
+        """Add the given CPDs and initiate NullCPDs and FunctionCPDs"""
         for cpd in cpds:
-            if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD)):
-                raise ValueError("Only TabularCPD, ContinuousFactor, or NullCPD can be added.")
+            if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD, FunctionCPD)):
+                raise ValueError("Only TabularCPD, ContinuousFactor, FunctionCPD, or NullCPD can be added.")
 
             if set(cpd.scope()) - set(cpd.scope()).intersection(set(self.nodes())):
                 raise ValueError("CPD defined on variable not in the model", cpd)
@@ -97,76 +96,20 @@ class CID(BayesianModel):
             else:
                 self.cpds.append(cpd)
 
-    def check_model(self, allow_null=True):
-        """
-        Check the model for various errors. This method checks for the following
-        errors.
-
-        * Checks if the sum of the probabilities for each state is equal to 1 (tol=0.01).
-        * Checks if the CPDs associated with nodes are consistent with their parents.
-
-        Returns
-        -------
-        check: boolean
-            True if all the checks are passed
-        """
-        for node in self.nodes():
-            cpd = self.get_cpds(node=node)
-
-            if cpd is None:
-                raise ValueError("No CPD associated with {}".format(node))
-            elif isinstance(cpd, (TabularCPD, ContinuousFactor)):
-                evidence = cpd.get_evidence()
-                parents = self.get_parents(node)
-                if set(evidence if evidence else []) != set(parents if parents else []): #TODO: do es this check appropriate cardinalities?
-                    raise ValueError(
-                        "CPD associated with {node} doesn't have "
-                        "proper parents associated with it.".format(node=node)
-                    )
-                if not cpd.is_valid_cpd():
-                    raise ValueError(
-                        "Sum or integral of conditional probabilites for node {node}"
-                        " is not equal to 1.".format(node=node)
-                    )
-            elif isinstance(cpd, (NullCPD)):
-                if not allow_null:
-                    raise ValueError(
-                        "CPD associated with {node} is nullcpd".format(node=node)
-                    )
-        return True
-
-    #def _get_local_policies(self, decision):
-    #    #returns a list of all possible CPDs
-    #    pass
-
-    def _impute_random_policy(self):
-        """Impute a uniform random policy to all NullCPDs"""
-        new = self.copy()
-        for cpd in new.get_cpds():
-            if isinstance(cpd, NullCPD):
-                n_actions = cpd.variable_card
-                parents = new.get_parents(cpd.variable)
-                parents_card = [self.get_cardinality(p) for p in parents]
-                transition_probs = np.ones((n_actions, np.product(parents_card).astype(int)))/n_actions
-                uniform_policy = TabularCPD(
-                        cpd.variable,
-                        cpd.variable_card,
-                        transition_probs,
-                        evidence=parents,
-                        evidence_card = parents_card
-                        )
-                new.add_cpds(uniform_policy)
-        return new
+        # Once all CPDs are added, initialize the TablularCPD matrices
+        for cpd in cpds:
+            if isinstance(cpd, FunctionCPD) or isinstance(cpd, NullCPD):
+                cpd.initializeTabularCPD(self)
 
     def impute_optimal_policy(self):
-        """Impute an optimal policy to all decisions"""
+        """Impute an optimal policy to all decision nodes"""
         self.add_cpds(*self.solve().values())
 
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
 
     def solve(self):
-        #returns dictionary with subgame perfect global policy
+        """Return dictionary with subgame perfect global policy"""
         new_cid = self.copy()
         # get ordering
         decisions = self._get_valid_order(self.decision_nodes)
@@ -243,7 +186,7 @@ class CID(BayesianModel):
                 cid.remove_node(node)
         filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
 
-        bp = BeliefPropagation(cid._impute_random_policy())
+        bp = BeliefPropagation(self)
         factor = bp.query(query, filtered_context)
         return factor
 

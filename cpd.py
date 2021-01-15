@@ -2,21 +2,38 @@
 #agreements; and to You under the Apache License, Version 2.0.
 import itertools
 from typing import List
-
-from pgmpy.factors.base import BaseFactor
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
+import numpy as np
 
-from cid import CID
+
+def get_random_cpd(name, card, evidence, evidence_card):
+    transition_probs = np.ones((card, np.product(evidence_card).astype(int))) / card
+    return TabularCPD(
+        name,
+        card,
+        transition_probs,
+        evidence=evidence,
+        evidence_card=evidence_card
+    )
 
 
-class NullCPD(BaseFactor):
-    def __init__(self, variable, variable_card, state_names={}):
+class NullCPD(TabularCPD):
+    """NullCPD class is a class used for decision nodes, to avoid having to specify a probability matrix
+
+    It only becomes a fully initialized TabularCPD once the method initializeTabularCPD
+    is run.
+    """
+
+    def __init__(self, variable, variable_card, state_names=None):
         self.variable = variable
         self.variable_card = variable_card #is this correct?
         self.cardinality = [variable_card] #TODO: possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
-        self.state_names = state_names
+        if state_names:
+            self.state_names = state_names[variable]
+        else:
+            self.state_names = {variable : list(range(variable_card))}
 
     def scope(self):
         return [self.variable]
@@ -24,52 +41,72 @@ class NullCPD(BaseFactor):
     def copy(self):
         return NullCPD(self.variable, self.variable_card)
 
-    def marginalize(self, variables, inplace=True): #TODO (maybe): decrease cardinality by len(variables)
-        if not inplace:
-            return self
-
     def __repr__(self):
         return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
     #def to_factor(self):
     #    return self
 
+    def initializeTabularCPD(self, cid):
+        """initialize the TabularCPD with a matrix representing a uniform random distribution"""
+        parents = cid.get_parents(self.variable)
+        parents_card = [cid.get_cardinality(p) for p in parents]
+        transition_probs = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
+        super(NullCPD, self).__init__(self.variable, self.variable_card, transition_probs,
+                                      parents, parents_card)
 
-class FunctionCPD:
 
-    def __init__(self, name: str, card: int, f, evidence: List[str], evidence_card: List[int]):
-        self.name = name
-        self.card = card
+class FunctionCPD(TabularCPD):
+    """FunctionCPD class used to specify relationship between variables with a function rather than
+    a probability matrix
+
+    Once inserted into a BayesianModel, the function initializeTabularCPD converts the function
+    into a probability table for the TabularCPD. It is necessary to wait with this until a surrounding
+    model is known, since the state names depends on the values of the parents.
+    """
+
+    def __init__(self, variable: str, f, evidence):
+        self.variable = variable
         self.f = f
         self.evidence = evidence
-        self.evidence_card = evidence_card
 
-    def possible_values(self, cid: BayesianModel):
-        parents = cid.get_parents(self.name)
+    def scope(self):
+        return [self.variable]
+
+    def copy(self):
+        return FunctionCPD(self.variable, self.f, self.evidence)
+
+    def __repr__(self):
+        return "<FunctionCPD {}:{}>".format(self.variable, self.f)
+
+    def parent_values(self, cid: BayesianModel) -> List[List]:
+        """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values = []
-        for p in parents:
-            if p.state_names:
-                parent_values.append(p.state_names)
-            elif isinstance(p, FunctionCPD):
+        for p in self.evidence:
+            p_cpd = cid.get_cpds(p)
+            if isinstance(p, FunctionCPD):
                 parent_values.append(p.possible_values())
+            elif p_cpd.state_names:
+                parent_values.append(list(p_cpd.state_names[p]))
             else:
                 raise Exception("unknown parent values for {}".format(p))
-        self.poss_values = [self.f(*x) for x in itertools.product(parents)]
+        return parent_values
 
+    def possible_values(self, cid: BayesianModel) -> List:
+        """The possible values this variable can take, given the values the parents can take"""
+        parent_values = self.parent_values(cid)
+        return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
 
-    def convert2TabularCPD(self, cid: BayesianModel):
-        parents = cid.get_parents(self.name)
+    def initializeTabularCPD(self, cid: BayesianModel) -> None:
+        """Initialize the probability table for the inherited TabularCPD"""
+        state_names = {self.variable: self.possible_values(cid)}
+        card = len(state_names[self.variable])
+        evidence = cid.get_parents(self.variable)
+        evidence_card = [cid.get_cpds(p).cardinality[0] for p in evidence]
 
+        matrix = np.array([[int(self.f(*i) == t)
+                            for i in itertools.product(*self.parent_values(cid))]
+                           for t in state_names[self.variable]])
 
-        ranges = [range(i) for i in evidence_card]
-        # values = [(f(*i) for i in itertools.product(*ranges)]
-
-        # for i in itertools.product(*ranges):
-        #     print(i, dom2val_list(evidence_dom2val, i), f(*dom2val_list(evidence_dom2val, i)),
-        #           val2dom(f(*dom2val_list(evidence_dom2val, i))),
-        #           val2dom(f(*dom2val_list(evidence_dom2val, i)))==3)
-
-        matrix = np.array([[int(val2dom(f(*dom2val_list(evidence_dom2val, i))) == t)
-                            for i in itertools.product(*ranges)]
-                           for t in range(card)])
-
-        super(FunctionCPD, self).__init__(name, card, matrix, evidence, evidence_card)
+        super(FunctionCPD, self).__init__(self.variable, card,
+                                          matrix, evidence, evidence_card,
+                                          state_names=state_names)
