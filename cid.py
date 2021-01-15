@@ -102,8 +102,14 @@ class CID(BayesianModel):
                 cpd.initializeTabularCPD(self)
 
     def impute_optimal_policy(self):
-        """Impute an optimal policy to all decision nodes"""
-        self.add_cpds(*self.solve().values())
+        """Impute a subgame perfect optimal policy to all decision nodes"""
+        decisions = self._get_valid_order(self.decision_nodes)
+        # solve in reverse ordering
+        self.add_cpds(*[self._get_sp_policy(d) for d in reversed(decisions)])
+
+    def impute_random_policy(self):
+        """Impute a random policy to all decision nodes"""
+        self.add_cpds(*[NullCPD(d, self.get_cardinality(d)) for d in self.decision_nodes])
 
     def _indices_to_prob_table(self, indices, n_actions):
         return np.eye(n_actions)[indices].T
@@ -111,16 +117,8 @@ class CID(BayesianModel):
     def solve(self):
         """Return dictionary with subgame perfect global policy"""
         new_cid = self.copy()
-        # get ordering
-        decisions = self._get_valid_order(self.decision_nodes)
-        # solve in reverse ordering
-        sp_policies = {}
-        for decision in reversed(decisions):
-            sp_policy = new_cid._get_sp_policy(decision)  # TODO make more efficient by just instantiating one BP object
-            new_cid.add_cpds(sp_policy)
-            sp_policies[decision] = sp_policy
-        # input each policy once it's solve
-        return sp_policies
+        new_cid.impute_optimal_policy()
+        return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
     def _possible_contexts(self, decision):
         parents = self.get_parents(decision)

@@ -39,7 +39,7 @@ class NullCPD(TabularCPD):
         return [self.variable]
 
     def copy(self):
-        return NullCPD(self.variable, self.variable_card)
+        return NullCPD(self.variable, self.variable_card, state_names=self.state_names)
 
     def __repr__(self):
         return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
