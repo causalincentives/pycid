@@ -23,7 +23,7 @@ class CID(BayesianModel):
         self.decision_nodes = decision_nodes
         self.utility_nodes = utility_nodes
 
-    def add_cpds(self, *cpds: DiscreteFactor) -> None:
+    def add_cpds(self, *cpds: DiscreteFactor, update_all:bool = True) -> None:
         """Add the given CPDs and initiate NullCPDs and FunctionCPDs"""
         for cpd in cpds:
             if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD, FunctionCPD)):
@@ -43,7 +43,11 @@ class CID(BayesianModel):
                 self.cpds.append(cpd)
 
         # Once all CPDs are added, initialize the TablularCPD matrices
-        for cpd in self.get_cpds():
+        if update_all:
+            update_cpds = self.get_cpds()
+        else:
+            update_cpds = cpds
+        for cpd in update_cpds:
             if hasattr(cpd, "initializeTabularCPD"):    #isinstance(cpd, FunctionCPD) or isinstance(cpd, NullCPD):
                 cpd.initializeTabularCPD(self)
 
@@ -70,12 +74,6 @@ class CID(BayesianModel):
                             return False
         return True
 
-    def impute_optimal_policy(self) -> None:
-        """Impute a subgame perfect optimal policy to all decision nodes"""
-        decisions = self._get_valid_order(self.decision_nodes)
-        # solve in reverse ordering
-        self.add_cpds(*[self._get_sp_policy(d) for d in reversed(decisions)])
-
     def impute_random_decision(self, d: str) -> None:
         sn = self.get_cpds(d).state_names
         self.add_cpds(NullCPD(d, self.get_cardinality(d), state_names=sn))
@@ -85,13 +83,39 @@ class CID(BayesianModel):
         for d in self.decision_nodes:
             self.impute_random_decision(d)
 
+    def impute_optimal_decision(self, d: str):
+        parents = self.get_parents(d)
+        dom2val = self.get_cpds(d).no_to_name[d]
+        card = self.get_cardinality(d)
+        new = self.copy()
+        new.impute_random_decision(d)
+
+        def opt_policy(*pv: tuple) -> float:
+            context = {p: pv[i] for i, p in enumerate(parents)}
+            eu = []
+            for d_idx in range(card):
+                context[d] = d_idx
+                eu.append(new.expected_utility(context))
+            return dom2val[np.argmax(eu)]
+
+        self.add_cpds(FunctionCPD(d, opt_policy, parents), update_all=False)
+        self.freeze_policy(d)
+
+    def impute_optimal_policy(self) -> None:
+        """Impute a subgame perfect optimal policy to all decision nodes"""
+        decisions = self._get_valid_order(self.decision_nodes)
+        for d in decisions:
+            self.impute_optimal_decision(d)
+        # solve in reverse ordering
+        #self.add_cpds(*[self._get_sp_policy(d) for d in reversed(decisions)])
+
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
         parents = self.get_parents(d)
-        parent_values = [self.get_cpds(p).state_names[p] for p in parents]
-        parent_values_prod = list(itertools.product(*parent_values))
-        contexts = [ {p: pv[i] for i, p in enumerate(parents)}
-                     for pv in parent_values_prod]
+        #parent_values = [self.get_cpds(p).state_names[p] for p in parents]
+        # parent_values_prod = list(itertools.product(*parent_values))
+        # contexts = [ {p: pv[i] for i, p in enumerate(parents)}
+        #              for pv in parent_values_prod]
         #function = {pv: self.expected_value(y, contexts[i]) for i, pv in enumerate(parent_values_prod)}
         # func = lambda *x: function[x]
         new = self.copy()
@@ -100,7 +124,7 @@ class CID(BayesianModel):
             context = {p: pv[i] for i, p in enumerate(parents)}
             return new.expected_value(y, context)
 
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents))
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents), update_all=False)
         self.freeze_policy(d)
 
     def freeze_policy(self, d: str) -> None:
@@ -112,64 +136,6 @@ class CID(BayesianModel):
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
-
-    def _possible_contexts(self, decision):
-        parents = self.get_parents(decision)
-        if parents:
-            contexts = []
-            parent_cards = [self.get_cardinality(p) for p in parents]
-            context_tuples = itertools.product(*[range(card) for card in parent_cards])  # TODO this should use state names instead
-            for context_tuple in context_tuples:
-                contexts.append({p:c for p,c in zip(parents, context_tuple)})
-            return contexts
-        else:
-            return None
-
-    def _get_sp_policy(self, decision):
-        actions = []
-        contexts = self._possible_contexts(decision)
-        if contexts:
-            for context in contexts:
-                act = self._optimal_decisions(decision, context)[0]
-                actions.append(act)
-        else:
-            act = self._optimal_decisions(decision, {})[0]
-            actions.append(act)
-
-        def _indices_to_prob_table(indices, n_actions):
-            return np.eye(n_actions)[indices].T
-
-        prob_table = _indices_to_prob_table(actions, self.get_cardinality(decision))
-
-        variable_card = self.get_cardinality(decision)
-        evidence = self.get_parents(decision)
-        evidence_card = [self.get_cardinality(e) for e in evidence]
-        cpd = TabularCPD(
-                decision,
-                variable_card,
-                prob_table,
-                evidence,
-                evidence_card,
-                state_names=self.get_cpds(decision).state_names
-                )
-        return cpd
-
-    def _optimal_decisions(self, decision, context):
-        new = self.copy()
-        new.impute_random_decision(decision)
-        utilities = []
-        #net = cid._impute_random_policy()
-        acts = np.arange(self.get_cpds(decision).variable_card)
-        for act in acts:
-            context = context.copy()
-            context[decision] = act
-            ev = new.expected_utility(context)
-            utilities.append(ev)
-        indices = np.where(np.array(utilities)==np.max(utilities))
-        if len(acts[indices])==0:
-            warnings.warn('zero prob on {} so all actions deemed optimal'.format(context))
-            return np.array(acts)
-        return acts[indices]
 
     def _query(self, query, context):
         #outputs P(U|context)*P(context).
