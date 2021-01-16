@@ -8,11 +8,13 @@ import numpy as np
 
 #from models.two_decisions import TwoDecisions
 
-from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, get_nested_cid
+from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, get_nested_cid, \
+    get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 from get_systems import choose_systems, get_first_c_index
 from parameterize import parameterize_systems, merge_all_nodes
 from verify_incentive import verify_incentive
+
 
 class TestCIDClass(unittest.TestCase):
 
@@ -76,7 +78,32 @@ class TestCIDClass(unittest.TestCase):
         cid = get_5node_cid_with_scaled_utility()
         self.assertEqual(cid.expected_utility({}), 6.0)
 
+    def test_impute_cond_expectation_decision(self):
+        cid = get_introduced_bias()
+        cid.impute_conditional_expectation_decision('D', 'Y')
+        eu_ce = cid.expected_utility({})
+        self.assertGreater(eu_ce, -0.2)
+        cid.impute_optimal_policy()
+        eu_opt = cid.expected_utility({})
+        self.assertEqual(eu_ce, eu_opt)
+
+    def test_updated_decision_names(self):
+        cid = get_introduced_bias()
+        self.assertEqual(cid.get_cpds('D').state_names['D'], [0, 1])
+        cid.impute_conditional_expectation_decision('D', 'Y')
+        self.assertNotEqual(cid.get_cpds('D').state_names['D'], [0, 1])
+        cid.impute_random_policy()
+        self.assertNotEqual(cid.get_cpds('D').state_names['D'], [0, 1])
+        cid.impute_optimal_policy()
+        eu = cid.expected_utility({})
+        self.assertGreater(eu, -0.2)
+
+
+# class IncentivesTest(unittest.TestCase):
+
+
 class TestParameterize(unittest.TestCase):
+
     def test_parameterization(self):
         cid = get_3node_cid()
         D = 'D'
@@ -91,7 +118,6 @@ class TestParameterize(unittest.TestCase):
         self.assertEqual(ev1, 1)
         self.assertEqual(ev2, .5)
 
-class TestParameterize(unittest.TestCase):
     def test_param3(self):
         cid = get_3node_cid()
         D = 'D'

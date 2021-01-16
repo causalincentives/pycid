@@ -7,15 +7,17 @@ from pgmpy.models import BayesianModel
 import numpy as np
 
 
-def get_random_cpd(name, card, evidence, evidence_card):
-    transition_probs = np.ones((card, np.product(evidence_card).astype(int))) / card
-    return TabularCPD(
-        name,
-        card,
-        transition_probs,
-        evidence=evidence,
-        evidence_card=evidence_card
-    )
+# class RandomCPD(TabularCPD):
+#
+#     def __init__(self, variable, card=2, evidence=[], evidence_card=[]):
+#         matrix = np.ones((card, np.product(evidence_card).astype(int))) / card
+#         super(RandomCPD, self).__init__(variable, card, matrix, evidence=evidence, evidence_card=evidence_card)
+#
+#     def __repr__(self):
+#         return "<RandomCPD {}:{}>".format(self.variable, self.variable_card)
+#
+#     def copy(self):
+#         return RandomCPD(self.variable, self.variable_card, self.evidence, self.evidence_card)
 
 
 class NullCPD(TabularCPD):
@@ -31,7 +33,7 @@ class NullCPD(TabularCPD):
         self.cardinality = [variable_card] #TODO: possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
         if state_names:
-            self.state_names = state_names[variable]
+            self.state_names = state_names
         else:
             self.state_names = {variable : list(range(variable_card))}
 
@@ -43,6 +45,9 @@ class NullCPD(TabularCPD):
 
     def __repr__(self):
         return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
+
+    def __str__(self):
+        return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
     #def to_factor(self):
     #    return self
 
@@ -52,7 +57,7 @@ class NullCPD(TabularCPD):
         parents_card = [cid.get_cardinality(p) for p in parents]
         transition_probs = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
         super(NullCPD, self).__init__(self.variable, self.variable_card, transition_probs,
-                                      parents, parents_card)
+                                      parents, parents_card, state_names=self.state_names)
 
 
 class FunctionCPD(TabularCPD):
@@ -66,8 +71,12 @@ class FunctionCPD(TabularCPD):
 
     def __init__(self, variable: str, f, evidence):
         self.variable = variable
+        self.variables = [self.variable]
+        self.cardinality = [2]  # Placeholder values
+        self.variable_card = 2
         self.f = f
         self.evidence = evidence
+        self.initialized = False
 
     def scope(self):
         return [self.variable]
@@ -78,17 +87,22 @@ class FunctionCPD(TabularCPD):
     def __repr__(self):
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
+    def __str__(self):
+        return "<FunctionCPD {}:{}>".format(self.variable, self.f)
+
     def parent_values(self, cid: BayesianModel) -> List[List]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values = []
         for p in self.evidence:
             p_cpd = cid.get_cpds(p)
-            if isinstance(p, FunctionCPD):
-                parent_values.append(p.possible_values())
-            elif p_cpd.state_names:
+            if not p_cpd:
+                raise("Found no CPD for", p)
+            if isinstance(p_cpd, FunctionCPD):
+                parent_values.append(p_cpd.possible_values(cid))
+            elif hasattr(p_cpd, 'state_names'):
                 parent_values.append(list(p_cpd.state_names[p]))
             else:
-                raise Exception("unknown parent values for {}".format(p))
+                raise Exception("unknown values for parent {}".format(p))
         return parent_values
 
     def possible_values(self, cid: BayesianModel) -> List:
@@ -110,3 +124,10 @@ class FunctionCPD(TabularCPD):
         super(FunctionCPD, self).__init__(self.variable, card,
                                           matrix, evidence, evidence_card,
                                           state_names=state_names)
+        self.initialized = True
+
+    def convertToTabularCPD(self) -> TabularCPD:
+        if self.initialized:
+            return super(FunctionCPD, self).copy()
+        else:
+            raise Exception("FunctionCPD not initialized yet", self)

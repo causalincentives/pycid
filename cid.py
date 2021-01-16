@@ -23,60 +23,6 @@ class CID(BayesianModel):
         self.decision_nodes = decision_nodes
         self.utility_nodes = utility_nodes
 
-    def nr_observations(self, decision):
-        #get nonrequisite observations
-        nonrequisite = []
-        parents = self.get_parents(decision)
-        for obs in parents:
-            observed = list(set(parents+ [decision]) - set([obs]))
-            connected = set(self.active_trail_nodes([obs], observed=observed)[obs])
-            downstream_utilities = set([i for i in self.utility_nodes if decision in self._get_ancestors_of(i)])
-            #if len([u for u in downstream_utilities if u in connected])==0:
-            #import ipdb; ipdb.set_trace()
-            if not connected.intersection(downstream_utilities):
-                nonrequisite.append(obs)
-        return nonrequisite
-
-    def trimmed(self):
-        #return the trimmed version of the graph
-        #based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
-        #using the assumption that the graph is soluble
-        cid = self.copy()
-        decisions = cid.decision_nodes
-        while True:
-            removed = 0
-            for decision in decisions:
-                nonrequisite = cid.nr_observations(decision)
-                for nr in nonrequisite:
-                    removed += 1
-                    cid.remove_edge(nr, decision)
-            if removed==0:
-                break
-        return cid
-
-    def _get_valid_order(self, nodes:List[str]):
-        srt = [i for i in nx.topological_sort(self) if i in nodes]
-        return srt
-
-    def check_sufficient_recall(self):
-        decision_ordering = self._get_valid_order(self.decision_nodes)
-        for i, decision1 in enumerate(decision_ordering):
-            for j, decision2 in enumerate(decision_ordering[i+1:]):
-                for utility in self.utility_nodes:
-                    if decision2 in self._get_ancestors_of(utility):
-                        cid_with_policy = self.copy()
-                        cid_with_policy.add_edge('pi',decision1)
-                        observed = cid_with_policy.get_parents(decision2) + [decision2]
-                        connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
-                        #print(decision1, decision2, connected)
-                        if connected:
-                            logging.warning(
-                                    "{} has insufficient recall of {} due to utility {}".format(
-                                        decision2, decision1, utility)
-                                    )
-                            return False
-        return True
-
     def add_cpds(self, *cpds: DiscreteFactor) -> None:
         """Add the given CPDs and initiate NullCPDs and FunctionCPDs"""
         for cpd in cpds:
@@ -97,22 +43,69 @@ class CID(BayesianModel):
                 self.cpds.append(cpd)
 
         # Once all CPDs are added, initialize the TablularCPD matrices
-        for cpd in cpds:
-            if isinstance(cpd, FunctionCPD) or isinstance(cpd, NullCPD):
+        for cpd in self.get_cpds():
+            if hasattr(cpd, "initializeTabularCPD"):    #isinstance(cpd, FunctionCPD) or isinstance(cpd, NullCPD):
                 cpd.initializeTabularCPD(self)
 
-    def impute_optimal_policy(self):
+    def _get_valid_order(self, nodes:List[str]):
+        srt = [i for i in nx.topological_sort(self) if i in nodes]
+        return srt
+
+    def check_sufficient_recall(self) -> bool:
+        decision_ordering = self._get_valid_order(self.decision_nodes)
+        for i, decision1 in enumerate(decision_ordering):
+            for j, decision2 in enumerate(decision_ordering[i+1:]):
+                for utility in self.utility_nodes:
+                    if decision2 in self._get_ancestors_of(utility):
+                        cid_with_policy = self.copy()
+                        cid_with_policy.add_edge('pi',decision1)
+                        observed = cid_with_policy.get_parents(decision2) + [decision2]
+                        connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
+                        #print(decision1, decision2, connected)
+                        if connected:
+                            logging.warning(
+                                    "{} has insufficient recall of {} due to utility {}".format(
+                                        decision2, decision1, utility)
+                                    )
+                            return False
+        return True
+
+    def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
         decisions = self._get_valid_order(self.decision_nodes)
         # solve in reverse ordering
         self.add_cpds(*[self._get_sp_policy(d) for d in reversed(decisions)])
 
-    def impute_random_policy(self):
-        """Impute a random policy to all decision nodes"""
-        self.add_cpds(*[NullCPD(d, self.get_cardinality(d)) for d in self.decision_nodes])
+    def impute_random_decision(self, d: str) -> None:
+        sn = self.get_cpds(d).state_names
+        self.add_cpds(NullCPD(d, self.get_cardinality(d), state_names=sn))
 
-    def _indices_to_prob_table(self, indices, n_actions):
-        return np.eye(n_actions)[indices].T
+    def impute_random_policy(self) -> None:
+        """Impute a random policy to all decision nodes"""
+        for d in self.decision_nodes:
+            self.impute_random_decision(d)
+
+    def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
+        """Imputes a policy for d = the expectation of y conditioning on d's parents"""
+        parents = self.get_parents(d)
+        parent_values = [self.get_cpds(p).state_names[p] for p in parents]
+        parent_values_prod = list(itertools.product(*parent_values))
+        contexts = [ {p: pv[i] for i, p in enumerate(parents)}
+                     for pv in parent_values_prod]
+        #function = {pv: self.expected_value(y, contexts[i]) for i, pv in enumerate(parent_values_prod)}
+        # func = lambda *x: function[x]
+        new = self.copy()
+
+        def cond_exp_policy(*pv: tuple) -> float:
+            context = {p: pv[i] for i, p in enumerate(parents)}
+            return new.expected_value(y, context)
+
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents))
+        self.freeze_policy(d)
+
+    def freeze_policy(self, d: str) -> None:
+        """Replace a FunctionCPD with the corresponding TabularCPD, to prevent it from updating later"""
+        self.add_cpds(self.get_cpds(d).convertToTabularCPD())
 
     def solve(self):
         """Return dictionary with subgame perfect global policy"""
@@ -125,7 +118,7 @@ class CID(BayesianModel):
         if parents:
             contexts = []
             parent_cards = [self.get_cardinality(p) for p in parents]
-            context_tuples = itertools.product(*[range(card) for card in parent_cards])
+            context_tuples = itertools.product(*[range(card) for card in parent_cards])  # TODO this should use state names instead
             for context_tuple in context_tuples:
                 contexts.append({p:c for p,c in zip(parents, context_tuple)})
             return contexts
@@ -143,7 +136,10 @@ class CID(BayesianModel):
             act = self._optimal_decisions(decision, {})[0]
             actions.append(act)
 
-        prob_table = self._indices_to_prob_table(actions, self.get_cardinality(decision))
+        def _indices_to_prob_table(indices, n_actions):
+            return np.eye(n_actions)[indices].T
+
+        prob_table = _indices_to_prob_table(actions, self.get_cardinality(decision))
 
         variable_card = self.get_cardinality(decision)
         evidence = self.get_parents(decision)
@@ -153,18 +149,21 @@ class CID(BayesianModel):
                 variable_card,
                 prob_table,
                 evidence,
-                evidence_card
+                evidence_card,
+                state_names=self.get_cpds(decision).state_names
                 )
         return cpd
 
     def _optimal_decisions(self, decision, context):
+        new = self.copy()
+        new.impute_random_decision(decision)
         utilities = []
         #net = cid._impute_random_policy()
         acts = np.arange(self.get_cpds(decision).variable_card)
         for act in acts:
             context = context.copy()
             context[decision] = act
-            ev = self.expected_utility(context)
+            ev = new.expected_utility(context)
             utilities.append(ev)
         indices = np.where(np.array(utilities)==np.max(utilities))
         if len(acts[indices])==0:
@@ -177,15 +176,16 @@ class CID(BayesianModel):
         #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
 
         #query fails if graph includes nodes not in moralized graph, so we remove them
-        cid = self.copy()
-        mm = MarkovModel(cid.moralize().edges())
-        for node in self.nodes:
-            if node not in mm.nodes:
-                cid.remove_node(node)
-        filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
+        # cid = self.copy()
+        # mm = MarkovModel(cid.moralize().edges())
+        # for node in self.nodes:
+        #     if node not in mm.nodes:
+        #         cid.remove_node(node)
+        # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
 
         bp = BeliefPropagation(self)
-        factor = bp.query(query, filtered_context)
+        #factor = bp.query(query, filtered_context)
+        factor = bp.query(query, context)
         return factor
 
     def expected_utility(self, context:dict):
@@ -202,8 +202,87 @@ class CID(BayesianModel):
         #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
 
+    def expected_value(self, variable:str, context:dict) -> float:
+        factor = self._query([variable], context)
+        factor.normalize() #make probs add to one
+
+        ev = 0.0
+        for idx, prob in np.ndenumerate(factor.values):
+            utils = [factor.state_names[factor.variables[i]][j] for i,j in enumerate(idx) ]
+            ev += np.sum(utils) * prob
+        #ev = (factor.values * np.arange(factor.cardinality)).sum()
+        return ev
+
+    def nr_observations(self, decision: str) -> List[str]:
+        """Get nonrequisite observations"""
+        nonrequisite = []
+        parents = self.get_parents(decision)
+        for obs in parents:
+            observed = list(set(parents+ [decision]) - set([obs]))
+            connected = set(self.active_trail_nodes([obs], observed=observed)[obs])
+            downstream_utilities = set([i for i in self.utility_nodes if decision in self._get_ancestors_of(i)])
+            #if len([u for u in downstream_utilities if u in connected])==0:
+            #import ipdb; ipdb.set_trace()
+            if not connected.intersection(downstream_utilities):
+                nonrequisite.append(obs)
+        return nonrequisite
+
+    def trimmed(self) -> BayesianModel:
+        """Return the trimmed version of the graph
+
+        Based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
+        uusing the assumption that the graph is soluble"""
+        cid = self.copy()
+        decisions = cid.decision_nodes
+        while True:
+            removed = 0
+            for decision in decisions:
+                nonrequisite = cid.nr_observations(decision)
+                for nr in nonrequisite:
+                    removed += 1
+                    cid.remove_edge(nr, decision)
+            if removed==0:
+                break
+        return cid
+
+    # def check_model(self, allow_null=True):
+    #     """
+    #     Check the model for various errors. This method checks for the following
+    #     errors.
+    #     * Checks if the sum of the probabilities for each state is equal to 1 (tol=0.01).
+    #     * Checks if the CPDs associated with nodes are consistent with their parents.
+    #     Returns
+    #     -------
+    #     check: boolean
+    #         True if all the checks are passed
+    #     """
+    #     for node in self.nodes():
+    #         cpd = self.get_cpds(node=node)
+    #
+    #         if cpd is None:
+    #             raise ValueError("No CPD associated with {}".format(node))
+    #         elif isinstance(cpd, (NullCPD, FunctionCPD)):
+    #             if not allow_null:
+    #                 raise ValueError(
+    #                     "CPD associated with {node} is null or function cpd".format(node=node)
+    #                 )
+    #         elif isinstance(cpd, (TabularCPD, ContinuousFactor)):
+    #             evidence = cpd.get_evidence()
+    #             parents = self.get_parents(node)
+    #             if set(evidence if evidence else []) != set(parents if parents else []): #TODO: do es this check appropriate cardinalities?
+    #                 raise ValueError(
+    #                     "CPD associated with {node} doesn't have "
+    #                     "proper parents associated with it.".format(node=node)
+    #                 )
+    #             if not cpd.is_valid_cpd():
+    #                 raise ValueError(
+    #                     "Sum or integral of conditional probabilites for node {node}"
+    #                     " is not equal to 1.".format(node=node)
+    #                 )
+    #     return True
+
     def copy(self):
-        model_copy = CID(self.edges(), decision_nodes=self.decision_nodes, utility_nodes=self.utility_nodes, )
+        model_copy = CID(self.edges(), decision_nodes=self.decision_nodes, utility_nodes=self.utility_nodes)
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy

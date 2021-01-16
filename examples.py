@@ -18,7 +18,7 @@ def get_minimal_cid():
     return cid
 
 
-def get_3node_cid():
+def get_3node_cid() -> CID:
     cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
               decision_nodes=['D'],
               utility_nodes=['U'])
@@ -31,7 +31,7 @@ def get_3node_cid():
     return cid
 
 
-def get_5node_cid():
+def get_5node_cid() -> CID:
     cid = CID([
         ('S1', 'D'),
         ('S1', 'U1'),
@@ -53,7 +53,7 @@ def get_5node_cid():
     return cid
 
 
-def get_5node_cid_with_scaled_utility():
+def get_5node_cid_with_scaled_utility() -> CID:
     cid = CID([
         ('S1', 'D'),
         ('S1', 'U1'),
@@ -97,7 +97,7 @@ def get_5node_cid_with_scaled_utility():
 #     return cid
 
 
-def get_2dec_cid():
+def get_2dec_cid() -> CID:
     from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
         ('S1', 'S2'),
@@ -122,14 +122,14 @@ def get_2dec_cid():
     return cid
 
 
-def get_insufficient_recall_cid():
+def get_insufficient_recall_cid() -> CID:
     cid = CID([('A', 'U'), ('B', 'U')], decision_nodes=['A', 'B'], utility_nodes=['U'])
     tabcpd = TabularCPD('U', 2, np.random.randn(2, 4), evidence=['A', 'B'], evidence_card=[2, 2])
     cid.add_cpds(NullCPD('A', 2), NullCPD('B', 2), tabcpd)
     return cid
 
 
-def get_nested_cid():
+def get_nested_cid() -> CID:
     cid = CID([
         ('S1', 'D1'),
         ('S1', 'S3'),
@@ -153,3 +153,33 @@ def get_nested_cid():
     ]
     cid.add_cpds(*cpds)
     return cid
+
+
+def get_introduced_bias() -> CID:
+
+    cid = CID([
+        ('A', 'X'),  # defining the graph's nodes and edges
+        ('Z', 'X'),
+        ('Z', 'Y'),
+        ('X', 'D'),
+        ('X', 'Y'),
+        ('D', 'U'),
+        ('Y', 'U')
+    ],
+        decision_nodes=['D'],
+        utility_nodes=['U'])
+
+    cpd_A = TabularCPD('A', 2, np.array([[.5], [.5]]))
+    cpd_Z = TabularCPD('Z', 2, np.array([[.5], [.5]]))
+    cpd_X = FunctionCPD('X', lambda a, z: a*z, evidence=['A', 'Z'])
+    cpd_D = NullCPD('D', 2)
+    cpd_Y = FunctionCPD('Y', lambda x, z: x + z, evidence=['X', 'Z'])
+    cpd_U = FunctionCPD('U', lambda d, y: -(d - y) ** 2, evidence=['D', 'Y'])
+
+    cid.add_cpds(cpd_A, cpd_D, cpd_Z, cpd_X, cpd_Y, cpd_U)
+
+    return cid
+
+# cpd = FunctionCPD('A', lambda : 0, evidence=[])
+# cid = get_minimal_cid()
+# cpd.initializeTabularCPD(cid)
