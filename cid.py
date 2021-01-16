@@ -213,38 +213,6 @@ class CID(BayesianModel):
         #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
 
-    def nr_observations(self, decision: str) -> List[str]:
-        """Get nonrequisite observations"""
-        nonrequisite = []
-        parents = self.get_parents(decision)
-        for obs in parents:
-            observed = list(set(parents+ [decision]) - set([obs]))
-            connected = set(self.active_trail_nodes([obs], observed=observed)[obs])
-            downstream_utilities = set([i for i in self.utility_nodes if decision in self._get_ancestors_of(i)])
-            #if len([u for u in downstream_utilities if u in connected])==0:
-            #import ipdb; ipdb.set_trace()
-            if not connected.intersection(downstream_utilities):
-                nonrequisite.append(obs)
-        return nonrequisite
-
-    def trimmed(self) -> BayesianModel:
-        """Return the trimmed version of the graph
-
-        Based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
-        uusing the assumption that the graph is soluble"""
-        cid = self.copy()
-        decisions = cid.decision_nodes
-        while True:
-            removed = 0
-            for decision in decisions:
-                nonrequisite = cid.nr_observations(decision)
-                for nr in nonrequisite:
-                    removed += 1
-                    cid.remove_edge(nr, decision)
-            if removed==0:
-                break
-        return cid
-
     # def check_model(self, allow_null=True):
     #     """
     #     Check the model for various errors. This method checks for the following
