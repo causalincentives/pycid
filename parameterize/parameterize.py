@@ -4,10 +4,8 @@
 import numpy as np
 #from pgmpy.factors.discrete import TabularCPD
 from cid import NullCPD
-from get_systems import is_directed, get_motifs
-from get_cpd import get_identity_cpd, merge_node, get_equality_cpd, get_xor_cpd, get_func_cpd
-from get_cpd import get_equals_func_cpd, get_random_cpd
-import warnings
+from parameterize.get_cpd import get_equals_func_cpd, get_random_cpd, get_identity_cpd, merge_node, get_equality_cpd, get_xor_cpd, get_func_cpd
+from parameterize.get_systems import is_directed
 
 
 def _parameterize_system(cid, systems, system_idx, H_cpd, Hprime_cpd):

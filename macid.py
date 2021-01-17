@@ -3,15 +3,12 @@
 
 import numpy as np
 from pgmpy.models import BayesianModel
-from pgmpy.factors.discrete import TabularCPD
 from pgmpy.factors.continuous import ContinuousFactor
 from pgmpy.factors.discrete import TabularCPD
 import logging
-import typing
 from typing import List, Tuple, Dict
 import itertools
 from pgmpy.inference import BeliefPropagation
-import functools
 import networkx as nx
 from cpd import NullCPD
 import matplotlib.pyplot as plt
@@ -20,8 +17,7 @@ from collections import defaultdict
 from collections import deque
 import copy
 import matplotlib.cm as cm
-from itertools import compress
-from get_paths import get_motifs, get_motif
+from parameterize.get_paths import get_motifs, get_motif
 
 
 

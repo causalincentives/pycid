@@ -9,10 +9,8 @@
 #%pdb
 import sys
 sys.path.append("..") #TODO: make /cid a package, then delete this
-from examples import get_3node_cid, get_5node_cid, get_2dec_cid, get_nested_cid
-from parameterize import parameterize_systems, merge_all_nodes
-from generate import random_cids
-from get_systems import choose_systems, check_systems
+from parameterize.parameterize import parameterize_systems, merge_all_nodes
+from parameterize.get_systems import choose_systems
 #TODO: choose i_C for first infolink automatically
 #TODO: add the collider->obs paths for colliders
 

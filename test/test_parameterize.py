@@ -1,12 +1,11 @@
 import sys, os
-
-from generate import random_cids
-
 sys.path.insert(0, os.path.abspath('.'))
+
+from parameterize.generate import random_cids
+from parameterize.get_systems import choose_systems, get_first_c_index
 import unittest
 from examples import get_3node_cid, get_5node_cid, get_2dec_cid, get_nested_cid
-from get_systems import choose_systems, get_first_c_index
-from parameterize import parameterize_systems, merge_all_nodes
+from parameterize.parameterize import parameterize_systems, merge_all_nodes
 from verify_incentive import verify_incentive
 
 
@@ -14,6 +13,7 @@ from verify_incentive import verify_incentive
 class TestParameterize(unittest.TestCase):
 
     def test_random_cid(self):
+        # TODO This test is flaky: sometimes gives e.g. "ValueError: D3 is an ancestor of D1"
         cid = random_cids(n_cids=1)[0]
 
     def test_parameterization(self):

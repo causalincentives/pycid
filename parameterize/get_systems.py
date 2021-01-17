@@ -1,9 +1,7 @@
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
-from get_paths import _get_path_pair, find_dirpath, _find_dirpath_recurse, get_motifs, _get_active_dirpath
-import matplotlib.pyplot as plt
-from typing import List
+from parameterize.get_paths import _get_path_pair, get_motifs, _get_active_dirpath
 import numpy as np
 
 def is_backdoor(cid, info_path):

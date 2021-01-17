@@ -4,7 +4,7 @@
 import random
 from typing import List, Tuple
 from cid import CID, NullCPD
-from get_paths import find_active_path_recurse
+from parameterize.get_paths import find_active_path_recurse
 import numpy as np
 
 
