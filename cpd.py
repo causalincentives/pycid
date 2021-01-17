@@ -35,6 +35,8 @@ class NullCPD(TabularCPD):
         self.cardinality = [variable_card] #TODO: possible problem because this usually includes cardinality of parents
         self.variables = [self.variable]
         if state_names:
+            assert isinstance(state_names, dict)
+            assert isinstance(state_names[variable], list)
             self.state_names = state_names
         else:
             self.state_names = {variable : list(range(variable_card))}

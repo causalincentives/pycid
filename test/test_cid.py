@@ -2,7 +2,6 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 import sys, os
-
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 import numpy as np
@@ -66,17 +65,6 @@ class TestCID(unittest.TestCase):
         cid.impute_optimal_policy()
         eu_opt = cid.expected_utility({})
         self.assertEqual(eu_ce, eu_opt)
-
-    def test_updated_decision_names(self):
-        cid = get_introduced_bias()
-        self.assertEqual(cid.get_cpds('D').state_names['D'], [0, 1])
-        cid.impute_conditional_expectation_decision('D', 'Y')
-        self.assertNotEqual(cid.get_cpds('D').state_names['D'], [0, 1])
-        cid.impute_random_policy()
-        self.assertNotEqual(cid.get_cpds('D').state_names['D'], [0, 1])
-        cid.impute_optimal_policy()
-        eu = cid.expected_utility({})
-        self.assertGreater(eu, -0.2)
 
 
 if __name__ == "__main__":

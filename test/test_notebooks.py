@@ -3,7 +3,7 @@ import os
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from test import ROOT_DIR
 
 
 def run_notebook(notebook_path):

@@ -179,7 +179,3 @@ def get_introduced_bias() -> CID:
     cid.add_cpds(cpd_A, cpd_D, cpd_Z, cpd_X, cpd_Y, cpd_U)
 
     return cid
-
-# cpd = FunctionCPD('A', lambda : 0, evidence=[])
-# cid = get_minimal_cid()
-# cpd.initializeTabularCPD(cid)
