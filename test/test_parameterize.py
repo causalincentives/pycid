@@ -1,4 +1,7 @@
 import sys, os
+
+from generate import random_cids
+
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 from examples import get_3node_cid, get_5node_cid, get_2dec_cid, get_nested_cid
@@ -9,6 +12,9 @@ from verify_incentive import verify_incentive
 
 # @unittest.skip("until Ryan/James fix")
 class TestParameterize(unittest.TestCase):
+
+    def test_random_cid(self):
+        cid = random_cids(n_cids=1)[0]
 
     def test_parameterization(self):
         cid = get_3node_cid()

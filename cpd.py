@@ -1,7 +1,9 @@
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
+
+from __future__ import annotations
 import itertools
-from typing import List
+from typing import List, Callable
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
 import numpy as np
@@ -37,21 +39,21 @@ class NullCPD(TabularCPD):
         else:
             self.state_names = {variable : list(range(variable_card))}
 
-    def scope(self):
+    def scope(self) -> List[str]:
         return [self.variable]
 
-    def copy(self):
+    def copy(self) -> NullCPD:
         return NullCPD(self.variable, self.variable_card, state_names=self.state_names)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
     #def to_factor(self):
     #    return self
 
-    def initializeTabularCPD(self, cid):
+    def initializeTabularCPD(self, cid: BayesianModel) -> None:
         """initialize the TabularCPD with a matrix representing a uniform random distribution"""
         parents = cid.get_parents(self.variable)
         parents_card = [cid.get_cardinality(p) for p in parents]
@@ -69,7 +71,7 @@ class FunctionCPD(TabularCPD):
     model is known, since the state names depends on the values of the parents.
     """
 
-    def __init__(self, variable: str, f, evidence):
+    def __init__(self, variable: str, f: Callable, evidence: List[str]) -> None:
         self.variable = variable
         self.variables = [self.variable]
         self.cardinality = [2]  # Placeholder values
@@ -78,16 +80,16 @@ class FunctionCPD(TabularCPD):
         self.evidence = evidence
         self.initialized = False
 
-    def scope(self):
+    def scope(self) -> List[str]:
         return [self.variable]
 
-    def copy(self):
+    def copy(self) -> FunctionCPD:
         return FunctionCPD(self.variable, self.f, self.evidence)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
     def parent_values(self, cid: BayesianModel) -> List[List]:

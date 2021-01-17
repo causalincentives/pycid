@@ -1,18 +1,18 @@
 #Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 #agreements; and to You under the Apache License, Version 2.0.
 
+from __future__ import annotations
 import numpy as np
+from pgmpy.factors.base import BaseFactor
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD, DiscreteFactor
 from pgmpy.factors.continuous import ContinuousFactor
 import logging
-from typing import List, Tuple
-import itertools
+from typing import List, Tuple, Dict
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from cpd import NullCPD, FunctionCPD
 import warnings
-from pgmpy.models import MarkovModel
 
 
 class CID(BayesianModel):
@@ -22,9 +22,17 @@ class CID(BayesianModel):
         super(CID, self).__init__(ebunch=ebunch)
         self.decision_nodes = decision_nodes
         self.utility_nodes = utility_nodes
+        assert set(self.nodes).issuperset(self.decision_nodes)
+        assert set(self.nodes).issuperset(self.utility_nodes)
+        self.chance_nodes = set(self.nodes) - set(self.decision_nodes + self.utility_nodes)
 
-    def add_cpds(self, *cpds: DiscreteFactor, update_all:bool = True) -> None:
-        """Add the given CPDs and initiate NullCPDs and FunctionCPDs"""
+    def add_cpds(self, *cpds: BaseFactor, update_all: bool = True) -> None:
+        """Add the given CPDs and initiate NullCPDs and FunctionCPDs
+
+        The update_all option recomputes the state_names and matrices for all CPDs in the graph.
+        It can be set to false to save time, if the added CPD(s) have identical state_names to
+        the ones they are replacing.
+        """
         for cpd in cpds:
             if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD, FunctionCPD)):
                 raise ValueError("Only TabularCPD, ContinuousFactor, FunctionCPD, or NullCPD can be added.")
@@ -42,14 +50,15 @@ class CID(BayesianModel):
             else:
                 self.cpds.append(cpd)
 
-        # Once all CPDs are added, initialize the TablularCPD matrices
-        if update_all:
-            update_cpds = self.get_cpds()
-        else:
-            update_cpds = cpds
-        for cpd in update_cpds:
-            if hasattr(cpd, "initializeTabularCPD"):    #isinstance(cpd, FunctionCPD) or isinstance(cpd, NullCPD):
-                cpd.initializeTabularCPD(self)
+        if len(self.cpds) == len(self.nodes):
+            # Once all CPDs are added, initialize the TablularCPD matrices
+            if update_all:
+                update_cpds = self.get_cpds()
+            else:
+                update_cpds = cpds
+            for cpd in update_cpds:
+                if hasattr(cpd, "initializeTabularCPD"):    #isinstance(cpd, (FunctionCPD, NullCPD)):
+                    cpd.initializeTabularCPD(self)
 
     def _get_valid_order(self, nodes:List[str]):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
@@ -75,17 +84,25 @@ class CID(BayesianModel):
         return True
 
     def impute_random_decision(self, d: str) -> None:
-        sn = self.get_cpds(d).state_names
-        self.add_cpds(NullCPD(d, self.get_cardinality(d), state_names=sn))
+        """Impute a random policy to the given decision node"""
+        current_cpd = self.get_cpds(d)
+        if current_cpd:
+            sn = current_cpd.state_names
+            card = self.get_cardinality(d)
+        else:
+            sn = None
+            card = 2
+        self.add_cpds(NullCPD(d, card, state_names=sn))
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes"""
         for d in self.decision_nodes:
             self.impute_random_decision(d)
 
-    def impute_optimal_decision(self, d: str):
+    def impute_optimal_decision(self, d: str) -> None:
+        """Impute an optimal policy to the given decision node"""
         parents = self.get_parents(d)
-        dom2val = self.get_cpds(d).no_to_name[d]
+        idx2name = self.get_cpds(d).no_to_name[d]
         card = self.get_cardinality(d)
         new = self.copy()
         new.impute_random_decision(d)
@@ -96,28 +113,20 @@ class CID(BayesianModel):
             for d_idx in range(card):
                 context[d] = d_idx
                 eu.append(new.expected_utility(context))
-            return dom2val[np.argmax(eu)]
+            return idx2name[np.argmax(eu)]
 
         self.add_cpds(FunctionCPD(d, opt_policy, parents), update_all=False)
-        self.freeze_policy(d)
+        self.freeze_policy(d)  # Convert the CPD to a TabularCPD, to avoid it changing from interventions
 
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
         decisions = self._get_valid_order(self.decision_nodes)
         for d in decisions:
             self.impute_optimal_decision(d)
-        # solve in reverse ordering
-        #self.add_cpds(*[self._get_sp_policy(d) for d in reversed(decisions)])
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
         parents = self.get_parents(d)
-        #parent_values = [self.get_cpds(p).state_names[p] for p in parents]
-        # parent_values_prod = list(itertools.product(*parent_values))
-        # contexts = [ {p: pv[i] for i, p in enumerate(parents)}
-        #              for pv in parent_values_prod]
-        #function = {pv: self.expected_value(y, contexts[i]) for i, pv in enumerate(parent_values_prod)}
-        # func = lambda *x: function[x]
         new = self.copy()
 
         def cond_exp_policy(*pv: tuple) -> float:
@@ -131,13 +140,13 @@ class CID(BayesianModel):
         """Replace a FunctionCPD with the corresponding TabularCPD, to prevent it from updating later"""
         self.add_cpds(self.get_cpds(d).convertToTabularCPD())
 
-    def solve(self):
+    def solve(self) -> Dict:
         """Return dictionary with subgame perfect global policy"""
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
-    def _query(self, query, context):
+    def _query(self, query: List["str"], context: Dict["str", "Any"]):
         #outputs P(U|context)*P(context).
         #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
 
@@ -154,10 +163,12 @@ class CID(BayesianModel):
         factor = bp.query(query, context)
         return factor
 
-    def expected_utility(self, context:dict):
-        # for example:
-        # cid = get_minimal_cid()
-        # out = self.expected_utility({'D':1}) #TODO: give example that uses context
+    def expected_utility(self, context: Dict["str", "Any"]) -> float:
+        """Compute the expected utility for a given context
+
+        For example:
+        cid = get_minimal_cid()
+        out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
         factor = self._query(self.utility_nodes, context)
         factor.normalize() #make probs add to one
 
@@ -168,7 +179,8 @@ class CID(BayesianModel):
         #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
 
-    def expected_value(self, variable:str, context:dict) -> float:
+    def expected_value(self, variable: str, context: dict) -> float:
+        """Compute the expected value of a real-valued variable for a given context"""
         factor = self._query([variable], context)
         factor.normalize() #make probs add to one
 
@@ -176,7 +188,6 @@ class CID(BayesianModel):
         for idx, prob in np.ndenumerate(factor.values):
             utils = [factor.state_names[factor.variables[i]][j] for i,j in enumerate(idx) ]
             ev += np.sum(utils) * prob
-        #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
 
     # def check_model(self, allow_null=True):
@@ -215,7 +226,7 @@ class CID(BayesianModel):
     #                 )
     #     return True
 
-    def copy(self):
+    def copy(self) -> CID:
         model_copy = CID(self.edges(), decision_nodes=self.decision_nodes, utility_nodes=self.utility_nodes)
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
