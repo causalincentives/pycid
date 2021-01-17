@@ -2,6 +2,7 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 import sys, os
+
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 import numpy as np
@@ -10,7 +11,7 @@ from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_uti
 from pgmpy.factors.discrete import TabularCPD
 
 
-class TestCIDClass(unittest.TestCase):
+class TestCID(unittest.TestCase):
 
     def test_assign_cpd(self):
         three_node = get_3node_cid()
@@ -57,7 +58,6 @@ class TestCIDClass(unittest.TestCase):
         cid = get_5node_cid_with_scaled_utility()
         self.assertEqual(cid.expected_utility({}), 6.0)
 
-    #@unittest.skip("")
     def test_impute_cond_expectation_decision(self):
         cid = get_introduced_bias()
         cid.impute_conditional_expectation_decision('D', 'Y')
@@ -67,7 +67,6 @@ class TestCIDClass(unittest.TestCase):
         eu_opt = cid.expected_utility({})
         self.assertEqual(eu_ce, eu_opt)
 
-    #@unittest.skip("")
     def test_updated_decision_names(self):
         cid = get_introduced_bias()
         self.assertEqual(cid.get_cpds('D').state_names['D'], [0, 1])
@@ -81,5 +80,5 @@ class TestCIDClass(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCIDClass)
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCID)
     unittest.TextTestRunner().run(suite)

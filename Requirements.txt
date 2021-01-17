@@ -1,4 +1,6 @@
+testbook
 matplotlib
 pgmpy
 networkx
 numpy
+ipykernel
