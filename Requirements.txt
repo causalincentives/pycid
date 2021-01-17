@@ -1,4 +1,5 @@
-testbook
+nbconvert
+nbformat
 matplotlib
 pgmpy
 networkx
