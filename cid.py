@@ -149,9 +149,15 @@ class CID(BayesianModel):
         else:
             cid = self
 
+        updated_state_names = {}
+        for v in query:
+            cpd = cid.get_cpds(v)
+            updated_state_names[v] = cpd.state_names[v]
+
         bp = BeliefPropagation(cid)
         #factor = bp.query(query, filtered_context)
         factor = bp.query(query, context)
+        factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 
     def intervene(self, intervention: dict) -> None:
