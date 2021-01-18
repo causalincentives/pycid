@@ -8,14 +8,11 @@ from functools import lru_cache
 import numpy as np
 from pgmpy.factors.base import BaseFactor
 from pgmpy.models import BayesianModel
-from pgmpy.factors.discrete import TabularCPD, DiscreteFactor
-from pgmpy.factors.continuous import ContinuousFactor
 import logging
 from typing import List, Tuple, Dict
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from cpd import NullCPD, FunctionCPD
-import warnings
 
 
 class CID(BayesianModel):
@@ -129,19 +126,16 @@ class CID(BayesianModel):
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, parents))
 
-    def freeze_policy(self, d: str) -> None:
-        """Replace a FunctionCPD with the corresponding TabularCPD, to prevent it from updating later"""
-        self.add_cpds(self.get_cpds(d).convertToTabularCPD())
-
     def solve(self) -> Dict:
         """Return dictionary with subgame perfect global policy"""
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
-    def _query(self, query: List["str"], context: Dict["str", "Any"]):
-        #outputs P(U|context)*P(context).
-        #Use context={} to get P(U). Or use factor.normalize to get p(U|context)
+    def _query(self, query: List["str"], context: Dict["str", "Any"], intervention: dict = None):
+        """Return P(query|context, do(intervention))*P(context | do(intervention)).
+
+        Use context={} to get P(query). Or use factor.normalize to get p(query|context)"""
 
         #query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()
@@ -150,74 +144,65 @@ class CID(BayesianModel):
         #     if node not in mm.nodes:
         #         cid.remove_node(node)
         # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
+        if intervention:
+            cid = self.copy()
+            cid.intervene(intervention)
+        else:
+            cid = self
 
-        bp = BeliefPropagation(self)
+        bp = BeliefPropagation(cid)
         #factor = bp.query(query, filtered_context)
         factor = bp.query(query, context)
         return factor
 
-    def expected_utility(self, context: Dict["str", "Any"]) -> float:
-        """Compute the expected utility for a given context
+    def intervene(self, intervention: dict) -> None:
+        """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
+
+        Soft interventions can be achieved by using add_cpds directly.
+        """
+        cpds = []
+        for variable, value in intervention.items():
+            cpds.append(FunctionCPD(variable, lambda *x: value,
+                                    evidence=self.get_parents(variable)))
+
+        self.add_cpds(*cpds)
+
+    def expected_utility(self, context: Dict["str", "Any"], intervene: dict = None) -> float:
+        """Compute the expected utility for a given context and optional intervention
 
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
-        factor = self._query(self.utility_nodes, context)
+        factor = self._query(self.utility_nodes, context, intervention=intervene)
         factor.normalize() #make probs add to one
 
         ev = 0
         for idx, prob in np.ndenumerate(factor.values):
             utils = [factor.state_names[factor.variables[i]][j] for i,j in enumerate(idx) ]
-            ev += np.sum(utils) * prob
+            val = np.sum(utils) * prob
+            if np.isnan(val):
+                raise Exception("query {} generated Nan from idx: {}, prob: {}, \
+                                consider imputing a random decision".format(context, idx, prob))
+
+            ev += val
         #ev = (factor.values * np.arange(factor.cardinality)).sum()
         return ev
 
-    def expected_value(self, variable: str, context: dict) -> float:
-        """Compute the expected value of a real-valued variable for a given context"""
-        factor = self._query([variable], context)
+    def expected_value(self, variable: str, context: dict, intervene: dict = None) -> float:
+        """Compute the expected value of a real-valued variable for a given context,
+        under an optional intervention
+        """
+        factor = self._query([variable], context, intervention=intervene)
         factor.normalize() #make probs add to one
 
         ev = 0.0
         for idx, prob in np.ndenumerate(factor.values):
-            utils = [factor.state_names[factor.variables[i]][j] for i,j in enumerate(idx) ]
-            ev += np.sum(utils) * prob
+            val = prob * factor.state_names[variable][idx[0]]
+            if np.isnan(val):
+                raise Exception("query {} | {} generated Nan from idx: {}, prob: {}, \
+                                consider imputing a random decision".format(variable, context, idx, prob))
+            ev += val
         return ev
-
-    # def check_model(self, allow_null=True):
-    #     """
-    #     Check the model for various errors. This method checks for the following
-    #     errors.
-    #     * Checks if the sum of the probabilities for each state is equal to 1 (tol=0.01).
-    #     * Checks if the CPDs associated with nodes are consistent with their parents.
-    #     Returns
-    #     -------
-    #     check: boolean
-    #         True if all the checks are passed
-    #     """
-    #     for node in self.nodes():
-    #         cpd = self.get_cpds(node=node)
-    #
-    #         if cpd is None:
-    #             raise ValueError("No CPD associated with {}".format(node))
-    #         elif isinstance(cpd, (NullCPD, FunctionCPD)):
-    #             if not allow_null:
-    #                 raise ValueError(
-    #                     "CPD associated with {node} is null or function cpd".format(node=node)
-    #                 )
-    #         elif isinstance(cpd, (TabularCPD, ContinuousFactor)):
-    #             evidence = cpd.get_evidence()
-    #             parents = self.get_parents(node)
-    #             if set(evidence if evidence else []) != set(parents if parents else []): #TODO: do es this check appropriate cardinalities?
-    #                 raise ValueError(
-    #                     "CPD associated with {node} doesn't have "
-    #                     "proper parents associated with it.".format(node=node)
-    #                 )
-    #             if not cpd.is_valid_cpd():
-    #                 raise ValueError(
-    #                     "Sum or integral of conditional probabilites for node {node}"
-    #                     " is not equal to 1.".format(node=node)
-    #                 )
-    #     return True
 
     def copy(self) -> CID:
         model_copy = CID(self.edges(), decision_nodes=self.decision_nodes, utility_nodes=self.utility_nodes)
