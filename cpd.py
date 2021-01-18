@@ -42,6 +42,7 @@ class NullCPD(TabularCPD):
             self.state_names = state_names
         else:
             self.state_names = {variable : list(range(variable_card))}
+        self.label = "Rand({})".format(self.variable_card)
 
     def scope(self) -> List[str]:
         return [self.variable]
@@ -66,8 +67,6 @@ class NullCPD(TabularCPD):
                                       parents, parents_card, state_names=self.state_names)
         return True
 
-    def get_label(self):
-        return "Rand({})".format(self.variable_card)
 
 class FunctionCPD(TabularCPD):
     """FunctionCPD class used to specify relationship between variables with a function rather than
@@ -78,7 +77,8 @@ class FunctionCPD(TabularCPD):
     of the parents have been computed, since the state names depends on the values of the parents.
     """
 
-    def __init__(self, variable: str, f: Callable, evidence: List[str], state_names: Dict = None) -> None:
+    def __init__(self, variable: str, f: Callable, evidence: List[str],
+                 state_names: Dict = None, label: str = None) -> None:
         """Initialize FunctionCPD with a variable name and a function
 
         state_names can optionally be provided, to force the domain of the distribution.
@@ -97,6 +97,14 @@ class FunctionCPD(TabularCPD):
             self.force_state_names = state_names[variable]
         else:
             self.force_state_names = None
+        if label:
+            self.label = label
+        else:
+            sl = getsourcelines(self.f)[0][0]
+            start = sl.find('lambda') + 7
+            middle = sl.find(':', start, len(sl))
+            end = sl.find(',', middle, len(sl))
+            self.label = sl[middle + 2:end] if start != 6 else ""
 
     def scope(self) -> List[str]:
         return [self.variable]
@@ -157,10 +165,3 @@ class FunctionCPD(TabularCPD):
         super(FunctionCPD, self).__init__(self.variable, card,
                                           matrix, evidence, evidence_card,
                                           state_names=state_names)
-
-    def get_label(self):
-        sl = getsourcelines(self.f)[0][0]
-        start = sl.find('lambda') + 7
-        middle = sl.find(':', start, len(sl))
-        end = sl.find(',', middle, len(sl))
-        return sl[middle+2:end] if start!=6 else ""

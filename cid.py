@@ -104,7 +104,8 @@ class CID(BayesianModel):
                 eu.append(new.expected_utility(context))
             return idx2name[np.argmax(eu)]
 
-        self.add_cpds(FunctionCPD(d, opt_policy, parents), update_all=False)
+        self.add_cpds(FunctionCPD(d, opt_policy, parents, label="opt"),
+                      update_all=False)
 
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
@@ -122,7 +123,7 @@ class CID(BayesianModel):
             context = {p: pv[i] for i, p in enumerate(parents)}
             return new.expected_value(y, context)
 
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents))
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
 
     def solve(self) -> Dict:
         """Return dictionary with subgame perfect global policy"""
@@ -226,8 +227,8 @@ class CID(BayesianModel):
 
     def __get_label(self, node):
         cpd = self.get_cpds(node)
-        if hasattr(cpd, "get_label"):
-            return cpd.get_label()
+        if hasattr(cpd, "label"):
+            return cpd.label
         else:
             return ""
 
