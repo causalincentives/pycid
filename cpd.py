@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 import itertools
+from inspect import getsourcelines
 from logging import warning
 from typing import List, Callable, Dict
 from pgmpy.factors.discrete import TabularCPD
@@ -65,6 +66,8 @@ class NullCPD(TabularCPD):
                                       parents, parents_card, state_names=self.state_names)
         return True
 
+    def get_label(self):
+        return "Rand({})".format(self.variable_card)
 
 class FunctionCPD(TabularCPD):
     """FunctionCPD class used to specify relationship between variables with a function rather than
@@ -154,3 +157,10 @@ class FunctionCPD(TabularCPD):
         super(FunctionCPD, self).__init__(self.variable, card,
                                           matrix, evidence, evidence_card,
                                           state_names=state_names)
+
+    def get_label(self):
+        sl = getsourcelines(self.f)[0][0]
+        start = sl.find('lambda') + 7
+        middle = sl.find(':', start, len(sl))
+        end = sl.find(',', middle, len(sl))
+        return sl[middle+2:end] if start!=6 else ""

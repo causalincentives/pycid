@@ -2,9 +2,7 @@
 #agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
-
 from functools import lru_cache
-
 import numpy as np
 from pgmpy.factors.base import BaseFactor
 from pgmpy.models import BayesianModel
@@ -226,9 +224,24 @@ class CID(BayesianModel):
         else:
             return 'o'
 
+    def __get_label(self, node):
+        cpd = self.get_cpds(node)
+        if hasattr(cpd, "get_label"):
+            return cpd.get_label()
+        else:
+            return ""
+
     def draw(self):
         l = nx.kamada_kawai_layout(self)
+        labeldict = {node: self.__get_label(node) for node in self.nodes}
+        pos_higher = {}
+        for k, v in l.items():
+            if (v[1] > 0):
+                pos_higher[k] = (v[0] - 0.1, v[1] - 0.2)
+            else:
+                pos_higher[k] = (v[0] - 0.1, v[1] + 0.2)
         nx.draw_networkx(self, pos=l, node_size=800, arrowsize=20)
+        nx.draw_networkx_labels(self, pos_higher, labeldict)
         for node in self.nodes:
             nx.draw_networkx(self.to_directed().subgraph([node]), pos=l, node_size=800, arrowsize=20,
                              node_color=self.__get_color(node),
