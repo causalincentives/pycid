@@ -2,6 +2,9 @@
 #agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
+
+from functools import lru_cache
+
 import numpy as np
 from pgmpy.factors.base import BaseFactor
 from pgmpy.models import BayesianModel
@@ -16,6 +19,7 @@ import warnings
 
 
 class CID(BayesianModel):
+
     def __init__(self, ebunch:List[Tuple[str, str]],
                  decision_nodes: List[str],
                  utility_nodes:List[str]):
@@ -24,7 +28,7 @@ class CID(BayesianModel):
         self.utility_nodes = utility_nodes
         assert set(self.nodes).issuperset(self.decision_nodes)
         assert set(self.nodes).issuperset(self.utility_nodes)
-        self.chance_nodes = set(self.nodes) - set(self.decision_nodes + self.utility_nodes)
+        self.cpds_to_add = {}
 
     def add_cpds(self, *cpds: BaseFactor, update_all: bool = True) -> None:
         """Add the given CPDs and initiate NullCPDs and FunctionCPDs
@@ -33,32 +37,21 @@ class CID(BayesianModel):
         It can be set to false to save time, if the added CPD(s) have identical state_names to
         the ones they are replacing.
         """
+        if update_all:
+            for cpd in self.cpds:
+                self.cpds_to_add[cpd.variable] = cpd
         for cpd in cpds:
-            if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD, FunctionCPD)):
-                raise ValueError("Only TabularCPD, ContinuousFactor, FunctionCPD, or NullCPD can be added.")
+            assert cpd.variable in self.nodes
+            self.cpds_to_add[cpd.variable] = cpd
 
-            if set(cpd.scope()) - set(cpd.scope()).intersection(set(self.nodes())):
-                raise ValueError("CPD defined on variable not in the model", cpd)
-
-            for prev_cpd_index in range(len(self.cpds)):
-                if self.cpds[prev_cpd_index].variable == cpd.variable:
-                    logging.warning(
-                        "Replacing existing CPD for {var}".format(var=cpd.variable)
-                    )
-                    self.cpds[prev_cpd_index] = cpd
-                    break
-            else:
-                self.cpds.append(cpd)
-
-        if len(self.cpds) == len(self.nodes):
-            # Once all CPDs are added, initialize the TablularCPD matrices
-            if update_all:
-                update_cpds = self.get_cpds()
-            else:
-                update_cpds = cpds
-            for cpd in update_cpds:
-                if hasattr(cpd, "initializeTabularCPD"):    #isinstance(cpd, (FunctionCPD, NullCPD)):
+        for var in nx.topological_sort(self):
+            if var in self.cpds_to_add:
+                cpd = self.cpds_to_add[var]
+                if hasattr(cpd, "initializeTabularCPD"):
                     cpd.initializeTabularCPD(self)
+                if hasattr(cpd, "values"):
+                    super(CID, self).add_cpds(cpd)
+                    del self.cpds_to_add[var]
 
     def _get_valid_order(self, nodes:List[str]):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
@@ -107,6 +100,7 @@ class CID(BayesianModel):
         new = self.copy()
         new.impute_random_decision(d)
 
+        @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple) -> float:
             context = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
@@ -116,7 +110,6 @@ class CID(BayesianModel):
             return idx2name[np.argmax(eu)]
 
         self.add_cpds(FunctionCPD(d, opt_policy, parents), update_all=False)
-        self.freeze_policy(d)  # Convert the CPD to a TabularCPD, to avoid it changing from interventions
 
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
@@ -129,12 +122,12 @@ class CID(BayesianModel):
         parents = self.get_parents(d)
         new = self.copy()
 
+        @lru_cache(maxsize=1000)
         def cond_exp_policy(*pv: tuple) -> float:
             context = {p: pv[i] for i, p in enumerate(parents)}
             return new.expected_value(y, context)
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, parents), update_all=False)
-        self.freeze_policy(d)
 
     def freeze_policy(self, d: str) -> None:
         """Replace a FunctionCPD with the corresponding TabularCPD, to prevent it from updating later"""
