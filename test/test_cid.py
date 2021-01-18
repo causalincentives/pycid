@@ -61,7 +61,7 @@ class TestCID(unittest.TestCase):
         cid = get_introduced_bias()
         cid.impute_conditional_expectation_decision('D', 'Y')
         eu_ce = cid.expected_utility({})
-        self.assertGreater(eu_ce, -0.2)
+        self.assertAlmostEqual(eu_ce, -0.1666, 2)
         cid.impute_optimal_policy()
         eu_opt = cid.expected_utility({})
         self.assertEqual(eu_ce, eu_opt)

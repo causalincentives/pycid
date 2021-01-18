@@ -47,8 +47,8 @@ class CID(BayesianModel):
         for var in nx.topological_sort(self):
             if var in self.cpds_to_add:
                 cpd = self.cpds_to_add[var]
-                if hasattr(cpd, "initializeTabularCPD"):
-                    cpd.initializeTabularCPD(self)
+                if hasattr(cpd, "initialize_tabular_cpd"):
+                    cpd.initialize_tabular_cpd(self)
                 if hasattr(cpd, "values"):
                     super(CID, self).add_cpds(cpd)
                     del self.cpds_to_add[var]
@@ -127,7 +127,7 @@ class CID(BayesianModel):
             context = {p: pv[i] for i, p in enumerate(parents)}
             return new.expected_value(y, context)
 
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents), update_all=False)
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents))
 
     def freeze_policy(self, d: str) -> None:
         """Replace a FunctionCPD with the corresponding TabularCPD, to prevent it from updating later"""
