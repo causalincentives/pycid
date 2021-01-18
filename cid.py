@@ -211,14 +211,25 @@ class CID(BayesianModel):
         return model_copy
 
     def __get_color(self, node):
-        if node.startswith('D'):
+        if node in self.decision_nodes:
             return 'lightblue'
-        elif node.startswith('U'):
+        elif node in self.utility_nodes:
             return 'yellow'
         else:
             return 'lightgray'
 
+    def __get_shape(self, node):
+        if node in self.decision_nodes:
+            return 's'
+        elif node in self.utility_nodes:
+            return 'D'
+        else:
+            return 'o'
+
     def draw(self):
         l = nx.kamada_kawai_layout(self)
-        colors = [self.__get_color(node) for node in self.nodes]
-        nx.draw_networkx(self, pos=l, node_color=colors)
+        nx.draw_networkx(self, pos=l, node_size=800, arrowsize=20)
+        for node in self.nodes:
+            nx.draw_networkx(self.to_directed().subgraph([node]), pos=l, node_size=800, arrowsize=20,
+                             node_color=self.__get_color(node),
+                             node_shape=self.__get_shape(node))
