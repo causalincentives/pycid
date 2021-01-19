@@ -204,7 +204,7 @@ class CID(BayesianModel):
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
 
-    def __get_color(self, node):
+    def _get_color(self, node):
         if node in self.decision_nodes:
             return 'lightblue'
         elif node in self.utility_nodes:
@@ -212,7 +212,7 @@ class CID(BayesianModel):
         else:
             return 'lightgray'
 
-    def __get_shape(self, node):
+    def _get_shape(self, node):
         if node in self.decision_nodes:
             return 's'
         elif node in self.utility_nodes:
@@ -220,16 +220,19 @@ class CID(BayesianModel):
         else:
             return 'o'
 
-    def __get_label(self, node):
+    def _get_label(self, node):
         cpd = self.get_cpds(node)
         if hasattr(cpd, "label"):
             return cpd.label
         else:
             return ""
 
-    def draw(self):
+    def draw(self, node_color=None, node_shape=None, node_label=None):
+        color = node_color if node_color else self._get_color
+        shape = node_shape if node_shape else self._get_shape
+        label = node_label if node_label else self._get_label
         layout = nx.kamada_kawai_layout(self)
-        labeldict = {node: self.__get_label(node) for node in self.nodes}
+        labeldict = {node: label(node) for node in self.nodes}
         pos_higher = {}
         for k, v in layout.items():
             if v[1] > 0:
@@ -240,5 +243,5 @@ class CID(BayesianModel):
         nx.draw_networkx_labels(self, pos_higher, labeldict)
         for node in self.nodes:
             nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
-                             node_color=self.__get_color(node),
-                             node_shape=self.__get_shape(node))
+                             node_color=color(node),
+                             node_shape=shape(node))

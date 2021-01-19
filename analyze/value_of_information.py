@@ -53,3 +53,15 @@ def admits_voi_list(cid: CID, decision: str, agent=None) -> List[str]:
         return []
     else:
         return [x for x in list(cid.nodes) if admits_voi(cid, decision, x, agent=agent)]
+
+
+def draw_voi(cid: CID, decision: str):
+    """Draw a CID with nodes admitting VoI highlighted"""
+
+    def node_color(node):
+        if admits_voi(cid, decision, node):
+            return 'red'
+        else:
+            return cid._get_color(node)
+
+    cid.draw(node_color=node_color)

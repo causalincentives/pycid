@@ -37,6 +37,10 @@ class TestNotebooks(unittest.TestCase):
         _, errors = run_notebook('examples/fairness.ipynb')
         self.assertEqual(len(errors), 0)
 
+    def analyze_incentives(self):
+        _, errors = run_notebook('examples/analyze_incentives.ipynb')
+        self.assertEqual(len(errors), 0)
+
     def test_generate_cpd(self):
         _, errors = run_notebook('examples/generate_cid.ipynb')
         self.assertEqual(len(errors), 0)
