@@ -24,4 +24,4 @@ A number of example models are provided in the folder models.
 
 ### Setup
 
-Install the required packages `pip3 install -r requirements.txt` and run `python3 tests/cid_test.py` to check that everything works.
+Install the required packages `pip3 install -r requirements.txt` and run `python3 -m unittest` or `python3 test/run_all_tests.py` to check that everything works.
