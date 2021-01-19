@@ -74,11 +74,11 @@ class TestCID(unittest.TestCase):
 
     def test_intervention(self):
         cid = get_minimal_cid()
-        self.assertEqual(cid.expected_value('B', {}), 0.5)
+        self.assertEqual(cid.expected_value(['B'], {})[0], 0.5)
         for a in [0, 1, 2]:
             cid.intervene({'A': a})
-            self.assertEqual(cid.expected_value('B', {}), a)
-            self.assertEqual(cid.expected_value('B', {}, intervene={'A': 1}), 1)
+            self.assertEqual(cid.expected_value(['B'], {})[0], a)
+        self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
 
 
 if __name__ == "__main__":

@@ -110,7 +110,8 @@ class FunctionCPD(TabularCPD):
         return [self.variable]
 
     def copy(self) -> FunctionCPD:
-        return FunctionCPD(self.variable, self.f, self.evidence, state_names=self.force_state_names)
+        state_names = {self.variable: self.force_state_names} if self.force_state_names else None
+        return FunctionCPD(self.variable, self.f, self.evidence, state_names=state_names)
 
     def __repr__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
