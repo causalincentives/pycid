@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 from functools import lru_cache
+import matplotlib.pyplot as plt
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
@@ -245,3 +246,4 @@ class CID(BayesianModel):
             nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
                              node_color=color(node),
                              node_shape=shape(node))
+        plt.show()
