@@ -1,12 +1,20 @@
 import sys, os
 import unittest
 sys.path.insert(0, os.path.abspath('.'))
+
+from analyze.effects import introduced_total_effect, total_effect
+from analyze.value_of_information import admits_voi, admits_voi_list
 from cpd import FunctionCPD
-from incentives import total_effect, introduced_total_effect
+
 from examples import get_introduced_bias, get_minimal_cid
 
 
-class TestIncentives(unittest.TestCase):
+class TestAnalyze(unittest.TestCase):
+
+    def test_value_of_information(self):
+        cid = get_introduced_bias()
+        self.assertTrue(admits_voi(cid, 'D', 'A'))
+        self.assertEqual(set(admits_voi_list(cid, 'D')), {'A', 'X', 'Z', 'Y'})
 
     def testTotalEffect(self):
         cid = get_minimal_cid()
@@ -38,6 +46,7 @@ class TestIncentives(unittest.TestCase):
         self.assertAlmostEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), 0.333, 2)
 
 
+
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestIncentives)
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze)
     unittest.TextTestRunner().run(suite)

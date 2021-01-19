@@ -1,9 +1,9 @@
 import unittest
 
+from test.test_analyze import TestAnalyze
 from test.test_cpd import TestCPD
 from test.test_notebooks import TestNotebooks
 from test.test_cid import TestCID
-from test.test_incentives import TestIncentives
 from test.test_parameterize import TestParameterize
 
 if __name__ == '__main__':
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     suiteList = []
     suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestCID))
     suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD))
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestIncentives))
+    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze))
     suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestParameterize))
     suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks))
     comboSuite = unittest.TestSuite(suiteList)
