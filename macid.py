@@ -17,7 +17,7 @@ from collections import defaultdict
 from collections import deque
 import copy
 import matplotlib.cm as cm
-from parameterize.get_paths import get_motifs, get_motif
+from generate.get_paths import get_motifs, get_motif
 
 
 

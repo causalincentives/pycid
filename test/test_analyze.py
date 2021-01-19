@@ -46,7 +46,6 @@ class TestAnalyze(unittest.TestCase):
         self.assertAlmostEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), 0.333, 2)
 
 
-
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze)
     unittest.TextTestRunner().run(suite)
