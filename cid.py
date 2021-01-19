@@ -97,7 +97,7 @@ class CID(BayesianModel):
         new = self.copy()  # this "freezes" the policy so it doesn't adapt to future interventions
 
         @lru_cache(maxsize=1000)
-        def opt_policy(*pv: tuple) -> float:
+        def opt_policy(*pv: tuple):
             context = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
