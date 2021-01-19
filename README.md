@@ -1,5 +1,7 @@
 # Causal Influence Diagram Representation
 
+*Warning: Parameterize not working*
+
 This project implements causal influence diagrams,
 as studied in a number of recent papers and blog posts.
 
