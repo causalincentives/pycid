@@ -2,7 +2,7 @@ import numpy as np
 import unittest
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
-from cpd import NullCPD, FunctionCPD
+from cpd import UniformRandomCPD, FunctionCPD
 from examples import get_introduced_bias, get_minimal_cid
 
 
@@ -10,11 +10,11 @@ class TestCPD(unittest.TestCase):
 
     def test_initialize_null_cpd(self):
         cid = get_minimal_cid()
-        cpd_a = NullCPD('A', 2, state_names={'A': [0, 2]})
+        cpd_a = UniformRandomCPD('A', 2, state_names={'A': [0, 2]})
         cpd_a.initialize_tabular_cpd(cid)
         self.assertTrue((cpd_a.get_values() == np.array([[0.5], [0.5]])).all())
         self.assertEqual(cpd_a.get_state_names('A', 1), 2)
-        cpd_b = NullCPD('B', 2)
+        cpd_b = UniformRandomCPD('B', 2)
         cpd_b.initialize_tabular_cpd(cid)
         self.assertTrue((cpd_a.get_values() == np.array([[0.5, 0.5], [0.5, 0.5]])).all())
 

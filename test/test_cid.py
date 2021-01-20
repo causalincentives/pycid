@@ -5,7 +5,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 import numpy as np
-from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, get_nested_cid, \
+from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
     get_introduced_bias, get_minimal_cid
 from pgmpy.factors.discrete import TabularCPD
 
@@ -43,16 +43,16 @@ class TestCID(unittest.TestCase):
     # @unittest.skip("")
     def test_solve(self):
         three_node = get_3node_cid()
-        soln2 = three_node.solve()
-        soln2 = three_node.solve()  # check that it can be solved repeatedly
-        cpd2 = soln2['D']
+        three_node.solve()
+        solution = three_node.solve()  # check that it can be solved repeatedly
+        cpd2 = solution['D']
         self.assertTrue(np.array_equal(cpd2.values, np.array([[1, 0], [0, 1]])))
         three_node.add_cpds(cpd2)
         self.assertEqual(three_node.expected_utility({}), 1)
 
         two_decisions = get_2dec_cid()
-        soln = two_decisions.solve()
-        cpd = soln['D2']
+        solution = two_decisions.solve()
+        cpd = solution['D2']
         self.assertTrue(np.array_equal(cpd.values, np.array([[1, 0], [0, 1]])))
         two_decisions.add_cpds(cpd)
         self.assertEqual(two_decisions.expected_utility({}), 1)

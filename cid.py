@@ -11,7 +11,7 @@ import logging
 from typing import List, Tuple, Dict, Any
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
-from cpd import NullCPD, FunctionCPD
+from cpd import UniformRandomCPD, FunctionCPD
 
 
 class CID(BayesianModel):
@@ -80,7 +80,7 @@ class CID(BayesianModel):
         else:
             sn = None
             card = 2
-        self.add_cpds(NullCPD(d, card, state_names=sn))
+        self.add_cpds(UniformRandomCPD(d, card, state_names=sn))
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes"""
@@ -136,6 +136,8 @@ class CID(BayesianModel):
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use context={} to get P(query). Or use factor.normalize to get p(query|context)"""
+
+        # TODO add check whether query depends on unspecified policy
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()

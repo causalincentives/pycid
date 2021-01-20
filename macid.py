@@ -10,7 +10,7 @@ from typing import List, Tuple, Dict
 import itertools
 from pgmpy.inference import BeliefPropagation
 import networkx as nx
-from cpd import NullCPD
+from cpd import UniformRandomCPD
 import matplotlib.pyplot as plt
 import operator
 from collections import defaultdict
@@ -48,7 +48,7 @@ class MACID(BayesianModel):
     def add_cpds(self, *cpds):
         # this method adds conditional probability distributions to the MACID.
         for cpd in cpds:
-            if not isinstance(cpd, (TabularCPD, ContinuousFactor, NullCPD)):
+            if not isinstance(cpd, (TabularCPD, ContinuousFactor, UniformRandomCPD)):
                 raise ValueError("Only TabularCPD, ContinuousFactor, or NullCPD can be added.")
 
             if set(cpd.scope()) - set(cpd.scope()).intersection(set(self.nodes())):
@@ -96,7 +96,7 @@ class MACID(BayesianModel):
                         "Sum or integral of conditional probabilites for node {node}"
                         " is not equal to 1.".format(node=node)
                     )
-            elif isinstance(cpd, (NullCPD)):
+            elif isinstance(cpd, (UniformRandomCPD)):
                 if not allow_null:
                     raise ValueError(
                         "CPD associated with {node} is nullcpd".format(node=node)

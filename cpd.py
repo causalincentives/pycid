@@ -1,70 +1,57 @@
-#Licensed to the Apache Software Foundation (ASF) under one or more contributor license
-#agreements; and to You under the Apache License, Version 2.0.
+# Licensed to the Apache Software Foundation (ASF) under one or more contributor license
+# agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
 import itertools
 from inspect import getsourcelines
 from logging import warning
-from typing import List, Callable, Dict
+from typing import List, Callable, Dict, Union
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
 import numpy as np
 
 
-# class RandomCPD(TabularCPD):
-#
-#     def __init__(self, variable, card=2, evidence=[], evidence_card=[]):
-#         matrix = np.ones((card, np.product(evidence_card).astype(int))) / card
-#         super(RandomCPD, self).__init__(variable, card, matrix, evidence=evidence, evidence_card=evidence_card)
-#
-#     def __repr__(self):
-#         return "<RandomCPD {}:{}>".format(self.variable, self.variable_card)
-#
-#     def copy(self):
-#         return RandomCPD(self.variable, self.variable_card, self.evidence, self.evidence_card)
-
-
-class NullCPD(TabularCPD):
-    """NullCPD class is a class used for decision nodes, to avoid having to specify a probability matrix
+class UniformRandomCPD(TabularCPD):
+    """UniformRandomPD class creates a uniform random CPD given parents in graph
 
     It only becomes a fully initialized TabularCPD once the method initializeTabularCPD
     is run.
     """
 
-    def __init__(self, variable, variable_card, state_names=None):
+    def __init__(self, variable: str, variable_card: int,
+                 state_names: Dict[str, List] = None, label: str = None):
         self.variable = variable
-        self.variable_card = variable_card #is this correct?
-        self.cardinality = [variable_card] #TODO: possible problem because this usually includes cardinality of parents
+        # TODO try removing these, it seems better that they are set by super.init
+        self.variable_card = variable_card  # is this correct?
+        self.cardinality = [variable_card]  # TODO: possible problem because usually includes cardinality of parents
         self.variables = [self.variable]
         if state_names:
             assert isinstance(state_names, dict)
             assert isinstance(state_names[variable], list)
             self.state_names = state_names
         else:
-            self.state_names = {variable : list(range(variable_card))}
-        self.label = "Rand({})".format(self.variable_card)
+            self.state_names = {variable: list(range(variable_card))}
+        self.label = label if label else f"DiscUni({self.state_names[self.variable]})"
 
     def scope(self) -> List[str]:
         return [self.variable]
 
-    def copy(self) -> NullCPD:
-        return NullCPD(self.variable, self.variable_card, state_names=self.state_names)
+    def copy(self) -> UniformRandomCPD:
+        return UniformRandomCPD(self.variable, self.variable_card, state_names=self.state_names)
 
     def __repr__(self) -> str:
-        return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
+        return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
 
     def __str__(self) -> str:
-        return "<NullCPD {}:{}>".format(self.variable, self.variable_card)
-    #def to_factor(self):
-    #    return self
+        return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
 
     def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
         """initialize the TabularCPD with a matrix representing a uniform random distribution"""
         parents = cid.get_parents(self.variable)
         parents_card = [cid.get_cardinality(p) for p in parents]
-        transition_probs = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
-        super(NullCPD, self).__init__(self.variable, self.variable_card, transition_probs,
-                                      parents, parents_card, state_names=self.state_names)
+        transition_matrix = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
+        super().__init__(self.variable, self.variable_card, transition_matrix,
+                         parents, parents_card, state_names=self.state_names)
         return True
 
 
@@ -101,10 +88,13 @@ class FunctionCPD(TabularCPD):
             self.label = label
         else:
             sl = getsourcelines(self.f)[0][0]
-            start = sl.find('lambda') + 7
-            middle = sl.find(':', start, len(sl))
-            end = sl.find(',', middle, len(sl))
-            self.label = sl[middle + 2:end] if start != 6 else ""
+            lambda_pos = sl.find('lambda')
+            if lambda_pos == -1:  # can't infer label if not defined by lambda expression
+                self.label = ""
+            else:
+                colon = sl.find(':', lambda_pos, len(sl))
+                end = sl.find(',', colon, len(sl))  # TODO this only works for simple expressions with no commas
+                self.label = sl[colon+2: end]
 
     def scope(self) -> List[str]:
         return [self.variable]
@@ -119,7 +109,7 @@ class FunctionCPD(TabularCPD):
     def __str__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
-    def parent_values(self, cid: BayesianModel) -> List[List]:
+    def parent_values(self, cid: BayesianModel) -> Union[List[List], None]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values = []
         for p in self.evidence:
@@ -128,10 +118,9 @@ class FunctionCPD(TabularCPD):
                 parent_values.append(p_cpd.state_names[p])
             else:
                 return None
-                #raise Exception("unknown values for parent {}".format(p))
         return parent_values
 
-    def possible_values(self, cid: BayesianModel) -> List:
+    def possible_values(self, cid: BayesianModel) -> Union[List[List], None]:
         """The possible values this variable can take, given the values the parents can take"""
         parent_values = self.parent_values(cid)
         if parent_values is None:
@@ -163,6 +152,27 @@ class FunctionCPD(TabularCPD):
                            for t in state_names_list])
         state_names = {self.variable: state_names_list}
 
-        super(FunctionCPD, self).__init__(self.variable, card,
-                                          matrix, evidence, evidence_card,
-                                          state_names=state_names)
+        super().__init__(self.variable, card,
+                         matrix, evidence, evidence_card,
+                         state_names=state_names)
+
+
+class DecisionDomain(UniformRandomCPD):
+    """DecisionDomain is used to specify the domain for a decision
+
+    Under the hood it becomes a UniformRandomCPD
+    """
+
+    def __init__(self, variable: str, state_names: List):
+        super().__init__(variable, len(state_names),
+                         state_names={variable: state_names},
+                         label=f"Dec({state_names})")
+
+    def copy(self) -> DecisionDomain:
+        return DecisionDomain(self.variable, state_names=self.state_names[self.variable])
+
+    def __repr__(self) -> str:
+        return f"<DecisionDomain {self.variable}:{self.state_names[self.variable]}>"
+
+    def __str__(self) -> str:
+        return f"<DecisionDomain {self.variable}:{self.state_names[self.variable]}>"

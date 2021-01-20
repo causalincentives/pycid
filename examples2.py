@@ -3,7 +3,7 @@
 from pgmpy.factors.discrete import TabularCPD
 import numpy as np
 from macid import MACID
-from cpd import NullCPD
+from cpd import UniformRandomCPD, DecisionDomain
 import itertools
 import operator
 import functools
@@ -82,9 +82,6 @@ def modified_content_reccomender():
     return macid
 
 
-
-
-
 #%%
 def basic2agent():
     from pgmpy.factors.discrete.CPD import TabularCPD
@@ -113,18 +110,13 @@ def basic2agent_2():
         {'U1' :list(range(6)), 'U2': list(range(6))}
         )
 
-
-
-
-    cpd_D1 = NullCPD('D1', 2)
-    cpd_D2 = NullCPD('D2', 2)
+    cpd_D1 = DecisionDomain('D1', [0, 1])
+    cpd_D2 = DecisionDomain('D2', [0, 1])
 
     cpd_U1 = TabularCPD('U1', 6, np.array([[0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 0], [1, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
     cpd_U2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0]]), evidence=['D1', 'D2'], evidence_card=[2,2])
 
     macid.add_cpds(cpd_D1, cpd_D2, cpd_U1, cpd_U2)
-
-
 
 
     # for dec in macid.all_decision_nodes:
@@ -314,10 +306,6 @@ def road_example():
 
     return macid
 
-
-
-
-
 #%%
 def basic2agent_3():
     from pgmpy.factors.discrete.CPD import TabularCPD
@@ -339,18 +327,15 @@ def basic2agent_3():
         {'U1':np.arange(7), 'U2':np.arange(7), 'U3':np.arange(7)}
         )
 
-    cpd_D1 = NullCPD('D1', 2)
-    cpd_D2 = NullCPD('D2', 2)
-    cpd_D3 = NullCPD('D3', 2)
+    cpd_D1 = DecisionDomain('D1', [0, 1])
+    cpd_D2 = DecisionDomain('D2', [0, 1])
+    cpd_D3 = DecisionDomain('D3', [0, 1])
 
     cpd_U1 = TabularCPD('U1', 7, np.array([[0, 0, 0, 1, 0, 0, 0, 1], [1, 1, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0]]), evidence=['D1', 'D2', 'D3'], evidence_card=[2,2,2])
     cpd_U2 = TabularCPD('U2', 7, np.array([[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0]]), evidence=['D1', 'D2', 'D3'], evidence_card=[2,2,2])
     cpd_U3 = TabularCPD('U3', 7, np.array([[0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 1, 0, 0]]), evidence=['D1', 'D2', 'D3'], evidence_card=[2,2,2])
 
     macid.add_cpds(cpd_D1, cpd_D2, cpd_D3, cpd_U1, cpd_U2, cpd_U3)
-
-
-
 
     # cpd_d1 = NullCPD('D1', 2)
     # cpd_d2 = NullCPD('D2', 2)
@@ -386,9 +371,6 @@ def basic2agent_3():
     # print("added cpds")
 
     return macid
-
-
-
 
 
 # %%
@@ -441,24 +423,10 @@ def umbrella():
 
     cpd_W = TabularCPD('W',2,np.array([[.6],[.4]]))
     cpd_F = TabularCPD('F',2,np.array([[.8, .3],[.2,.7]]), evidence=['W'], evidence_card=[2])
-    cpd_UM = NullCPD('UM', 2)
+    cpd_UM = DecisionDomain('UM', [0, 1])
     cpd_A = TabularCPD('A', 3, np.array([[0, 1, 1, 0], [1, 0, 0, 0], [0,0,0,1]]), evidence=['W', 'UM'], evidence_card=[2,2])
-
-
-
     macid.add_cpds(cpd_W, cpd_F, cpd_UM, cpd_A)
-
-
-
-
-
-
-
-
-
     return macid
-
-
 
 def c2d():
     from pgmpy.factors.discrete.CPD import TabularCPD
@@ -476,18 +444,12 @@ def c2d():
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': ['C1']},     #defines the decisions, chance nodes and utility nodes for each agent
         {'U1':np.arange(6), 'U2':-np.arange(6)})     #defines utility ranges
 
-
     cpd_C1 = TabularCPD('C1',2,np.array([[.5],[.5]]))
-    cpd_D1 = NullCPD('D1', 2)
-    cpd_D2 = NullCPD('D2', 2)
+    cpd_D1 = DecisionDomain('D1', [0, 1])
+    cpd_D2 = DecisionDomain('D2', [0, 1])
     cpd_U1 = TabularCPD('U1', 4, np.array([[0, 0, 0, 0, 1, 0, 0, 0], [1, 0, 1, 0, 0, 1, 0, 0], [0, 1, 0, 1, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 1]]), evidence=['C1', 'D1', 'D2'], evidence_card=[2,2,2])
     cpd_U2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 1, 0, 1], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0]]), evidence=['C1', 'D1', 'D2'], evidence_card=[2,2,2])
-
     macid.add_cpds(cpd_C1, cpd_D1, cpd_D2, cpd_U1, cpd_U2)
-
-
-
-
     return macid
 
 
@@ -503,15 +465,7 @@ def sequential():
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']},'C': []},     #defines the decisions, chance nodes and utility nodes for each agent
        )     #defines utility ranges
 
-
-
-
-
-
     return macid
-
-
-
 
 print("loaded examples")
 
@@ -535,8 +489,8 @@ def signal():
         {'U1':np.arange(6), 'U2':-np.arange(6)})
 
     cpd_X = TabularCPD('X',2,np.array([[.5],[.5]]))
-    cpd_D1 = NullCPD('D1', 2)
-    cpd_D2 = NullCPD('D1', 2)
+    cpd_D1 = DecisionDomain('D1', [0, 1])
+    cpd_D2 = DecisionDomain('D1', [0, 1])
 
     U1_cpd_array = np.array([[0, 0, 0, 0, 1, 0, 0, 0],
                             [0, 0, 0, 1, 0, 0, 1, 0],
@@ -601,8 +555,6 @@ def triage():
         ('D4', 'U4'),
         ('D4', 'U1'),
         ('D4', 'U2'),
-
-
 
 
         ('D3', 'U5'),
