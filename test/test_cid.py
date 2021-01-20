@@ -5,8 +5,9 @@ import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 import numpy as np
-from examples import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_introduced_bias, get_minimal_cid
+from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
+    get_minimal_cid
+from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 
 

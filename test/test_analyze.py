@@ -6,7 +6,8 @@ from analyze.effects import introduced_total_effect, total_effect
 from analyze.value_of_information import admits_voi, admits_voi_list
 from cpd import FunctionCPD
 
-from examples import get_introduced_bias, get_minimal_cid
+from examples.simple_cids import get_minimal_cid
+from examples.story_cids import get_introduced_bias
 
 
 class TestAnalyze(unittest.TestCase):

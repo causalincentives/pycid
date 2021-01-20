@@ -3,7 +3,8 @@ import unittest
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 from cpd import UniformRandomCPD, FunctionCPD
-from examples import get_introduced_bias, get_minimal_cid
+from examples.simple_cids import get_minimal_cid
+from examples.story_cids import get_introduced_bias
 
 
 class TestCPD(unittest.TestCase):
@@ -20,7 +21,7 @@ class TestCPD(unittest.TestCase):
 
     def test_initialize_function_cpd(self):
         cid = get_minimal_cid()
-        cpd_a = FunctionCPD('A', lambda : 2, evidence=[])
+        cpd_a = FunctionCPD('A', lambda: 2, evidence=[])
         cpd_a.initialize_tabular_cpd(cid)
         self.assertTrue(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(['A'])['A'], 1)

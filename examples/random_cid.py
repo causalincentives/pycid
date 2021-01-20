@@ -4,7 +4,7 @@
 import random
 from typing import List, Tuple
 from cid import CID
-from generate.get_paths import find_active_path
+from analyze.get_paths import find_active_path
 
 
 def random_cid(
@@ -14,7 +14,7 @@ def random_cid(
         edge_density: float = 0.4,
         add_sr_edges: bool = True,
         seed: int = None):
-    """generate a random cid with the specified number of nodes and edges"""
+    """examples a random cid with the specified number of nodes and edges"""
 
     allnames, dnames, unames = get_node_names(n_all, n_decisions, n_utilities)
     edges = get_edges(allnames, unames, edge_density, seed=seed, allow_u_edges=False)
@@ -68,7 +68,7 @@ def random_cids(
 
 
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
-    """generate lists of node names for decision, utility, and chance nodes"""
+    """examples lists of node names for decision, utility, and chance nodes"""
     n_structural = n_all - n_decisions - n_utilities
     snames = ['S{}'.format(i) for i in range(n_structural)]
     dnames = ['D{}'.format(i) for i in range(n_decisions)]

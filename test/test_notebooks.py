@@ -29,24 +29,24 @@ def run_notebook(notebook_path):
 
 class TestNotebooks(unittest.TestCase):
 
-    def test_solve_cid(self):
-        _, errors = run_notebook('examples/solve_cid.ipynb')
+    def test_solve_cid_notebook(self):
+        _, errors = run_notebook('notebooks/solve_cid.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_fairness(self):
-        _, errors = run_notebook('examples/fairness.ipynb')
+    def test_fairness_notebook(self):
+        _, errors = run_notebook('notebooks/fairness.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def analyze_incentives(self):
-        _, errors = run_notebook('examples/analyze_incentives.ipynb')
+    def analyze_incentives_notebook(self):
+        _, errors = run_notebook('notebooks/analyze_incentives.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_generate_cpd(self):
-        _, errors = run_notebook('examples/generate_cid.ipynb')
+    def test_generate_cid_notebook(self):
+        _, errors = run_notebook('notebooks/generate_cid.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_MACID_codebase_demonstration(self):
-        _, errors = run_notebook('examples/MACID_codebase_demonstration.ipynb')
+    def test_MACID_codebase_demonstration_notebook(self):
+        _, errors = run_notebook('notebooks/MACID_codebase_demonstration.ipynb')
         self.assertEqual(len(errors), 0)
 
 

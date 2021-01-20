@@ -7,7 +7,7 @@ from cid import CID
 from cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 
 
-def get_minimal_cid():
+def get_minimal_cid() -> CID:
     cid = CID([('A', 'B')],
               decision_nodes=['A'],
               utility_nodes=['B'])
@@ -91,30 +91,4 @@ def get_insufficient_recall_cid() -> CID:
     cid = CID([('A', 'U'), ('B', 'U')], decision_nodes=['A', 'B'], utility_nodes=['U'])
     cpd_u = TabularCPD('U', 2, np.random.randn(2, 4), evidence=['A', 'B'], evidence_card=[2, 2])
     cid.add_cpds(DecisionDomain('A', [0, 1]), DecisionDomain('B', [0, 1]), cpd_u)
-    return cid
-
-
-def get_introduced_bias() -> CID:
-
-    cid = CID([
-        ('A', 'X'),  # defining the graph's nodes and edges
-        ('Z', 'X'),
-        ('Z', 'Y'),
-        ('X', 'D'),
-        ('X', 'Y'),
-        ('D', 'U'),
-        ('Y', 'U')
-    ],
-        decision_nodes=['D'],
-        utility_nodes=['U'])
-
-    cpd_a = UniformRandomCPD('A', 2)
-    cpd_z = UniformRandomCPD('Z', 2)
-    cpd_x = FunctionCPD('X', lambda a, z: a*z, evidence=['A', 'Z'])
-    cpd_d = DecisionDomain('D', [0, 1])
-    cpd_y = FunctionCPD('Y', lambda x, z: x + z, evidence=['X', 'Z'])
-    cpd_u = FunctionCPD('U', lambda d, y: -(d - y) ** 2, evidence=['D', 'Y'])
-
-    cid.add_cpds(cpd_a, cpd_d, cpd_z, cpd_x, cpd_y, cpd_u)
-
     return cid

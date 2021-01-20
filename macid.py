@@ -17,7 +17,7 @@ from collections import defaultdict
 from collections import deque
 import copy
 import matplotlib.cm as cm
-from generate.get_paths import get_motifs, get_motif
+from analyze.get_paths import get_motifs, get_motif
 
 
 
@@ -1204,7 +1204,7 @@ class MACID(BayesianModel):
 
     def _get_leaf_utilities(self, node_selection, node_order, bp):
         # finds leaf utilities by querying (doing propabalistic inference) on the BN described by the MACID
-        # utilities = {0:np.arange(6), 1:-np.arange(6)}    # this should come from the examples
+        # utilities = {0:np.arange(6), 1:-np.arange(6)}    # this should come from the notebooks
         evidences = dict(zip(node_order, node_selection))
         leaf_utilities = []
         for agent in range(len(self.agents)):
