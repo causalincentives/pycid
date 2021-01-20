@@ -29,8 +29,8 @@ def run_notebook(notebook_path):
 
 class TestNotebooks(unittest.TestCase):
 
-    def test_solve_cpd(self):
-        _, errors = run_notebook('examples/solve_cpd.ipynb')
+    def test_solve_cid(self):
+        _, errors = run_notebook('examples/solve_cid.ipynb')
         self.assertEqual(len(errors), 0)
 
     def test_fairness(self):

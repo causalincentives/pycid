@@ -8,11 +8,10 @@ from test.test_cid import TestCID
 
 if __name__ == '__main__':
     # All tests can also be run with python3 -m unittest
-    suiteList = []
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestCID))
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD))
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestGenerate))
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze))
-    suiteList.append(unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks))
+    suiteList = [unittest.defaultTestLoader.loadTestsFromTestCase(TestCID),
+                 unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD),
+                 unittest.defaultTestLoader.loadTestsFromTestCase(TestGenerate),
+                 unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze),
+                 unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks)]
     comboSuite = unittest.TestSuite(suiteList)
     unittest.TextTestRunner(verbosity=0).run(comboSuite)
