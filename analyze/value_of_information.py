@@ -55,13 +55,14 @@ def admits_voi_list(cid: CID, decision: str, agent=None) -> List[str]:
         return [x for x in list(cid.nodes) if admits_voi(cid, decision, x, agent=agent)]
 
 
-def draw_voi(cid: CID, decision: str):
-    """Draw a CID with nodes admitting VoI highlighted"""
-
-    def node_color(node):
-        if admits_voi(cid, decision, node):
-            return 'red'
-        else:
-            return cid._get_color(node)
-
-    cid.draw(node_color=node_color)
+def voi(cid: CID, decision: str, variable: str):
+    # TODO test this method
+    new = cid.copy()
+    new.add_edge(variable, decision)
+    new.impute_optimal_policy()
+    ev1 = new.expected_utility({})
+    new = cid.copy()
+    new.remove_edge(variable, decision)
+    new.impute_optimal_policy()
+    ev2 = new.expected_utility({})
+    return ev1 - ev2

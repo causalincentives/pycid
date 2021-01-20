@@ -8,7 +8,7 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Callable
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from cpd import UniformRandomCPD, FunctionCPD
@@ -230,7 +230,10 @@ class CID(BayesianModel):
         else:
             return ""
 
-    def draw(self, node_color=None, node_shape=None, node_label=None):
+    def draw(self,
+             node_color: Callable[[str], bool] = None,
+             node_shape: Callable[[str], bool] = None, 
+             node_label: Callable[[str], bool] = None):
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
@@ -249,3 +252,14 @@ class CID(BayesianModel):
                              node_color=color(node),
                              node_shape=shape(node))
         plt.show()
+
+    def draw_with_property(self, property: Callable[[str], bool], color='red'):
+        """Draw a CID with nodes satisfying property highlighted"""
+
+        def node_color(node):
+            if property(node):
+                return color
+            else:
+                return self._get_color(node)
+
+        self.draw(node_color=node_color)
