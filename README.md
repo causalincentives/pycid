@@ -48,7 +48,7 @@ The code is structured into 5 folders:
 
 ### Installation and setup
 
-Given that you have installed Python 3.7 or later, git, and jupyter, 
+Given that you have Python 3.7 or later, git, and jupyter, 
 you can download and setup pycid via:
 
 ```shell
