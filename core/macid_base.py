@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
-import logging
 from typing import List, Tuple, Dict, Any, Callable
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
@@ -22,7 +21,7 @@ class MACIDBase(BayesianModel):
         super().__init__(ebunch=edges)
         self.node_types = node_types
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}     # this gives a dictionary matching each agent with their decision and utility nodes
-        self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
+        self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}     # eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
         self.all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
         self.all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
@@ -74,7 +73,7 @@ class MACIDBase(BayesianModel):
             raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         self.add_cpds(UniformRandomCPD(d, sn))
 
-    def impute_optimal_decision(self, d: str) -> None:
+    def impute_optimal_decision(self, d: str, agent: int = 0) -> None:
         """Impute an optimal policy to the given decision node"""
         self.impute_random_decision(d)
         card = self.get_cardinality(d)
@@ -89,7 +88,7 @@ class MACIDBase(BayesianModel):
             eu = []
             for d_idx in range(card):
                 context[d] = d_idx
-                eu.append(new.expected_utility(context))
+                eu.append(new.expected_utility(context, agent=agent))
             return idx2name[np.argmax(eu)]
 
         self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=state_names, label="opt"),
@@ -109,7 +108,7 @@ class MACIDBase(BayesianModel):
 
     def mechanism_graph(self) -> MACIDBase:
         """Returns a mechanism graph with an extra parent node+"mec" for each node"""
-        mg = MACIDBase(self.edges, self.node_types)
+        mg = self.copy_without_cpds()
         for node in self.nodes:
             mg.add_node(node+"mec")
             mg.add_edge(node+"mec", node)
@@ -188,19 +187,23 @@ class MACIDBase(BayesianModel):
         return ev.tolist()
 
     def expected_utility(self, context: Dict["str", "Any"],
-                         intervene: dict = None, agent = 0) -> float:
+                         intervene: dict = None, agent: int = 0) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
-        # TODO update for player
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
+    def copy_without_cpds(self):
+        return MACIDBase(self.edges(),
+                         {agent: {'D': self.decision_nodes_agent[agent],
+                                  'U': self.decision_nodes_agent[agent]}
+                          for agent in self.agents})
+
     def copy(self) -> MACIDBase:
-        # TODO Fixx
-        model_copy = MACIDBase(self.edges(), self.node_types)
+        model_copy = self.copy_without_cpds()
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy

@@ -18,9 +18,9 @@ from core.macid_base import MACIDBase
 class CID(MACIDBase):
 
     def __init__(self, edges: List[Tuple[str, str]],
-                 all_decision_nodes: List[str],
-                 all_utility_nodes: List[str]):
-        super().__init__(edges, {0: {'D': all_decision_nodes, 'U': all_utility_nodes}})
+                 decision_nodes: List[str],
+                 utility_nodes: List[str]):
+        super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
 
     def check_sufficient_recall(self) -> bool:
         # TODO update to use MACID relevance graph
