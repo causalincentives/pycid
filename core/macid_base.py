@@ -108,7 +108,7 @@ class MACIDBase(BayesianModel):
 
     def mechanism_graph(self) -> MACIDBase:
         """Returns a mechanism graph with an extra parent node+"mec" for each node"""
-        mg = MACIDBase(self.edges, self.node_types)
+        mg = self.copy_without_cpds()
         for node in self.nodes:
             mg.add_node(node+"mec")
             mg.add_edge(node+"mec", node)
@@ -193,13 +193,17 @@ class MACIDBase(BayesianModel):
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
-        # TODO update for player
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
+    def copy_without_cpds(self):
+        return MACIDBase(self.edges(),
+                         {agent: {'D': self.decision_nodes_agent[agent],
+                                  'U': self.decision_nodes_agent[agent]}
+                          for agent in self.agents})
+
     def copy(self) -> MACIDBase:
-        # TODO Fixx
-        model_copy = MACIDBase(self.edges(), self.node_types)
+        model_copy = self.copy_without_cpds()
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
