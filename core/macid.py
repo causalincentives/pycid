@@ -25,8 +25,6 @@ class MACID(MACIDBase):
                 node_types: Dict[str, Dict]):
         super().__init__(edges, node_types)
 
-    
-
 
 # class MACID(BayesianModel):
 #     def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_domains:Dict=None ):
@@ -44,113 +42,14 @@ class MACID(MACIDBase):
 #         self.cpds_to_add = {}
 
 
-
-#     def copy(self):
-#         model_copy = MACID(node_types=self.node_types)
-#         model_copy.add_nodes_from(self.nodes())
-#         model_copy.add_edges_from(self.edges())
-#         if self.cpds:
-#             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
-#         return model_copy
-
-
-#     def add_cpds(self, *cpds: TabularCPD, update_all: bool = True) -> None:
-#         """Add the given CPDs and initiate NullCPDs and FunctionCPDs
-
-#         The update_all option recomputes the state_names and matrices for all CPDs in the graph.
-#         It can be set to false to save time, if the added CPD(s) have identical state_names to
-#         the ones they are replacing.
-#         """
-#         if update_all:
-#             for cpd in self.cpds:
-#                 self.cpds_to_add[cpd.variable] = cpd
-#         for cpd in cpds:
-#             assert cpd.variable in self.nodes
-#             self.cpds_to_add[cpd.variable] = cpd
-
-#         for var in nx.topological_sort(self):
-#             if var in self.cpds_to_add:
-#                 cpd = self.cpds_to_add[var]
-#                 if hasattr(cpd, "initialize_tabular_cpd"):
-#                     cpd.initialize_tabular_cpd(self)
-#                 if hasattr(cpd, "values"):
-#                     super(MACID, self).add_cpds(cpd)
-#                     del self.cpds_to_add[var]
-
-
-
-# # --------------   methods for plotting MACID ----------------
-
-#     def _set_single_agent_node_color(self, node: str):
-#         """
-#         Colour codes the decision, chance nodes to match the single-agent conventions:
-#         - decision nodes are blue
-#         - utility nodes are yellow
-#         """
-#         if self.get_node_type(node) == 'p':  # 'p' is a player/decision node to match with gambit's notation
-#             return 'lightblue'
-#         if self.get_node_type(node) == 'u':  # utility node
-#             return 'yellow'
-
-#     def _get_shape(self, node: str):
-#         """
-#         Colour codes the decision, chance and utility nodes of each agent
-#         """
-#         for i in self.node_types:
-#             if i == 'C':
-#                 if node in self.node_types['C']:
-#                     return 'o'
-#             else:
-#                 if node in self.node_types[i]['D']:
-#                     return 's'
-#                 if node in self.node_types[i]['U']:
-#                     return 'D'
-
-
-#     def _set_multi_agent_node_color(self, node):
-#         """
-#         This matches a unique colour with each new agent's decision and utility nodes
-#         """
-#         colors = cm.rainbow(np.linspace(0, 1, len(self.node_types)))
-#         if self.get_node_type(node) == 'p':  # 'p' is a player/decision node to match with gambit's notation
-#             return colors[self._get_dec_agent(node)]
-#         if self.get_node_type(node) == 'u':  # utility node
-#             return colors[self._get_util_agent(node)]
-
-
-#     def _get_cmap(self, n, name='hsv'):
-#         '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
-#         RGB color; the keyword argument name must be a standard mpl colormap name.'''
-#         return plt.cm.get_cmap(name, n)
-
-
-#     def _get_node_shape(self, node):
-#         """
-#         finds a node's shape
-#         """
-#         if self.get_node_type(node) == 'p':  #decision nodes should be squares ('p' matches gambit's player node notation)
-#             return 's'
-#         elif self.get_node_type(node) == 'u': #utility nodes should be diamonds
-#             return 'D'
-
-
-#     def draw(self):
-#         """
-#         This draws the DAG for the MACID
-#         """
-#         l = nx.kamada_kawai_layout(self)
-#         G = self.to_undirected()
-#         nx.draw_networkx(self, pos=l, node_size=400, arrowsize=20, node_color='lightgray', node_shape='o')  #chance nodes should be gray circles
-#         if len(self.agents) == 1:
-#             for node in self.nodes:
-#                 if self.get_node_type(node) != 'c':
-#                     nx.draw_networkx(G.subgraph([node]), pos=l, node_size=400, node_color=self._set_single_agent_node_color(node), node_shape=self._get_node_shape(node))
-
-#         else:
-#             for node in self.nodes:
-#                 if self.get_node_type(node) != 'c':
-#                     nx.draw_networkx(G.subgraph([node]), pos=l, node_size=400, node_color=self._set_multi_agent_node_color(node).reshape(1,-1), node_shape=self._get_node_shape(node))
-
+    def _get_color(self, node):
+        """
+        This matches a unique colour with each new agent's decision and utility nodes
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
+        if node in self.all_decision_nodes or node in self.all_utility_nodes:
+            return colors[[int(self.whose_node[node])]]
+   
 
 # # ---------- methods setting up MACID for probabilistic inference ------
 
@@ -206,10 +105,6 @@ class MACID(MACIDBase):
 #             return 'u'
 #         else:
 #             return "node is not in MACID"
-
-
-
-
 
 
 

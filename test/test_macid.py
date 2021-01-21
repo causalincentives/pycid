@@ -17,7 +17,6 @@ class TestMACID(unittest.TestCase):
 
     # @unittest.skip("")
     def test_create_macid(self):
-
         basic2agent = get_basic2agent()
         basic2agent.draw()
 
