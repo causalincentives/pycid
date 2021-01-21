@@ -4,7 +4,7 @@
 from pgmpy.factors.discrete import TabularCPD
 import numpy as np
 from core.cid import CID
-from core.cpd import FunctionCPD, DecisionDomain
+from core.cpd import FunctionCPD, DecisionDomain, UniformRandomCPD
 
 
 def get_minimal_cid() -> CID:
@@ -21,7 +21,7 @@ def get_3node_cid() -> CID:
     cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
               decision_nodes=['D'],
               utility_nodes=['U'])
-    cpd_s = TabularCPD('S', 2, np.array([[.5], [.5]]))
+    cpd_s = UniformRandomCPD('S', [0, 1])
     cpd_u = FunctionCPD('U', lambda s, d: int(s == d), evidence=['S', 'D'])
     cpd_d = DecisionDomain('D', [0, 1])
     cid.add_cpds(cpd_d, cpd_s, cpd_u)
@@ -38,8 +38,8 @@ def get_5node_cid() -> CID:
         ('D', 'U2')],
         decision_nodes=['D'],
         utility_nodes=['U1', 'U2'])
-    cpd_s1 = TabularCPD('S1', 2, np.array([[.5], [.5]]))
-    cpd_s2 = TabularCPD('S2', 2, np.array([[.5], [.5]]))
+    cpd_s1 = UniformRandomCPD('S1', [0, 1])
+    cpd_s2 = UniformRandomCPD('S2', [0, 1])
     cpd_u1 = FunctionCPD('U1', lambda s1, d: int(s1 == d), evidence=['S1', 'D'])
     cpd_u2 = FunctionCPD('U2', lambda s2, d: int(s2 == d), evidence=['S2', 'D'])
     cpd_d = DecisionDomain('D', [0, 1])
@@ -57,8 +57,8 @@ def get_5node_cid_with_scaled_utility() -> CID:
         ('D', 'U2')],
         decision_nodes=['D'],
         utility_nodes=['U1', 'U2'])
-    cpd_s1 = TabularCPD('S1', 2, np.array([[.5], [.5]]))
-    cpd_s2 = TabularCPD('S2', 2, np.array([[.5], [.5]]))
+    cpd_s1 = UniformRandomCPD('S1', [0, 1])
+    cpd_s2 = UniformRandomCPD('S2', [0, 1])
     cpd_u1 = FunctionCPD('U1', lambda s1, d: 10*int(s1 == d), evidence=['S1', 'D'])
     cpd_u2 = FunctionCPD('U2', lambda s2, d: 2*int(s2 == d), evidence=['S2', 'D'])
     cpd_d = DecisionDomain('D', [0, 1])
@@ -67,7 +67,6 @@ def get_5node_cid_with_scaled_utility() -> CID:
 
 
 def get_2dec_cid() -> CID:
-    from pgmpy.factors.discrete.CPD import TabularCPD
     cid = CID([
         ('S1', 'S2'),
         ('S1', 'D1'),
@@ -78,7 +77,7 @@ def get_2dec_cid() -> CID:
     ],
         decision_nodes=['D1', 'D2'],
         utility_nodes=['U'])
-    cpd_s1 = TabularCPD('S1', 2, np.array([[.5], [.5]]))
+    cpd_s1 = UniformRandomCPD('S1', [0, 1])
     cpd_d1 = DecisionDomain('D1', [0, 1])
     cpd_d2 = DecisionDomain('D2', [0, 1])
     cpd_s2 = FunctionCPD('S2', lambda s2, d1: int(s2 == d1), evidence=['S1', 'D1'])

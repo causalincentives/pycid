@@ -18,26 +18,15 @@ class UniformRandomCPD(TabularCPD):
     is run.
     """
 
-    def __init__(self, variable: str, variable_card: int,
-                 state_names: Dict[str, List] = None, label: str = None):
+    def __init__(self, variable: str, state_names: List, label: str = None):
         self.variable = variable
-        # TODO try removing these, it seems better that they are set by super.init
-        self.variable_card = variable_card  # is this correct?
-        self.cardinality = [variable_card]  # TODO: possible problem because usually includes cardinality of parents
-        self.variables = [self.variable]
-        if state_names:
-            assert isinstance(state_names, dict)
-            assert isinstance(state_names[variable], list)
-            self.state_names = state_names
-        else:
-            self.state_names = {variable: list(range(variable_card))}
-        self.label = label if label else f"DiscUni({self.state_names[self.variable]})"
-
-    def scope(self) -> List[str]:
-        return [self.variable]
+        self.variable_card = len(state_names)
+        self.state_names = {variable: state_names}
+        self.label = label if label else f"DiscUni({state_names})"
+        # we call super().__init__() in initialize_tabular_cpd instead
 
     def copy(self) -> UniformRandomCPD:
-        return UniformRandomCPD(self.variable, self.variable_card, state_names=self.state_names)
+        return UniformRandomCPD(self.variable, self.state_names[self.variable])
 
     def __repr__(self) -> str:
         return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
@@ -73,9 +62,6 @@ class FunctionCPD(TabularCPD):
         function.
         """
         self.variable = variable
-        self.variables = [self.variable]
-        self.cardinality = [2]  # Placeholder values
-        self.variable_card = 2
         self.f = f
         self.evidence = evidence
         if state_names:
@@ -89,12 +75,15 @@ class FunctionCPD(TabularCPD):
         else:
             sl = getsourcelines(self.f)[0][0]
             lambda_pos = sl.find('lambda')
-            if lambda_pos == -1:  # can't infer label if not defined by lambda expression
-                self.label = ""
-            else:
+            if lambda_pos > -1:  # can't infer label if not defined by lambda expression
                 colon = sl.find(':', lambda_pos, len(sl))
                 end = sl.find(',', colon, len(sl))  # TODO this only works for simple expressions with no commas
                 self.label = sl[colon+2: end]
+            elif hasattr(self.f, "__name__"):
+                self.label = self.f.__name__
+            else:
+                self.label = ""
+        # we call super().__init__() in initialize_tabular_cpd instead
 
     def scope(self) -> List[str]:
         return [self.variable]
@@ -164,9 +153,7 @@ class DecisionDomain(UniformRandomCPD):
     """
 
     def __init__(self, variable: str, state_names: List):
-        super().__init__(variable, len(state_names),
-                         state_names={variable: state_names},
-                         label=f"Dec({state_names})")
+        super().__init__(variable, state_names, label=f"Dec({state_names})")
 
     def copy(self) -> DecisionDomain:
         return DecisionDomain(self.variable, state_names=self.state_names[self.variable])

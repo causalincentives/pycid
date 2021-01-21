@@ -35,6 +35,7 @@ class MACID(BayesianModel):
         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))
         self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))
         self.numDecisions = len(self.reversed_acyclic_ordering)
+        self.cpds_to_add = {}
 
     def copy(self):
         model_copy = MACID(node_types=self.node_types)
@@ -45,24 +46,28 @@ class MACID(BayesianModel):
         return model_copy
 
 
-    def add_cpds(self, *cpds):
-        # this method adds conditional probability distributions to the MACID.
+    def add_cpds(self, *cpds: TabularCPD, update_all: bool = True) -> None:
+        """Add the given CPDs and initiate NullCPDs and FunctionCPDs
+
+        The update_all option recomputes the state_names and matrices for all CPDs in the graph.
+        It can be set to false to save time, if the added CPD(s) have identical state_names to
+        the ones they are replacing.
+        """
+        if update_all:
+            for cpd in self.cpds:
+                self.cpds_to_add[cpd.variable] = cpd
         for cpd in cpds:
-            if not isinstance(cpd, (TabularCPD, ContinuousFactor, UniformRandomCPD)):
-                raise ValueError("Only TabularCPD, ContinuousFactor, or NullCPD can be added.")
+            assert cpd.variable in self.nodes
+            self.cpds_to_add[cpd.variable] = cpd
 
-            if set(cpd.scope()) - set(cpd.scope()).intersection(set(self.nodes())):
-                raise ValueError("CPD defined on variable not in the model", cpd)
-
-            for prev_cpd_index in range(len(self.cpds)):
-                if self.cpds[prev_cpd_index].variable == cpd.variable:
-                    logging.warning(
-                        "Replacing existing CPD for {var}".format(var=cpd.variable)
-                    )
-                    self.cpds[prev_cpd_index] = cpd
-                    break
-            else:
-                self.cpds.append(cpd)
+        for var in nx.topological_sort(self):
+            if var in self.cpds_to_add:
+                cpd = self.cpds_to_add[var]
+                if hasattr(cpd, "initialize_tabular_cpd"):
+                    cpd.initialize_tabular_cpd(self)
+                if hasattr(cpd, "values"):
+                    super(MACID, self).add_cpds(cpd)
+                    del self.cpds_to_add[var]
 
 
     def check_model(self, allow_null=True):

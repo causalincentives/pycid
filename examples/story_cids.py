@@ -16,8 +16,8 @@ def get_introduced_bias() -> CID:
         decision_nodes=['D'],
         utility_nodes=['U'])
 
-    cpd_a = UniformRandomCPD('A', 2)
-    cpd_z = UniformRandomCPD('Z', 2)
+    cpd_a = UniformRandomCPD('A', [0, 1])
+    cpd_z = UniformRandomCPD('Z', [0, 1])
     cpd_x = FunctionCPD('X', lambda a, z: a*z, evidence=['A', 'Z'])
     cpd_d = DecisionDomain('D', [0, 1])
     cpd_y = FunctionCPD('Y', lambda x, z: x + z, evidence=['X', 'Z'])

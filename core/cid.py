@@ -75,12 +75,10 @@ class CID(BayesianModel):
         """Impute a random policy to the given decision node"""
         current_cpd = self.get_cpds(d)
         if current_cpd:
-            sn = current_cpd.state_names
-            card = self.get_cardinality(d)
+            sn = current_cpd.state_names[d]
         else:
-            sn = None
-            card = 2
-        self.add_cpds(UniformRandomCPD(d, card, state_names=sn))
+            raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
+        self.add_cpds(UniformRandomCPD(d, sn))
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes"""
@@ -207,7 +205,7 @@ class CID(BayesianModel):
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
 
-    def _get_color(self, node):
+    def _get_color(self, node: str) -> str:
         if node in self.decision_nodes:
             return 'lightblue'
         elif node in self.utility_nodes:
@@ -215,7 +213,7 @@ class CID(BayesianModel):
         else:
             return 'lightgray'
 
-    def _get_shape(self, node):
+    def _get_shape(self, node: str) -> str:
         if node in self.decision_nodes:
             return 's'
         elif node in self.utility_nodes:
@@ -223,7 +221,7 @@ class CID(BayesianModel):
         else:
             return 'o'
 
-    def _get_label(self, node):
+    def _get_label(self, node: str) -> str:
         cpd = self.get_cpds(node)
         if hasattr(cpd, "label"):
             return cpd.label
@@ -231,9 +229,9 @@ class CID(BayesianModel):
             return ""
 
     def draw(self,
-             node_color: Callable[[str], bool] = None,
-             node_shape: Callable[[str], bool] = None,
-             node_label: Callable[[str], bool] = None):
+             node_color: Callable[[str], str] = None,
+             node_shape: Callable[[str], str] = None,
+             node_label: Callable[[str], str] = None):
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
@@ -253,11 +251,11 @@ class CID(BayesianModel):
                              node_shape=shape(node))
         plt.show()
 
-    def draw_with_property(self, property: Callable[[str], bool], color='red'):
+    def draw_property(self, node_property: Callable[[str], bool], color='red'):
         """Draw a CID with nodes satisfying property highlighted"""
 
-        def node_color(node):
-            if property(node):
+        def node_color(node: str) -> str:
+            if node_property(node):
                 return color
             else:
                 return self._get_color(node)
