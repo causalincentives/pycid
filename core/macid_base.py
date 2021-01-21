@@ -20,10 +20,11 @@ class MACIDBase(BayesianModel):
                  edges: List[Tuple[str, str]],
                  node_types: Dict[str, Dict]):
         super().__init__(ebunch=edges)
+        self.node_types = node_types
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}     # this gives a dictionary matching each agent with their decision and utility nodes
         self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
         self.all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
-        self.all_utility_nodes = list(set().union(*list(self.all_utility_nodes.values())))
+        self.all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
         self.whose_node = {}
         for agent in self.agents:
@@ -106,9 +107,9 @@ class MACIDBase(BayesianModel):
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
 
-    def mechanism_graph(self) -> MACCIDBase:
+    def mechanism_graph(self) -> MACIDBase:
         """Returns a mechanism graph with an extra parent node+"mec" for each node"""
-        mg = MACIDBase(self.edges, self.all_decision_nodes, self.all_utility_nodes)
+        mg = MACIDBase(self.edges, self.node_types)
         for node in self.nodes:
             mg.add_node(node+"mec")
             mg.add_edge(node+"mec", node)
@@ -199,7 +200,7 @@ class MACIDBase(BayesianModel):
 
     def copy(self) -> MACIDBase:
         # TODO Fixx
-        model_copy = MACIDBase(self.edges(), decision_nodes=self.all_decision_nodes, utility_nodes=self.all_utility_nodes)
+        model_copy = MACIDBase(self.edges(), self.node_types)
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
