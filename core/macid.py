@@ -6,11 +6,11 @@ from pgmpy.models import BayesianModel
 from pgmpy.factors.continuous import ContinuousFactor
 from pgmpy.factors.discrete import TabularCPD
 import logging
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Any, Callable
 import itertools
 from pgmpy.inference import BeliefPropagation
 import networkx as nx
-from core.cpd import UniformRandomCPD
+from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import matplotlib.pyplot as plt
 import operator
 from collections import defaultdict
@@ -18,24 +18,27 @@ from collections import deque
 import copy
 import matplotlib.cm as cm
 from analyze.get_paths import get_motifs, get_motif
+from core.macid_base import MACIDBase
 
+class MACID(MACIDBace):
+    def __init__(self, edges: List[Tuple[str, str]],
+                node_types: Dict[str, Dict]):
+        super().__init__(edges, node_types)
 
-
-
-class MACID(BayesianModel):
-    def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_domains:Dict=None ):
-        super(MACID, self).__init__(ebunch=ebunch)
-        self.node_types = node_types
-        self.utility_domains = utility_domains
-        self.utility_nodes = {i:node_types[i]['U'] for i in node_types if i != 'C'}     # this gives a dictionary matching each agent with their decision and utility nodes
-        self.decision_nodes = {i:node_types[i]['D'] for i in node_types if i != 'C'}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
-        self.chance_nodes = node_types['C']     # list of chance nodes
-        self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
-        self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))
-        self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))
-        self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))
-        self.numDecisions = len(self.reversed_acyclic_ordering)
-        self.cpds_to_add = {}
+# class MACID(BayesianModel):
+#     def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_domains:Dict=None ):
+#         super(MACID, self).__init__(ebunch=ebunch)
+#         self.node_types = node_types
+#         self.utility_domains = utility_domains
+#         self.utility_nodes = {i:node_types[i]['U'] for i in node_types if i != 'C'}     # this gives a dictionary matching each agent with their decision and utility nodes
+#         self.decision_nodes = {i:node_types[i]['D'] for i in node_types if i != 'C'}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
+#         self.chance_nodes = node_types['C']     # list of chance nodes
+#         self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
+#         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))
+#         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))
+#         self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))
+#         self.numDecisions = len(self.reversed_acyclic_ordering)
+#         self.cpds_to_add = {}
 
     def copy(self):
         model_copy = MACID(node_types=self.node_types)
