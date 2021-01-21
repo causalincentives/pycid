@@ -46,7 +46,7 @@ The code is structured into 5 folders:
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods
 * [test](./test) has unit tests
 
-### Installation and setup
+## Installation and setup
 
 Given that you have Python 3.7 or later, git, and jupyter, 
 you can download and setup pycid via:
@@ -58,7 +58,7 @@ pip3 install -r Requirements.txt  # install required python packages
 python3 -m unittest   # check that everything works
 ```
 
-### Contributing
+## Contributing
 
 Before committing to the master branch, please ensure that:
 * All tests pass: run `python3 -m unittest` from the root directory
