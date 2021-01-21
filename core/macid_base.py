@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
-from typing import List, Tuple, Dict, Any, Callable
+from typing import List, Tuple, Dict, Any, Callable, Union
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
@@ -17,7 +17,7 @@ class MACIDBase(BayesianModel):
 
     def __init__(self,
                  edges: List[Tuple[str, str]],
-                 node_types: Dict[str, Dict]):
+                 node_types: Dict[Union[str, int], Dict]):
         super().__init__(ebunch=edges)
         self.node_types = node_types
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}     # this gives a dictionary matching each agent with their decision and utility nodes

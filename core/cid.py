@@ -2,16 +2,8 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
-from functools import lru_cache
-import matplotlib.pyplot as plt
-import numpy as np
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.models import BayesianModel
 import logging
-from typing import List, Tuple, Dict, Any, Callable
-from pgmpy.inference.ExactInference import BeliefPropagation
-import networkx as nx
-from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+from typing import List, Tuple, Dict
 from core.macid_base import MACIDBase
 
 
@@ -53,18 +45,6 @@ class CID(MACIDBase):
         decisions = reversed(self._get_valid_order(self.all_decision_nodes))
         for d in decisions:
             self.impute_optimal_decision(d)
-
-    def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
-        """Imputes a policy for d = the expectation of y conditioning on d's parents"""
-        parents = self.get_parents(d)
-        new = self.copy()
-
-        @lru_cache(maxsize=1000)
-        def cond_exp_policy(*pv: tuple) -> float:
-            context = {p: pv[i] for i, p in enumerate(parents)}
-            return new.expected_value([y], context)[0]
-
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
 
     def solve(self) -> Dict:
         """Return dictionary with subgame perfect global policy
