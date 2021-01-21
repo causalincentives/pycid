@@ -57,7 +57,9 @@ class CID(MACIDBase):
         return {d: new_cid.get_cpds(d) for d in new_cid.all_decision_nodes}
 
     def copy(self) -> CID:
-        model_copy = CID(self.edges(), all_decision_nodes=self.all_decision_nodes, all_utility_nodes=self.all_utility_nodes)
+        model_copy = CID(self.edges(),
+                         decision_nodes=self.all_decision_nodes,
+                         utility_nodes=self.all_utility_nodes)
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy

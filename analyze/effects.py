@@ -13,23 +13,3 @@ def introduced_total_effect(cid: CID, A: str, D: str, Y: str, a1, a2) -> float:
     teD = total_effect(cid, A, D, a1, a2)
     teY = total_effect(cid, A, Y, a1, a2)
     return teD - teY
-
-
-# TODO find a better place to put this
-def trimmed(cid: CID) -> CID:
-    """Return the trimmed version of the graph
-
-    Based on algorithm from Sect 4.5 of Lauritzen and Nilsson 2011, but simplified
-    uusing the assumption that the graph is soluble"""
-    new = cid.copy()
-    decisions = cid.decision_nodes
-    while True:
-        removed = 0
-        for decision in decisions:
-            nonrequisite = admits_voi_list(cid, decision)
-            for nr in nonrequisite:
-                removed += 1
-                new.remove_edge(nr, decision)
-        if removed == 0:
-            break
-    return new

@@ -6,7 +6,7 @@ from pgmpy.models import BayesianModel
 from pgmpy.factors.continuous import ContinuousFactor
 from pgmpy.factors.discrete import TabularCPD
 import logging
-from typing import List, Tuple, Dict, Any, Callable
+from typing import List, Tuple, Dict, Any, Callable, Union
 import itertools
 from pgmpy.inference import BeliefPropagation
 import networkx as nx
@@ -21,7 +21,7 @@ from analyze.get_paths import get_motifs, get_motif
 from core.macid_base import MACIDBase
 
 class MACID(MACIDBase):
-    def __init__(self, edges: List[Tuple[str, str]],
+    def __init__(self, edges: List[Tuple[Union[str, int], str]],
                 node_types: Dict[str, Dict]):
         super().__init__(edges, node_types)
 
