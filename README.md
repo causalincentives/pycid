@@ -1,27 +1,70 @@
 # Causal Influence Diagram Representation
 
-This project implements causal influence diagrams,
-as studied in a number of recent papers and blog posts.
+This package implements causal influence diagrams and methods to analyze them, and is part of the
+[Causal Incentives](https://causalincentives.com) project.
 
-* [The Incentives that Shape Behavior](https://arxiv.org/abs/2001.07118)
-* [Reward Tampering Problems and Solutions](https://medium.com/@deepmindsafetyresearch/designing-agent-incentives-to-avoid-reward-tampering-4380c1bb6cd)
-* [Understanding Agent Incentives using Causal Influence Diagrams](https://medium.com/@deepmindsafetyresearch/understanding-agent-incentives-with-causal-influence-diagrams-7262c2512486)
-* [Modeling AGI Safety Frameworks with Causal Influence Diagrams](https://arxiv.org/abs/1906.08663)
-* TODO: Add some old ones
+Building on [pgmpy](https://pgmpy.org/), pycid provides methods for 
+defining CIDs and MACIDs, 
+computing optimal policies and Nash equilibria,
+studying the effects of interventions, and
+checking graphical criteria for various types of incentives. 
 
-The key class is CID.py, which extends [BayesianModel](http://pgmpy.org/models.html) from the well-established Python graphical models library [pgmpy](http://pgmpy.org).
+## Basic usage
 
-Just like BayesianModel, it can be flexibly initialized in a number of ways.
-It requires two additional parameters that specify the decision nodes and the utility nodes of the model.
+```python
+# Import
+from core.cid import CID
+from core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
 
-Building on pgmpy, it provides methods for computing
-* The expected utility (of a decision) (in some context)
-* The set of optimal decisions in a given context
-* A check for [sufficient recall](http://people.csail.mit.edu/milch/papers/geb-maid.pdf) / [solubility](https://arxiv.org/abs/1301.3881)
-* Optimal policies for all decision nodes if sufficient recall is satisfied.
+# Specify the nodes and edges of a simple CID
+cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
+          decision_nodes=['D'],
+          utility_nodes=['U'])
 
-A number of example models are provided in the folder models.
+# specify the causal relationships
+cpd_s = UniformRandomCPD('S', [-1, 1])
+cpd_d = DecisionDomain('D', [-1, 1])
+cpd_u = FunctionCPD('U', lambda s, d: s*d, evidence=['S', 'D'])
+cid.add_cpds(cpd_d, cpd_s, cpd_u)
 
-### Setup
+# Draw the result
+cid.draw()
+```
 
-Install the required packages `pip3 install -r requirements.txt` and run `python3 -m unittest` or `python3 test/run_all_tests.py` to check that everything works.
+![image](./image.png "")
+
+The [notebooks](./notebooks) provide many more examples.
+
+## Code overview
+
+The code is structured into 5 folders:
+* [core](./core) contains methods and classes for specifying CID and MACID models, 
+  as well as for computing optimal policies and Nash equilibria
+* [examples](./examples) has a range of pre-specified CIDs and MACIDs, 
+  as well as methods for generating random ones
+* [analyze](./analyze) has methods for analyzing different types of effects and interventions
+* [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods
+* [test](./test) has unit tests
+
+### Installation and setup
+
+Given that you have installed Python 3.7 or later, git, and jupyter, 
+you can download and setup pycid via:
+
+```shell
+git clone https://github.com/causalincentives/pycid  # download the code
+cd pycid
+pip3 install -r Requirements.txt  # install required python packages
+python3 -m unittest   # check that everything works
+```
+
+### Contributing
+
+Before committing to the master branch, please ensure that:
+* All tests pass: run `python3 -m unittest` from the root directory
+* Your code does not generate unnecessary `pylint` warnings 
+  (some are okay, if fixing them would be hard)
+* Any added requirements are added to Requirements.txt
+* Your functions have docstrings and types, and a unit test verifying that they work
+* You have chosen "restart kernel and run all cells" before saving and committing a notebook
+* Any documentation (such as this file) is up-to-date
