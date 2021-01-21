@@ -23,8 +23,8 @@
         returns the DAG which has been trimmed of all irrelevant information links.
         """
         assert (len(self.all_decision_nodes) ==1) ,"The theory currently only works for the single-decision case!"
-        agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-        agent_utils = self.utility_nodes[agent] #this agent's utility nodes
+        agent_dec = self.all_decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
+        agent_utils = self.all_utility_nodes[agent] #this agent's utility nodes
 
         trimmed_graph = self.copy()
         d_par = self.get_parents(*agent_dec)
@@ -41,8 +41,8 @@
         """
         returns True if a node faces a feasible control incentive
         """
-        agent_dec = self.decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-        agent_utils = self.utility_nodes[agent] #this agent's utility nodes
+        agent_dec = self.all_decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
+        agent_utils = self.all_utility_nodes[agent] #this agent's utility nodes
 
         if [node] == agent_dec:  #ignore decision node
             return False

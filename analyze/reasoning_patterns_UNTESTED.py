@@ -99,7 +99,7 @@ def direct_effect(self, dec: str, effective_set: List[str]):
     """
     agent = self._get_dec_agent(dec)
     print(agent)
-    agent_utils = self.utility_nodes[agent]
+    agent_utils = self.all_utility_nodes[agent]
     print(agent_utils)
     for u in agent_utils:
         if self._directed_decision_free_path(dec,u):
@@ -116,7 +116,7 @@ def manipulation(self, dec: str, effective_set: List[str]):
     3) There is a directed, effective path from D_A to U_B that does not pass trhough D_B.
     """
     agent = self._get_dec_agent(dec)
-    agent_utils = self.utility_nodes[agent]
+    agent_utils = self.all_utility_nodes[agent]
     reachable_decisions = []    #set of possible D_B
     list_decs = copy.deepcopy(self.all_decision_nodes)
     list_decs.remove(dec)
@@ -127,7 +127,7 @@ def manipulation(self, dec: str, effective_set: List[str]):
 
     for dec_B in reachable_decisions:
         agentB = self._get_dec_agent(dec_B)
-        agentB_utils = self.utility_nodes[agentB]
+        agentB_utils = self.all_utility_nodes[agentB]
 
         for u in agent_utils:
             if self.effective_dir_path_exists(dec_B, u, effective_set):
@@ -151,7 +151,7 @@ def signaling(self, dec: str, effective_set: List[str]):
     """
 
     agent = self._get_dec_agent(dec)
-    agent_utils = self.utility_nodes[agent]
+    agent_utils = self.all_utility_nodes[agent]
     reachable_decisions = []    #set of possible D_B
     list_decs = copy.deepcopy(self.all_decision_nodes)
     list_decs.remove(dec)
@@ -162,7 +162,7 @@ def signaling(self, dec: str, effective_set: List[str]):
 
     for dec_B in reachable_decisions:
         agentB = self._get_dec_agent(dec_B)
-        agentB_utils = self.utility_nodes[agentB]
+        agentB_utils = self.all_utility_nodes[agentB]
         for u in agent_utils:
             if self.effective_dir_path_exists(dec_B, u, effective_set):
 
@@ -192,7 +192,7 @@ def revealing_or_denying(self, dec: str, effective_set: List[str]):
     3) There is an effective indirect front-door path π from D_A to U_B that is not blocked by D_B U W^{D_A}_{D_B}.
     """
     agent = self._get_dec_agent(dec)
-    agent_utils = self.utility_nodes[agent]
+    agent_utils = self.all_utility_nodes[agent]
     reachable_decisions = []    #set of possible D_B
     list_decs = copy.deepcopy(self.all_decision_nodes)
     list_decs.remove(dec)
@@ -203,7 +203,7 @@ def revealing_or_denying(self, dec: str, effective_set: List[str]):
 
     for dec_B in reachable_decisions:
         agentB = self._get_dec_agent(dec_B)
-        agentB_utils = self.utility_nodes[agentB]
+        agentB_utils = self.all_utility_nodes[agentB]
 
         for u in agent_utils:
             if self.effective_dir_path_exists(dec_B, u, effective_set):

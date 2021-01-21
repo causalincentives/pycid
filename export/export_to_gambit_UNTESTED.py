@@ -53,7 +53,7 @@ def _get_leaf_utilities(self, node_selection, node_order, bp):
     evidences = dict(zip(node_order, node_selection))
     leaf_utilities = []
     for agent in range(len(self.agents)):
-        utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+        utils = self.all_utility_nodes[agent]       #gets the utility nodes for that agent
         h = bp.query(variables=utils, evidence=evidences)
         ev = 0
         for idx, prob in np.ndenumerate(h.values):
@@ -69,7 +69,7 @@ def _get_leaf_utilities(self, node_selection, node_order, bp):
     leaf_utilities = []
 
     for agent in range(len(self.agents)):
-        utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+        utils = self.all_utility_nodes[agent]       #gets the utility nodes for that agent
 
         h = bp.query(variables=utils, evidence=evidences)
         ev = 0

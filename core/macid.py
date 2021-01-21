@@ -70,44 +70,6 @@ class MACID(BayesianModel):
                     del self.cpds_to_add[var]
 
 
-    def check_model(self, allow_null=True):
-        """
-        Check the model for various errors. This method checks for the following
-        errors.
-
-        * Checks if the sum of the probabilities for each state is equal to 1 (tol=0.01).
-        * Checks if the CPDs associated with nodes are consistent with their parents.
-
-        Returns
-        -------
-        check: boolean
-            True if all the checks are passed
-        """
-        for node in self.nodes():
-            cpd = self.get_cpds(node=node)
-
-            if cpd is None:
-                raise ValueError("No CPD associated with {}".format(node))
-            elif isinstance(cpd, (TabularCPD, ContinuousFactor)):
-                evidence = cpd.get_evidence()
-                parents = self.get_parents(node)
-                if set(evidence if evidence else []) != set(parents if parents else []):
-                    raise ValueError(
-                        "CPD associated with {node} doesn't have "
-                        "proper parents associated with it.".format(node=node)
-                    )
-                if not cpd.is_valid_cpd():
-                    raise ValueError(
-                        "Sum or integral of conditional probabilites for node {node}"
-                        " is not equal to 1.".format(node=node)
-                    )
-            elif isinstance(cpd, (UniformRandomCPD)):
-                if not allow_null:
-                    raise ValueError(
-                        "CPD associated with {node} is nullcpd".format(node=node)
-                    )
-        return True
-
 
 # --------------   methods for plotting MACID ----------------
 

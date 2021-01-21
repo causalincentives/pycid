@@ -2,9 +2,9 @@ def has_control_inc(self, node: str, agent):
     """
     returns True if a node faces a control incentive or "positive value of control"
     """
-    agent_dec = self.decision_nodes[
+    agent_dec = self.all_decision_nodes[
         agent]  # decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-    agent_utils = self.utility_nodes[agent]  # this agent's utility nodes
+    agent_utils = self.all_utility_nodes[agent]  # this agent's utility nodes
 
     if not agent_dec or not agent_utils:  # if the agent has no decision or no utility nodes, no node will face a control incentive
         return False
@@ -28,9 +28,9 @@ def has_indir_control_inc(self, node, agent):
     """
     returns True if a node faces an indirect control incentive
     """
-    agent_dec = self.decision_nodes[
+    agent_dec = self.all_decision_nodes[
         agent]  # decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-    agent_utils = self.utility_nodes[agent]  # this agent's utility nodes
+    agent_utils = self.all_utility_nodes[agent]  # this agent's utility nodes
     trimmed_MACID = self.dreduction(agent)
 
     for util in agent_utils:
@@ -51,9 +51,9 @@ def has_dir_control_inc(self, node, agent):
     """
     returns True if a node faces a direct control incentive
     """
-    agent_dec = self.decision_nodes[
+    agent_dec = self.all_decision_nodes[
         agent]  # decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-    agent_utils = self.utility_nodes[agent]  # this agent's utility nodes
+    agent_utils = self.all_utility_nodes[agent]  # this agent's utility nodes
     trimmed_MACID = self.dreduction(agent)
 
     for util in agent_utils:

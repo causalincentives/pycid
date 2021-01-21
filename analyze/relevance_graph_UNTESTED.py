@@ -12,7 +12,7 @@ def _is_s_reachable(self, d1: str, d2: str):
     """
     self.add_edge('temp_par', d2)
     agent = self._get_dec_agent(d1)
-    agent_utilities = self.utility_nodes[agent]
+    agent_utilities = self.all_utility_nodes[agent]
     con_nodes = [d1] + self.get_parents(d1)
     is_active_trail = any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities])
     self.remove_node('temp_par')
