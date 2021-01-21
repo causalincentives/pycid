@@ -7,6 +7,7 @@ from pgmpy.factors.continuous import ContinuousFactor
 from pgmpy.factors.discrete import TabularCPD
 import logging
 from typing import List, Tuple, Dict, Any, Callable, Union
+#import numpy.typing as npt
 import itertools
 from pgmpy.inference import BeliefPropagation
 import networkx as nx
@@ -42,13 +43,78 @@ class MACID(MACIDBase):
 #         self.cpds_to_add = {}
 
 
-    def _get_color(self, node):
+    def _get_color(self, node: str):
+        # TODO declare type as np.ndarray, but then this requires np.typing package installed - I assume we want this though?
         """
         This matches a unique colour with each new agent's decision and utility nodes
         """
         colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
             return colors[[int(self.whose_node[node])]]
+
+
+    def is_s_reachable(self, d1: str, d2: str) -> bool:
+        """ 
+        Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch 2001)
+        
+        A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
+        such that if a new parent D2' were added to D2, there would be an active path in M from
+        D2′ to U given Pa(D)∪{D}, where a path is active in a MAID if it is active in the same graph, viewed as a BN.
+
+        """
+        self.add_edge('temp_par', d2)
+        agent = self.whose_node[d1]
+        agent_utilities = self.utility_nodes_agent[agent]
+        con_nodes = [d1] + self.get_parents(d1) 
+        is_active_trail = any([self.is_active_trail('temp_par', u_node, con_nodes) for u_node in agent_utilities])
+        self.remove_node('temp_par')
+        return is_active_trail
+
+    def strategic_rel_graph(self) -> nx.DiGraph:
+        #TODO move this to macid_base
+        """
+        Find the strategic relevance graph of the MAID
+        - an edge D -> D' exists iff D' is s-reachable from D
+        """
+        G = nx.DiGraph()
+        dec_pair_perms = list(itertools.permutations(self.all_decision_nodes, 2))
+        for dec_pair in dec_pair_perms:
+            if self.is_s_reachable(dec_pair[0], dec_pair[1]):
+                G.add_edge(dec_pair[0], dec_pair[1])
+        return G
+
+    def draw_strategic_rel_graph(self) -> None:
+        """
+        Draw the MACID's strategic relevance graph
+        """
+        rg = self.strategic_rel_graph()
+        nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w', edge_color='k', with_labels=True)
+        plt.figure(2)
+        plt.draw()
+        
+
+    def is_strategically_acyclic(self) -> bool:
+        """
+        Find whether the MACID has an acyclic strategic relevance graph.
+        """
+        rg = self.strategic_rel_graph()
+        return nx.is_directed_acyclic_graph(rg)
+        
+
+    def get_acyclic_topological_ordering(self) -> List[str]:
+        """
+        Return a topological ordering (which might not be unique) of the decision nodes 
+        if the strategic relevance graph is acyclic
+
+        """
+        rg = self.strategic_rel_graph()
+        if not self.is_strategically_acyclic():
+            raise Exception('The strategic relevance graph for this MACID is not acyclic and so \
+                        no topological ordering can be immediately given.')
+        else:
+            return list(nx.topological_sort(rg))
+    
+            
    
 
 # # ---------- methods setting up MACID for probabilistic inference ------

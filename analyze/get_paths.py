@@ -145,7 +145,6 @@ def _directed_decision_free_path(self, start: str, finish: str):
     else:
         return False
 
-
 def _get_path_structure(self, path:List[str]):
     """
     returns the path's structure (ie the direction of the edges that make up this path)

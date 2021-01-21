@@ -5,9 +5,9 @@ from core.cpd import DecisionDomain
 
 
 def get_basic2agent():
-
     macid = MACID([
         ('D1', 'D2'),
+        ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
         ('D2', 'U1'),
@@ -15,6 +15,21 @@ def get_basic2agent():
         {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}})
 
     return macid
+
+def get_basic2agent2():
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1'),
+        ],
+        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}})
+
+    return macid
+
+
+
+
 
 
 def basic2agent_2():
