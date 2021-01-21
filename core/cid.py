@@ -11,7 +11,7 @@ import logging
 from typing import List, Tuple, Dict, Any, Callable
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
-from core.cpd import UniformRandomCPD, FunctionCPD
+from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 
 
 class CID(BayesianModel):
@@ -33,6 +33,8 @@ class CID(BayesianModel):
         It can be set to false to save time, if the added CPD(s) have identical state_names to
         the ones they are replacing.
         """
+        # TODO: get rid of update_all, by instead adding any children of a node whose state_names
+        #       have changed to cpds_to_add
         if update_all:
             for cpd in self.cpds:
                 self.cpds_to_add[cpd.variable] = cpd
@@ -108,6 +110,8 @@ class CID(BayesianModel):
 
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
+        if not self.check_sufficient_recall():
+            raise Exception("CID lacks sufficient recall, so cannot be solved by backwards induction")
         decisions = self._get_valid_order(self.decision_nodes)
         for d in decisions:
             self.impute_optimal_decision(d)
@@ -130,12 +134,31 @@ class CID(BayesianModel):
         new_cid.impute_optimal_policy()
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
+    def mechanism_graph(self) -> CID:
+        """Returns a mechanism graph with an extra parent node+"mec" for each node"""
+        mg = CID(self.edges, self.decision_nodes, self.utility_nodes)
+        for node in self.nodes:
+            mg.add_node(node+"mec")
+            mg.add_edge(node+"mec", node)
+        return mg
+
     def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None):
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
-        Use context={} to get P(query). Or use factor.normalize to get p(query|context)"""
+        Use factor.normalize to get p(query|context, do(intervention)).
+        Use context={} to get P(query). """
 
-        # TODO add check whether query depends on unspecified policy
+        # check that graph is sufficiently instantiated to determine query,
+        # in particular that strategically relevant decisions have a policy specified
+        mech_graph = self.mechanism_graph()
+        for decision in self.decision_nodes:
+            for query_node in query:
+                if mech_graph.is_active_trail(decision+"mec", query_node, observed=list(context.keys())):
+                    cpd = self.get_cpds(decision)
+                    if not cpd:
+                        raise Exception(f"no DecisionDomain specified for {decision}")
+                    elif isinstance(cpd, DecisionDomain):
+                        raise Exception(f"query depends on {decision}, but no policy imputed for it")
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()
@@ -236,7 +259,7 @@ class CID(BayesianModel):
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
         layout = nx.kamada_kawai_layout(self)
-        labeldict = {node: label(node) for node in self.nodes}
+        label_dict = {node: label(node) for node in self.nodes}
         pos_higher = {}
         for k, v in layout.items():
             if v[1] > 0:
@@ -244,7 +267,7 @@ class CID(BayesianModel):
             else:
                 pos_higher[k] = (v[0] - 0.1, v[1] + 0.2)
         nx.draw_networkx(self, pos=layout, node_size=800, arrowsize=20)
-        nx.draw_networkx_labels(self, pos_higher, labeldict)
+        nx.draw_networkx_labels(self, pos_higher, label_dict)
         for node in self.nodes:
             nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
                              node_color=color(node),

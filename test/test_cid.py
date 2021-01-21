@@ -21,6 +21,13 @@ class TestCID(unittest.TestCase):
         cpd = three_node.get_cpds('D').values
         self.assertTrue(np.array_equal(cpd, np.array([[1, 0], [0, 1]])))
 
+    def test_query(self):
+        three_node = get_3node_cid()
+        with self.assertRaises(Exception):
+            three_node._query(['U'], {})
+        with self.assertRaises(Exception):
+            three_node._query(['U'], {'D': 0})
+
     # @unittest.skip("")
     def test_expected_utility(self):
         three_node = get_3node_cid()
@@ -61,6 +68,7 @@ class TestCID(unittest.TestCase):
     # @unittest.skip("")
     def test_scaled_utility(self):
         cid = get_5node_cid_with_scaled_utility()
+        cid.impute_random_policy()
         self.assertEqual(cid.expected_utility({}), 6.0)
 
     # @unittest.skip("")
@@ -73,8 +81,10 @@ class TestCID(unittest.TestCase):
         eu_opt = cid.expected_utility({})
         self.assertEqual(eu_ce, eu_opt)
 
+    # @unittest.skip("")
     def test_intervention(self):
         cid = get_minimal_cid()
+        cid.impute_random_policy()
         self.assertEqual(cid.expected_value(['B'], {})[0], 0.5)
         for a in [0, 1, 2]:
             cid.intervene({'A': a})
