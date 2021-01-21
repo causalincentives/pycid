@@ -12,9 +12,10 @@ from typing import List, Tuple, Dict, Any, Callable
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+from core.macid_base import MACIDBase
 
 
-class CID(BayesianModel):
+class CID(MACIDBase):
 
     def __init__(self, edges: List[Tuple[str, str]],
                  decision_nodes: List[str],
@@ -22,7 +23,8 @@ class CID(BayesianModel):
         super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
 
     def check_sufficient_recall(self) -> bool:
-        decision_ordering = self._get_valid_order(self.decision_nodes)
+        # TODO update to use MACID relevance graph
+        decision_ordering = self._get_valid_order(self.all_decision_nodes)
         for i, decision1 in enumerate(decision_ordering):
             for j, decision2 in enumerate(decision_ordering[i+1:]):
                 for utility in self.utility_nodes:
