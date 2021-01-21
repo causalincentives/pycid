@@ -35,21 +35,6 @@ class MACIDBase(BayesianModel):
         assert set(self.nodes).issuperset(self.all_utility_nodes)
         self.cpds_to_add = {}
 
-    # def __init__(self, ebunch:List[Tuple[str, str]]=None,
-    #              node_types:Dict=None):
-    #     super(MACID, self).__init__(ebunch=ebunch)
-    #     self.node_types = node_types
-    #     self.utility_domains = utility_domains
-    #     self.all_utility_nodes = {i:node_types[i]['U'] for i in node_types if i != 'C'}     # this gives a dictionary matching each agent with their decision and utility nodes
-    #     self.all_decision_nodes = {i:node_types[i]['D'] for i in node_types if i != 'C'}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
-    #     self.chance_nodes = node_types['C']     # list of chance nodes
-    #     self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
-    #     self.all_utility_nodes = list(itertools.chain(*self.all_utility_nodes.values()))
-    #     self.all_decision_nodes = list(itertools.chain(*self.all_decision_nodes.values()))
-    #     self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))
-    #     self.numDecisions = len(self.reversed_acyclic_ordering)
-    #     self.cpds_to_add = {}
-
     def add_cpds(self, *cpds: TabularCPD, update_all: bool = True) -> None:
         """Add the given CPDs and initiate NullCPDs and FunctionCPDs
 
@@ -201,14 +186,16 @@ class MACIDBase(BayesianModel):
                                 consider imputing a random decision".format(variables, context, idx, prob))
         return ev.tolist()
 
-    def expected_utility(self, context: Dict["str", "Any"], intervene: dict = None) -> float:
+    def expected_utility(self, context: Dict["str", "Any"],
+                         intervene: dict = None, agent = 0) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
         # TODO update for player
-        return sum(self.expected_value(self.all_utility_nodes, context, intervene=intervene))
+        return sum(self.expected_value(self.utility_nodes_agent[agent],
+                                       context, intervene=intervene))
 
     def copy(self) -> CID:
         model_copy = CID(self.edges(), decision_nodes=self.all_decision_nodes, utility_nodes=self.all_utility_nodes)
