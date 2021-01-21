@@ -16,18 +16,18 @@ def random_cid(
         seed: int = None):
     """examples a random cid with the specified number of nodes and edges"""
 
-    allnames, dnames, unames = get_node_names(n_all, n_decisions, n_utilities)
-    edges = get_edges(allnames, unames, edge_density, seed=seed, allow_u_edges=False)
-    cid = CID(edges, dnames, unames)
+    all_names, decision_names, utility_names = get_node_names(n_all, n_decisions, n_utilities)
+    edges = get_edges(all_names, utility_names, edge_density, seed=seed, allow_u_edges=False)
+    cid = CID(edges, decision_names, utility_names)
 
-    for uname in unames:
+    for uname in utility_names:
         for edge in edges:
             assert uname != edge[0]
 
-    for i, d1 in enumerate(dnames):
-        for j, d2 in enumerate(dnames[i+1:]):
+    for i, d1 in enumerate(decision_names):
+        for j, d2 in enumerate(decision_names[i+1:]):
             if d2 in cid._get_ancestors_of(d1):
-                raise Exception("misordered decisions")
+                raise Exception("mis-ordered decisions")
 
     if add_sr_edges:
         add_sufficient_recalls(cid)
@@ -58,7 +58,7 @@ def random_cids(
         cid = random_cid(n_all, n_decisions, n_utilities, edge_density,
                          add_sr_edges=add_sr_edges, seed=seed)
 
-        for uname in cid.utility_nodes:
+        for uname in cid.all_utility_nodes:
             for edge in cid.edges:
                 assert uname != edge[0]
         if cid.check_sufficient_recall():
@@ -70,29 +70,28 @@ def random_cids(
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
     """examples lists of node names for decision, utility, and chance nodes"""
     n_structural = n_all - n_decisions - n_utilities
-    snames = ['S{}'.format(i) for i in range(n_structural)]
-    dnames = ['D{}'.format(i) for i in range(n_decisions)]
-    unames = ['U{}'.format(i) for i in range(n_utilities)]
-    nonunames = snames + dnames
+    structure_names = ['S{}'.format(i) for i in range(n_structural)]
+    decision_names = ['D{}'.format(i) for i in range(n_decisions)]
+    utility_names = ['U{}'.format(i) for i in range(n_utilities)]
 
     # scramble decision and structure nodes, without upsetting internal orders
-    nonunames = []
+    non_utility_names = []
     si = 0
     di = 0
-    while si < len(snames) - 1 and di < len(dnames):
+    while si < len(structure_names) - 1 and di < len(decision_names):
         if random.random() > 0.5:
-            nonunames.append(snames[si])
+            non_utility_names.append(structure_names[si])
             si += 1
         else:
-            nonunames.append(dnames[di])
+            non_utility_names.append(decision_names[di])
             di += 1
-    nonunames = nonunames + dnames[di:] + snames[si:]
-    return nonunames + unames, dnames, unames
+    non_utility_names = non_utility_names + decision_names[di:] + structure_names[si:]
+    return non_utility_names + utility_names, decision_names, utility_names
 
 
 def get_edges(
         names: List[str],
-        unames: List[str],
+        utility_names: List[str],
         edge_density: float,
         seed=None,
         allow_u_edges=False,
@@ -103,7 +102,7 @@ def get_edges(
     for i, name1 in enumerate(names):
         for name2 in names[i+1:]:
             if random.random() < edge_density:
-                if allow_u_edges or name1 not in unames:
+                if allow_u_edges or name1 not in utility_names:
                     edges.append((name1, name2))
                     nodes_with_edges.add(name1)
                     nodes_with_edges.add(name2)
@@ -112,11 +111,11 @@ def get_edges(
             other_node_indices = list(set(range(len(names))) - {i})
             j = random.choice(other_node_indices)
             if i < j:
-                if allow_u_edges or (name1 not in unames):
+                if allow_u_edges or (name1 not in utility_names):
                     edges.append((name1, names[j]))
                     nodes_with_edges.add(name1)
             else:
-                if allow_u_edges or (names[j] not in unames):
+                if allow_u_edges or (names[j] not in utility_names):
                     edges.append((names[j], name1))
                     nodes_with_edges.add(name1)
     return edges
@@ -152,12 +151,11 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
 
 def add_sufficient_recalls(cid: CID) -> None:
     """add edges to a cid until all decisions have sufficient recall of all prior decisions"""
-    for utility_node in cid.utility_nodes:
-        #decisions = cid._get_valid_order(cid.decision_nodes)  # cannot be trusted...
-        for i, dec1 in enumerate(cid.decision_nodes):
-            for dec2 in cid.decision_nodes[i+1:]:
+    for utility_node in cid.all_utility_nodes:
+        # decisions = cid._get_valid_order(cid.decision_nodes)  # cannot be trusted...
+        for i, dec1 in enumerate(cid.all_decision_nodes):
+            for dec2 in cid.all_decision_nodes[i+1:]:
                 if dec1 in cid._get_ancestors_of(dec2):
                     _add_sufficient_recall(cid, dec1, dec2, utility_node)
                 else:
                     _add_sufficient_recall(cid, dec2, dec1, utility_node)
-
