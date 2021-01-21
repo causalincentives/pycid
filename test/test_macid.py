@@ -3,6 +3,7 @@
 #%%
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \

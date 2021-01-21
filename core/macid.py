@@ -20,7 +20,7 @@ import matplotlib.cm as cm
 from analyze.get_paths import get_motifs, get_motif
 from core.macid_base import MACIDBase
 
-class MACID(MACIDBace):
+class MACID(MACIDBase):
     def __init__(self, edges: List[Tuple[str, str]],
                 node_types: Dict[str, Dict]):
         super().__init__(edges, node_types)
