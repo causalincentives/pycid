@@ -112,7 +112,7 @@ class CID(BayesianModel):
         """Impute a subgame perfect optimal policy to all decision nodes"""
         if not self.check_sufficient_recall():
             raise Exception("CID lacks sufficient recall, so cannot be solved by backwards induction")
-        decisions = self._get_valid_order(self.decision_nodes)
+        decisions = reversed(self._get_valid_order(self.decision_nodes))
         for d in decisions:
             self.impute_optimal_decision(d)
 
@@ -129,7 +129,11 @@ class CID(BayesianModel):
         self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
 
     def solve(self) -> Dict:
-        """Return dictionary with subgame perfect global policy"""
+        """Return dictionary with subgame perfect global policy
+
+        to impute back the result, use add_cpds(*list(cid.solve().values())),
+        or the impute_optimal_policy method
+        """
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
@@ -158,7 +162,7 @@ class CID(BayesianModel):
                     if not cpd:
                         raise Exception(f"no DecisionDomain specified for {decision}")
                     elif isinstance(cpd, DecisionDomain):
-                        raise Exception(f"query depends on {decision}, but no policy imputed for it")
+                        raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed for it")
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()

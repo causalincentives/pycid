@@ -62,7 +62,7 @@ class TestCID(unittest.TestCase):
         solution = two_decisions.solve()
         cpd = solution['D2']
         self.assertTrue(np.array_equal(cpd.values, np.array([[1, 0], [0, 1]])))
-        two_decisions.add_cpds(cpd)
+        two_decisions.add_cpds(*list(solution.values()))
         self.assertEqual(two_decisions.expected_utility({}), 1)
 
     # @unittest.skip("")
