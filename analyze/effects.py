@@ -1,7 +1,5 @@
-from typing import List
-
 from analyze.value_of_information import admits_voi_list
-from cid import CID
+from core.cid import CID
 
 
 def total_effect(cid: CID, A: str, X: str, a1, a2) -> float:

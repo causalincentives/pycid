@@ -8,8 +8,8 @@ from typing import List
 
 import networkx as nx
 
-from cid import CID
-from macid import MACID
+from core.cid import CID
+from core.macid import MACID
 
 
 def admits_voi(cid: CID, decision: str, node: str, agent=None) -> bool:

@@ -11,7 +11,7 @@ import logging
 from typing import List, Tuple, Dict, Any, Callable
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
-from cpd import UniformRandomCPD, FunctionCPD
+from core.cpd import UniformRandomCPD, FunctionCPD
 
 
 class CID(BayesianModel):
@@ -232,7 +232,7 @@ class CID(BayesianModel):
 
     def draw(self,
              node_color: Callable[[str], bool] = None,
-             node_shape: Callable[[str], bool] = None, 
+             node_shape: Callable[[str], bool] = None,
              node_label: Callable[[str], bool] = None):
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape

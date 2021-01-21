@@ -3,7 +3,7 @@
 
 import random
 from typing import List, Tuple
-from cid import CID
+from core.cid import CID
 from analyze.get_paths import find_active_path
 
 

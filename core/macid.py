@@ -10,7 +10,7 @@ from typing import List, Tuple, Dict
 import itertools
 from pgmpy.inference import BeliefPropagation
 import networkx as nx
-from cpd import UniformRandomCPD
+from core.cpd import UniformRandomCPD
 import matplotlib.pyplot as plt
 import operator
 from collections import defaultdict

@@ -3,8 +3,8 @@
 
 from pgmpy.factors.discrete import TabularCPD
 import numpy as np
-from cid import CID
-from cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+from core.cid import CID
+from core.cpd import FunctionCPD, DecisionDomain
 
 
 def get_minimal_cid() -> CID:

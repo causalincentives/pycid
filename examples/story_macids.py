@@ -1,8 +1,8 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 
-from macid import MACID
-from cpd import DecisionDomain
+from core.macid import MACID
+from core.cpd import DecisionDomain
 
 
 def tree_doctor():
