@@ -53,6 +53,7 @@ class TestBASE(unittest.TestCase):
             cid.intervene({'A': a})
             self.assertEqual(cid.expected_value(['B'], {})[0], a)
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
+        print(cid.cpds)
 
     # @unittest.skip("")
     def test_is_s_reachable(self):
@@ -84,7 +85,7 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
         self.assertEqual(len(mg.nodes()), len(example.nodes())*2)
-        
+        print(example.cpds)
 
 
 if __name__ == "__main__":
