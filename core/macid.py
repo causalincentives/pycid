@@ -23,7 +23,7 @@ from core.macid_base import MACIDBase
 
 class MACID(MACIDBase):
     def __init__(self, edges: List[Tuple[Union[str, int], str]],
-                node_types: Dict[str, Dict]):
+                node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
 

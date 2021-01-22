@@ -187,7 +187,7 @@ class MACIDBase(BayesianModel):
         return ev.tolist()
 
     def expected_utility(self, context: Dict["str", "Any"],
-                         intervene: dict = None, agent: int = 0) -> float:
+                         intervene: dict = None, agent: Union[str, int] = 0) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
