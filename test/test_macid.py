@@ -45,6 +45,9 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             example2.get_acyclic_topological_ordering()
 
+        
+
+
 
        
        
