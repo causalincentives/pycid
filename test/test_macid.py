@@ -16,7 +16,6 @@ from examples.simple_macids import get_basic2agent, get_basic2agent2
 class TestMACID(unittest.TestCase):
 
     # @unittest.skip("")
-
     def test_create_macid(self):
         basic2agent = get_basic2agent()
         basic2agent.draw()
@@ -28,7 +27,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(example.is_s_reachable('D1','D2'))
         self.assertFalse(example.is_s_reachable('D2','D1'))
 
-    # @unittest.skip("")
+    # @unittest.skip("") 
     def test_is_strategically_acyclic(self):
         example = get_basic2agent()
         self.assertTrue(example.is_strategically_acyclic())
@@ -41,7 +40,7 @@ class TestMACID(unittest.TestCase):
     def test_get_acyclic_topological_ordering(self):
         example = get_basic2agent()
         self.assertEqual(example.get_acyclic_topological_ordering(), ['D1', 'D2'])
-        
+          
         example2 = get_basic2agent2()
         with self.assertRaises(Exception):
             example2.get_acyclic_topological_ordering()

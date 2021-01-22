@@ -89,7 +89,7 @@ class MACID(MACIDBase):
         """
         rg = self.strategic_rel_graph()
         nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w', edge_color='k', with_labels=True)
-        plt.figure(2)
+        plt.figure()
         plt.draw()
         
 

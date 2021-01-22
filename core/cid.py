@@ -30,7 +30,7 @@ class CID(MACIDBase):
                                     "{} has insufficient recall of {} due to utility {}".format(
                                         decision2, decision1, utility)
                                     )
-                            return False
+                            return False                 
         return True
 
     def impute_random_policy(self) -> None:
