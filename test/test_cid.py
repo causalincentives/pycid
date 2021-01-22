@@ -5,10 +5,9 @@ import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 import unittest
 import numpy as np
-from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_minimal_cid
+from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
+    get_sequential_cid
 from examples.story_cids import get_introduced_bias
-from pgmpy.factors.discrete import TabularCPD
 
 
 class TestCID(unittest.TestCase):
@@ -16,9 +15,11 @@ class TestCID(unittest.TestCase):
     # @unittest.skip("")
     def test_sufficient_recall(self):
         two_decisions = get_2dec_cid()
-        self.assertEqual(two_decisions.check_sufficient_recall(), True)
+        self.assertTrue(two_decisions.check_sufficient_recall())
+        sequential = get_sequential_cid()
+        self.assertTrue(sequential.check_sufficient_recall())
         two_decisions.remove_edge('S2', 'D2')
-        self.assertEqual(two_decisions.check_sufficient_recall(), False)
+        self.assertFalse(two_decisions.check_sufficient_recall())
 
     # @unittest.skip("")
     def test_solve(self):
@@ -37,6 +38,9 @@ class TestCID(unittest.TestCase):
         two_decisions.add_cpds(*list(solution.values()))
         self.assertEqual(two_decisions.expected_utility({}), 1)
 
+        sequential = get_sequential_cid()
+        sequential.solve()
+
     # @unittest.skip("")
     def test_scaled_utility(self):
         cid = get_5node_cid_with_scaled_utility()
@@ -52,6 +56,7 @@ class TestCID(unittest.TestCase):
         cid.impute_optimal_policy()
         eu_opt = cid.expected_utility({})
         self.assertEqual(eu_ce, eu_opt)
+
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCID)
