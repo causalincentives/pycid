@@ -11,6 +11,8 @@ from typing import List, Tuple, Dict, Any, Callable, Union
 from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+import itertools
+
 
 
 class MACIDBase(BayesianModel):
@@ -199,7 +201,7 @@ class MACIDBase(BayesianModel):
     def copy_without_cpds(self):
         return MACIDBase(self.edges(),
                          {agent: {'D': self.decision_nodes_agent[agent],
-                                  'U': self.decision_nodes_agent[agent]}
+                                  'U': self.utility_nodes_agent[agent]}
                           for agent in self.agents})
 
     def copy(self) -> MACIDBase:
@@ -275,16 +277,13 @@ class MACIDBase(BayesianModel):
 
         """
         mg = self.mechanism_graph()
-        #self.add_edge('temp_par', d2)
-        agent = self.whose_node[d1]
-        agent_utilities = self.utility_nodes_agent[agent]
-        con_nodes = [d1] + self.get_parents(d1) 
-        is_active_trail = any([self.is_active_trail(d2, u_node, con_nodes) for u_node in agent_utilities])
-        self.remove_node('temp_par')
+        agent = mg.whose_node[d1]
+        agent_utilities = mg.utility_nodes_agent[agent]
+        con_nodes = [d1] + mg.get_parents(d1) 
+        is_active_trail = any([mg.is_active_trail(d2+"mec", u_node, con_nodes) for u_node in agent_utilities])
         return is_active_trail
 
     def strategic_rel_graph(self) -> nx.DiGraph:
-        #TODO move this to macid_base
         """
         Find the strategic relevance graph of the MAID
         - an edge D -> D' exists iff D' is s-reachable from D
@@ -314,7 +313,7 @@ class MACIDBase(BayesianModel):
         return nx.is_directed_acyclic_graph(rg)
         
 
-    def get_acyclic_topological_ordering(self) -> List[str]:
+    def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """
         Return a topological ordering (which might not be unique) of the decision nodes 
         if the strategic relevance graph is acyclic
@@ -327,4 +326,4 @@ class MACIDBase(BayesianModel):
         else:
             return list(nx.topological_sort(rg))
 
-        
+    

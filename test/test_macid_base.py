@@ -1,13 +1,15 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
+#%%
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
     get_minimal_cid
 from examples.story_cids import get_introduced_bias
+from examples.simple_macids import get_basic2agent, get_basic2agent2
 from pgmpy.factors.discrete import TabularCPD
 
 
@@ -21,6 +23,7 @@ class TestBASE(unittest.TestCase):
         cpd = three_node.get_cpds('D').values
         self.assertTrue(np.array_equal(cpd, np.array([[1, 0], [0, 1]])))
 
+    # @unittest.skip("")
     def test_query(self):
         three_node = get_3node_cid()
         with self.assertRaises(Exception):
@@ -50,6 +53,29 @@ class TestBASE(unittest.TestCase):
             cid.intervene({'A': a})
             self.assertEqual(cid.expected_value(['B'], {})[0], a)
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
+
+    # @unittest.skip("")
+    def test_is_s_reachable(self):
+        example = get_basic2agent()
+        self.assertTrue(example.is_s_reachable('D1','D2'))
+        self.assertFalse(example.is_s_reachable('D2','D1'))
+
+    # @unittest.skip("") 
+    def test_is_strategically_acyclic(self):
+        example = get_basic2agent()
+        self.assertTrue(example.is_strategically_acyclic())
+        
+        example2 = get_basic2agent2()
+        self.assertFalse(example2.is_strategically_acyclic())
+        
+    # @unittest.skip("")
+    def get_valid_acyclic_dec_node_ordering(self):
+        example = get_basic2agent()
+        self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
+          
+        example2 = get_basic2agent2()
+        with self.assertRaises(Exception):
+            example2.get_valid_acyclic_dec_node_ordering()
 
 
 if __name__ == "__main__":
