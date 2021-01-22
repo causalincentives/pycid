@@ -73,22 +73,25 @@ class MACIDBase(BayesianModel):
             raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         self.add_cpds(UniformRandomCPD(d, sn))
 
-    def impute_optimal_decision(self, d: str, agent: int = 0) -> None:
+    def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
         self.impute_random_decision(d)
         card = self.get_cardinality(d)
         parents = self.get_parents(d)
         idx2name = self.get_cpds(d).no_to_name[d]
         state_names = self.get_cpds(d).state_names
+        utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
+        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
         new = self.copy()  # this "freezes" the policy so it doesn't adapt to future interventions
 
         @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple):
+            nonlocal descendant_utility_nodes
             context = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
                 context[d] = d_idx
-                eu.append(new.expected_utility(context, agent=agent))
+                eu.append(new.expected_value(descendant_utility_nodes, context))
             return idx2name[np.argmax(eu)]
 
         self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=state_names, label="opt"),
