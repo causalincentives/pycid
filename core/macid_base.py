@@ -12,6 +12,8 @@ from pgmpy.inference.ExactInference import BeliefPropagation
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
+import matplotlib.cm as cm
+
 
 
 
@@ -239,7 +241,7 @@ class MACIDBase(BayesianModel):
     def draw(self,
              node_color: Callable[[str], str] = None,
              node_shape: Callable[[str], str] = None,
-             node_label: Callable[[str], str] = None):
+             node_label: Callable[[str], str] = None) -> None:
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
@@ -259,7 +261,7 @@ class MACIDBase(BayesianModel):
                              node_shape=shape(node))
         plt.show()
 
-    def draw_property(self, node_property: Callable[[str], bool], color='red'):
+    def draw_property(self, node_property: Callable[[str], bool], color='red') -> None:
         """Draw a CID with nodes satisfying property highlighted"""
 
         def node_color(node: str) -> str:
@@ -329,4 +331,31 @@ class MACIDBase(BayesianModel):
         else:
             return list(nx.topological_sort(rg))
 
-    
+    def get_SCCs(self) -> List[set]:
+        """
+        Return a list with the maximal strongly connected components of the MACID's strategic relevance graph
+        Uses Tarjan’s algorithm with Nuutila’s modifications
+        - complexity is linear in the number of edges and nodes """
+        rg = self.strategic_rel_graph()
+        return list(nx.strongly_connected_components(rg))
+        
+    def _set_color_SCC(self, node: str, SCCs) -> np.ndarray:
+        "Assign a unique color to the set of nodes in each SCC."
+        colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
+        for SCC in SCCs:
+            idx = SCCs.index(SCC)
+            if node in SCC:
+                col = colors[idx]
+                print(type(col))
+                return col
+
+    def draw_SCCs(self) -> None:
+        """
+        Show the strategic relevance graph's SCCs.
+        """
+        rg = self.strategic_rel_graph()
+        SCCs = list(nx.strongly_connected_components(rg))
+        layout = nx.kamada_kawai_layout(rg)
+        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
+        nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
+        plt.draw()

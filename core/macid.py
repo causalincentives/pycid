@@ -43,17 +43,60 @@ class MACID(MACIDBase):
 #         self.cpds_to_add = {}
 
 
-    def _get_color(self, node: str):
-        # TODO declare type as np.ndarray, but then this requires np.typing package installed - I assume we want this though?
+    def _get_color(self, node: str) -> np.ndarray:
         """
-        This matches a unique colour with each new agent's decision and utility nodes
+        Matches a unique colour with each new agent's decision and utility nodes
         """
         colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[int(self.whose_node[node])]]
+            return colors[[self.agents.index(self.whose_node[node])]]
+        else:
+            return 'lightgray' #chance node
 
+
+  # #----------------cyclic relevance graph methods:--------------------------------------
 
   
+
+
+    
+
+    def component_graph(self):
+        """
+        Draw and return the component graph whose nodes are the maximal SCCs of the relevance graph
+        the component graph will always be acyclic. Therefore, we can return a topological ordering.
+        comp_graph.graph['mapping'] returns a dictionary matching the original nodes to the nodes in the new component (condensation) graph
+        """
+        rg = self.strategic_rel_graph()
+        comp_graph = nx.condensation(rg)
+        nx.draw_networkx(comp_graph, with_labels=True)
+        plt.figure(4)
+        plt.draw()
+        return comp_graph
+
+#     def get_cyclic_topological_ordering(self):
+#         """first checks whether the strategic relevance graph is cyclic
+#         if it's cyclic
+#         returns a topological ordering (which might not be unique) of the decision nodes
+#         """
+#         rg = self.strategic_rel_graph()
+#         if self.strategically_acyclic():
+#             return TypeError(f"Relevance graph is acyclic")
+#         else:
+#             comp_graph = self.component_graph()
+#             return list(nx.topological_sort(comp_graph))
+
+
+#         numSCCs = nx.number_strongly_connected_components(rg)
+#         print(f"num = {numSCCs}")
+
+
+#     def _set_color_SCC(self, node, SCCs):
+#         colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
+#         for SCC in SCCs:
+#             if node in SCC:
+#                 col = colors[SCCs.index(SCC)]
+#         return col
     
             
    
@@ -231,72 +274,3 @@ class MACID(MACIDBase):
 
 
 
-# #----------------cyclic relevance graph methods:--------------------------------------
-
-#     def find_SCCs(self):
-#         """
-#         Uses Tarjan’s algorithm with Nuutila’s modifications
-#         - complexity is linear in the number of edges and nodes """
-#         rg = self.strategic_rel_graph()
-#         l = list(nx.strongly_connected_components(rg))
-
-
-#         numSCCs = nx.number_strongly_connected_components(rg)
-#         print(f"num = {numSCCs}")
-
-
-#     def _set_color_SCC(self, node, SCCs):
-#         colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
-#         for SCC in SCCs:
-#             idx = SCCs.index(SCC)
-#             if node in SCC:
-#                 col = colors[idx]
-#         return col
-
-#     def draw_SCCs(self):
-#         """
-#         This shows the strategic relevance graph's SCCs
-#         """
-#         rg = self.strategic_rel_graph()
-#         SCCs = list(nx.strongly_connected_components(rg))
-#         layout = nx.kamada_kawai_layout(rg)
-#         colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
-#         nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
-#         plt.draw()
-
-#     def component_graph(self):
-#         """
-#         draws and returns the component graph whose nodes are the maximal SCCs of the relevance graph
-#         the component graph will always be acyclic. Therefore, we can return a topological ordering.
-#         comp_graph.graph['mapping'] returns a dictionary matching the original nodes to the nodes in the new component (condensation) graph
-#         """
-#         rg = self.strategic_rel_graph()
-#         comp_graph = nx.condensation(rg)
-#         nx.draw_networkx(comp_graph, with_labels=True)
-#         plt.figure(4)
-#         plt.draw()
-#         return comp_graph
-
-#     def get_cyclic_topological_ordering(self):
-#         """first checks whether the strategic relevance graph is cyclic
-#         if it's cyclic
-#         returns a topological ordering (which might not be unique) of the decision nodes
-#         """
-#         rg = self.strategic_rel_graph()
-#         if self.strategically_acyclic():
-#             return TypeError(f"Relevance graph is acyclic")
-#         else:
-#             comp_graph = self.component_graph()
-#             return list(nx.topological_sort(comp_graph))
-
-
-#         numSCCs = nx.number_strongly_connected_components(rg)
-#         print(f"num = {numSCCs}")
-
-
-#     def _set_color_SCC(self, node, SCCs):
-#         colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
-#         for SCC in SCCs:
-#             if node in SCC:
-#                 col = colors[SCCs.index(SCC)]
-#         return col

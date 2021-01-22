@@ -2,6 +2,7 @@
 # agreements; and to You under the Apache License, Version 2.0.
 #%%
 import sys, os
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
@@ -11,41 +12,30 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_wit
 from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 
-from examples.simple_macids import get_basic2agent, get_basic2agent2
+from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames
 
 class TestMACID(unittest.TestCase):
 
+
+
     # @unittest.skip("")
     def test_create_macid(self):
-        basic2agent = get_basic2agent()
-        basic2agent.draw()
-        basic2agent.draw_strategic_rel_graph()
+        example = get_basic_subgames()
+        example.draw()
+        print(example.get_SCCs()[0])
+        print(example.get_SCCs()[1])
+        print(example.get_SCCs()[2])
 
-    # @unittest.skip("")
-    def test_is_s_reachable(self):
-        example = get_basic2agent()
-        self.assertTrue(example.is_s_reachable('D1','D2'))
-        self.assertFalse(example.is_s_reachable('D2','D1'))
-
-    # @unittest.skip("") 
-    def test_is_strategically_acyclic(self):
-        example = get_basic2agent()
-        self.assertTrue(example.is_strategically_acyclic())
-        
-        example2 = get_basic2agent2()
-        self.assertFalse(example2.is_strategically_acyclic())
-        
-    # @unittest.skip("")
-
-    def test_get_acyclic_topological_ordering(self):
-        example = get_basic2agent()
-        self.assertEqual(example.get_acyclic_topological_ordering(), ['D1', 'D2'])
-          
-        example2 = get_basic2agent2()
-        with self.assertRaises(Exception):
-            example2.get_acyclic_topological_ordering()
 
         
+
+
+
+    
+
+    
+
+       
 
 
 

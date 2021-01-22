@@ -9,7 +9,7 @@ import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
     get_minimal_cid
 from examples.story_cids import get_introduced_bias
-from examples.simple_macids import get_basic2agent, get_basic2agent2
+from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames
 from pgmpy.factors.discrete import TabularCPD
 
 
@@ -53,7 +53,6 @@ class TestBASE(unittest.TestCase):
             cid.intervene({'A': a})
             self.assertEqual(cid.expected_value(['B'], {})[0], a)
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
-        print(cid.cpds)
 
     # @unittest.skip("")
     def test_is_s_reachable(self):
@@ -85,7 +84,26 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
         self.assertEqual(len(mg.nodes()), len(example.nodes())*2)
-        print(example.cpds)
+        
+    # @unittest.skip("")
+    def test_copy_without_cpds(self):
+        cid = get_3node_cid()
+        cid_no_cpds = cid.copy_without_cpds()
+        self.assertTrue(len(cid_no_cpds.cpds)==0)
+
+    # @unittest.skip("")
+    def test_get_SCCs(self):
+        example = get_basic_subgames()
+        self.assertTrue(len(example.get_SCCs())==3)
+        # example.draw_strategic_rel_graph()
+        # example.draw_SCCs()
+        # TODO: change subgame example
+
+        
+
+
+
+
 
 
 if __name__ == "__main__":

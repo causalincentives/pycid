@@ -12,8 +12,8 @@ def get_basic2agent():
         ('D2', 'U2'),
         ('D2', 'U1'),
         ],
-        {0: {'D': ['D1'], 'U': ['U1']},
-         1: {'D': ['D2'], 'U': ['U2']}})
+        {'A': {'D': ['D1'], 'U': ['U1']},
+         'B': {'D': ['D2'], 'U': ['U2']}})
 
     return macid
 
@@ -29,6 +29,33 @@ def get_basic2agent2():
          1: {'D': ['D2'], 'U': ['U2']}})
 
     return macid
+
+def get_basic_subgames():
+    macid = MACID([
+        ('D11', 'U11'),
+        ('D11', 'U12'),
+        ('X1', 'U11'),
+        ('X1', 'D11'),
+        ('X1', 'U12'),
+        ('X1', 'U3'),
+        ('D12', 'U12'),
+        ('D12', 'U3'),
+        ('D12', 'D3'),
+        ('D3', 'U12'),
+        ('D3', 'U3'),
+        ('D2', 'U3'),
+        ('D2', 'U2'),
+        ('X2', 'U2'),
+        ('X2', 'D2'),
+        ],
+        {0: {'D': ['D11', 'D12'], 'U': ['U11']},
+        1: {'D': ['D2'], 'U': ['U2', 'U12']},
+        2: {'D': ['D3'], 'U': ['U3']},
+         })
+
+    return macid
+
+
 
 
 def basic2agent_2():
@@ -90,7 +117,6 @@ def basic_rel_agent2():
 
     return macid
 
-
 def basic_rel_agent3():
     macid = MACID([
         ('D1', 'U1'),
@@ -105,7 +131,6 @@ def basic_rel_agent3():
          2: {'D': ['D2'], 'U': ['U2']}})
 
     return macid
-
 
 def basic_rel_agent4():
     macid = MACID([
