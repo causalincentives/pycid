@@ -69,13 +69,22 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example2.is_strategically_acyclic())
         
     # @unittest.skip("")
-    def get_valid_acyclic_dec_node_ordering(self):
+    def test_get_valid_acyclic_dec_node_ordering(self):
         example = get_basic2agent()
         self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
           
         example2 = get_basic2agent2()
         with self.assertRaises(Exception):
             example2.get_valid_acyclic_dec_node_ordering()
+
+    # @unittest.skip("")
+    def test_mechanism_graph(self):
+        example = get_basic2agent()
+        mg = example.mechanism_graph()
+        self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
+        self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
+        self.assertEqual(len(mg.nodes()), len(example.nodes())*2)
+        
 
 
 if __name__ == "__main__":
