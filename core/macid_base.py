@@ -15,8 +15,6 @@ import itertools
 import matplotlib.cm as cm
 
 
-
-
 class MACIDBase(BayesianModel):
 
     def __init__(self,
@@ -37,31 +35,33 @@ class MACIDBase(BayesianModel):
                 self.whose_node[node] = agent
         assert set(self.nodes).issuperset(self.all_decision_nodes)
         assert set(self.nodes).issuperset(self.all_utility_nodes)
-        self.cpds_to_add = {}
+        self.cpds_to_add: Dict[str, TabularCPD] = {}
 
-    def add_cpds(self, *cpds: TabularCPD, update_all: bool = True) -> None:
-        """Add the given CPDs and initiate NullCPDs and FunctionCPDs
-
-        The update_all option recomputes the state_names and matrices for all CPDs in the graph.
-        It can be set to false to save time, if the added CPD(s) have identical state_names to
-        the ones they are replacing.
+    def add_cpds(self, *cpds: TabularCPD) -> None:
         """
-        # TODO: get rid of update_all, by instead adding any children of a node whose state_names
-        #       have changed to cpds_to_add
-        if update_all:
-            for cpd in self.cpds:
-                self.cpds_to_add[cpd.variable] = cpd
+        Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
+        """
         for cpd in cpds:
             assert cpd.variable in self.nodes
+            assert isinstance(cpd, TabularCPD)
+            if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
+                raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             self.cpds_to_add[cpd.variable] = cpd
 
         for var in nx.topological_sort(self):
             if var in self.cpds_to_add:
-                cpd = self.cpds_to_add[var]
-                if hasattr(cpd, "initialize_tabular_cpd"):
-                    cpd.initialize_tabular_cpd(self)
-                if hasattr(cpd, "values"):
-                    super().add_cpds(cpd)
+                cpd_to_add = self.cpds_to_add[var]
+                if hasattr(cpd_to_add, "initialize_tabular_cpd"):
+                    cpd_to_add.initialize_tabular_cpd(self)
+                if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
+                    # if the state_names have changed, remember to update all descendants:
+                    previous_cpd = self.get_cpds(var)
+                    if previous_cpd and previous_cpd.state_names[var] != cpd_to_add.state_names[var]:
+                        for descendant in nx.descendants(self, var):
+                            if descendant not in self.cpds_to_add and self.get_cpds(descendant):
+                                self.cpds_to_add[descendant] = self.get_cpds(descendant)
+                    # add cpd to BayesianModel, and remove it from cpds_to_add
+                    super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
     def _get_valid_order(self, nodes: List[str]):
@@ -98,8 +98,7 @@ class MACIDBase(BayesianModel):
                 eu.append(new.expected_value(descendant_utility_nodes, context))
             return idx2name[np.argmax(eu)]
 
-        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=state_names, label="opt"),
-                      update_all=False)
+        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=state_names, label="opt"))
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
@@ -235,6 +234,8 @@ class MACIDBase(BayesianModel):
         cpd = self.get_cpds(node)
         if hasattr(cpd, "label"):
             return cpd.label
+        elif hasattr(cpd, "__name__"):
+            return cpd.__name__
         else:
             return ""
 
