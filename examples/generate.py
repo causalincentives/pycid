@@ -5,7 +5,7 @@ import random
 from typing import List, Tuple
 from core.cid import CID
 from analyze.get_paths import find_active_path
-from core.cpd import DecisionDomain, RandomlySampledFunctionCPD
+from core.cpd import DecisionDomain, RandomlySampledFunctionCPD, UniformRandomCPD
 
 
 # TODO add a random_macid function
@@ -39,6 +39,8 @@ def random_cid(
         for node in cid.nodes:
             if node in cid.all_decision_nodes:
                 cid.add_cpds(DecisionDomain(node, [0, 1]))
+            elif not cid.get_parents(node):  # node is a root node
+                cid.add_cpds(UniformRandomCPD(node, [0, 1]))
             else:
                 cid.add_cpds(RandomlySampledFunctionCPD(node, cid.get_parents(node)))
     return cid
