@@ -88,7 +88,7 @@ def _find_dirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths
         children = mb.get_children(path[-1])
         for child in children:
             ext = path + [child]
-            ext = mb._find_dirpath_recurse(ext, finish, all_paths)
+            ext = _find_dirpath_recurse(mb, ext, finish, all_paths)
             if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full directed path.
                 all_paths.append(ext)
             else:
@@ -100,7 +100,7 @@ def find_all_dir_paths(mb: MACIDBase, start, finish):
     finds all directed paths from start node to end node that exist in the MAID
     """
     all_paths = []
-    return self._find_dirpath_recurse([start], finish, all_paths)
+    return _find_dirpath_recurse(mb, [start], finish, all_paths)
 
 def _find_undirpath_recurse(self, path: List[str], finish: str, all_paths: str):
 

@@ -38,9 +38,11 @@ class TestPATHS(unittest.TestCase):
     # @unittest.skip("")
     def test_find_all_dir_paths(self):
         example = get_basic_subgames()
-        example.draw()
-        print(find_all_dir_paths(example, 'D11', 'U3'))
+        self.assertEqual(*find_all_dir_paths(example, 'D11', 'U3'), ['D11', 'D12', 'U3'])
+        self.assertFalse(find_all_dir_paths(example, 'U2', 'D2'))
+        self.assertTrue(len(find_all_dir_paths(example, 'D2', 'U2'))==2)
 
+    
 
 
 
