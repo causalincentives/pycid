@@ -331,32 +331,3 @@ class MACIDBase(BayesianModel):
                         no topological ordering can be immediately given.')
         else:
             return list(nx.topological_sort(rg))
-
-    def get_SCCs(self) -> List[set]:
-        """
-        Return a list with the maximal strongly connected components of the MACID's strategic relevance graph
-        Uses Tarjan’s algorithm with Nuutila’s modifications
-        - complexity is linear in the number of edges and nodes """
-        rg = self.strategic_rel_graph()
-        return list(nx.strongly_connected_components(rg))
-        
-    def _set_color_SCC(self, node: str, SCCs) -> np.ndarray:
-        "Assign a unique color to the set of nodes in each SCC."
-        colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
-        for SCC in SCCs:
-            idx = SCCs.index(SCC)
-            if node in SCC:
-                col = colors[idx]
-                print(type(col))
-                return col
-
-    def draw_SCCs(self) -> None:
-        """
-        Show the strategic relevance graph's SCCs.
-        """
-        rg = self.strategic_rel_graph()
-        SCCs = list(nx.strongly_connected_components(rg))
-        layout = nx.kamada_kawai_layout(rg)
-        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
-        nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
-        plt.draw()

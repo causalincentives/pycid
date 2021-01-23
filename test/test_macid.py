@@ -12,13 +12,11 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_wit
 from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 
-from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames
+from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames, road_example
 
 class TestMACID(unittest.TestCase):
 
-
-
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_create_macid(self):
         example = get_basic_subgames()
         example.draw()
@@ -26,8 +24,16 @@ class TestMACID(unittest.TestCase):
         print(example.get_SCCs()[1])
         print(example.get_SCCs()[2])
 
-
+    @unittest.skip("")
+    def test_get_SCCs(self):
+        example = get_basic_subgames()
+        #self.assertTrue(len(example.get_SCCs())==3)
+        example.draw()
+        example.draw_strategic_rel_graph()
+        example.draw_SCCs()
+        # TODO: change subgame example
         
+
 
 
 

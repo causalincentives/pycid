@@ -91,13 +91,7 @@ class TestBASE(unittest.TestCase):
         cid_no_cpds = cid.copy_without_cpds()
         self.assertTrue(len(cid_no_cpds.cpds)==0)
 
-    # @unittest.skip("")
-    def test_get_SCCs(self):
-        example = get_basic_subgames()
-        self.assertTrue(len(example.get_SCCs())==3)
-        # example.draw_strategic_rel_graph()
-        # example.draw_SCCs()
-        # TODO: change subgame example
+    
 
         
 

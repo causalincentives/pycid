@@ -45,13 +45,43 @@ class MACID(MACIDBase):
 
     def _get_color(self, node: str) -> np.ndarray:
         """
-        Matches a unique colour with each new agent's decision and utility nodes
+        Assign a unique colour with each new agent's decision and utility nodes
         """
         colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
             return colors[[self.agents.index(self.whose_node[node])]]
         else:
             return 'lightgray' #chance node
+
+    def get_SCCs(self) -> List[set]:
+        """
+        Returns a list with the maximal strongly connected components of the MACID's strategic relevance graph
+        Uses Tarjan’s algorithm with Nuutila’s modifications
+        - complexity is linear in the number of edges and nodes """
+        rg = self.strategic_rel_graph()
+        return list(nx.strongly_connected_components(rg))
+        
+    def _set_color_SCC(self, node: str, SCCs) -> np.ndarray:
+        "Assign a unique color to the set of nodes in each SCC."
+        colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
+        for SCC in SCCs:
+            idx = SCCs.index(SCC)
+            if node in SCC:
+                col = colors[idx]
+                print(type(col))
+                return col
+
+    def draw_SCCs(self) -> None:
+        """
+        Show the strategic relevance graph's SCCs.
+        """
+        rg = self.strategic_rel_graph()
+        SCCs = list(nx.strongly_connected_components(rg))
+        layout = nx.kamada_kawai_layout(rg)
+        colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
+        nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
+        plt.draw()
+
 
 
   # #----------------cyclic relevance graph methods:--------------------------------------

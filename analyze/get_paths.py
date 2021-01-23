@@ -1,19 +1,20 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
+from core.macid_base import MACIDBase
 from typing import List, Set
 from pgmpy.models import BayesianModel
 
 
-def _active_neighbours(bn: BayesianModel, path: List[str], observed: List[str]) -> Set[str]:
+def _active_neighbours(mb: MACIDBase, path: List[str], observed: List[str]) -> Set[str]:
     """Find possibly active extensions of path conditional on observed"""
     end_of_path = path[-1]
-    last_forward = len(path) > 1 and end_of_path in bn.get_children(path[-2])
-    possible_colliders = set().union(*[set(bn._get_ancestors_of(e)) for e in observed])
+    last_forward = len(path) > 1 and end_of_path in mb.get_children(path[-2])
+    possible_colliders = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])
 
     # if going upward or at a possible collider, it's possible to continue to a parent
     if end_of_path in possible_colliders or not last_forward:
-        active_parents = set(bn.get_parents(end_of_path)) - set(observed)
+        active_parents = set(mb.get_parents(end_of_path)) - set(observed)
     else:
         active_parents = set()
 
@@ -21,94 +22,85 @@ def _active_neighbours(bn: BayesianModel, path: List[str], observed: List[str]) 
     if end_of_path in observed:
         active_children = set()
     else:
-        active_children = set(bn.get_children(end_of_path))
+        active_children = set(mb.get_children(end_of_path))
 
     active_neighbours = active_parents.union(active_children)
     new_active_neighbours = active_neighbours - set(path)
     return new_active_neighbours
 
 
-def _find_active_path_recurse(bn: BayesianModel, path: List[str],
+def _find_active_path_recurse(mb: MACIDBase, path: List[str],
                               end_node: str, observed: List[str]) -> List[str]:
     """Find active path from `path' to `end_node' given `observed'"""
     if path[-1] == end_node and end_node not in observed:
         return path
     else:
-        neighbours = _active_neighbours(bn, path, observed)
+        neighbours = _active_neighbours(mb, path, observed)
         for neighbour in neighbours:
-            ext = _find_active_path_recurse(bn, path + [neighbour], end_node, observed)
+            ext = _find_active_path_recurse(mb, path + [neighbour], end_node, observed)
             if ext:
                 return ext
 
 
-def find_active_path(bn: BayesianModel, start_node: str, end_node: str, observed: List[str]) -> List[str]:
+def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: List[str] = []) -> List[str]:
     """Find active path from `start_node' to `end_node' given `observed'"""
-    return _find_active_path_recurse(bn, [start_node], end_node, observed)
+    return _find_active_path_recurse(mb, [start_node], end_node, observed)
 
-
-def get_motifs(cid, path):
-    shapes = []
-    for i in range(len(path)):
-        if i == 0:
-            if path[i] in cid.get_parents(path[i+1]):
-                shapes.append('forward')
-            else:
-                shapes.append('backward')
-        else:
-            shapes.append(get_motif(cid, path, i))
-    return shapes
-
-
-def get_motif(cid, path: List[str], i):
+def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
     """
-    Classify three node structure as a forward (chain), backward (chain), fork or collider.
+    Classify three node structure as a forward (chain), backward (chain), fork or collider at index 'idx' along the path.
     """
-    if len(path) == i+1:
-        return "endpoint"
+    if len(path) == idx+1:
+        return 'endpoint'
 
-    elif cid.has_edge(path[i-1], path[i]) and cid.has_edge(path[i], path[i+1]):
-        return "forward"
+    elif mb.has_edge(path[idx-1], path[idx]) and mb.has_edge(path[idx], path[idx+1]):
+        return 'forward'
 
-    elif cid.has_edge(path[i+1], path[i]) and cid.has_edge(path[i], path[i-1]):
-        return "backward"
+    elif mb.has_edge(path[idx+1], path[idx]) and mb.has_edge(path[idx], path[idx-1]):
+        return 'backward'
 
-    elif cid.has_edge(path[i-1], path[i]) and cid.has_edge(path[i+1], path[i]):
-        return "collider"
+    elif mb.has_edge(path[idx-1], path[idx]) and mb.has_edge(path[idx+1], path[idx]):
+        return 'collider'
 
-    elif cid.has_edge(path[i], path[i-1]) and cid.has_edge(path[i], path[i+1]):
-        return "fork"
+    elif mb.has_edge(path[idx], path[idx-1]) and mb.has_edge(path[idx], path[idx+1]):
+        return 'fork'
 
     else:
         ValueError(f"unsure how to classify this path at index {i}")
 
+def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
+    shapes = []
+    for i in range(len(path)):
+        if i == 0:
+            if path[i] in mb.get_parents(path[i+1]):
+                shapes.append('forward')
+            else:
+                shapes.append('backward')
+        else:
+            shapes.append(get_motif(mb, path, i))
+    return shapes
 
-
-# TODO add tests for these
-# -------- Methods for finding MACID graphical properties --------------------
-
-def _find_dirpath_recurse(self, path: List[str], finish: str, all_paths):
+def _find_dirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths):
 
     if path[-1] == finish:
         return path
     else:
-        children = self.get_children(path[-1])
+        children = mb.get_children(path[-1])
         for child in children:
             ext = path + [child]
-            ext = self._find_dirpath_recurse(ext, finish, all_paths)
+            ext = mb._find_dirpath_recurse(ext, finish, all_paths)
             if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full directed path.
                 all_paths.append(ext)
             else:
                 continue
         return all_paths
 
-def find_all_dir_path(self, start, finish):
+def find_all_dir_paths(mb: MACIDBase, start, finish):
     """
-    finds all direct paths from start node to end node that exist in the MAID
+    finds all directed paths from start node to end node that exist in the MAID
     """
     all_paths = []
     return self._find_dirpath_recurse([start], finish, all_paths)
-
-
 
 def _find_undirpath_recurse(self, path: List[str], finish: str, all_paths: str):
 
