@@ -5,3 +5,6 @@ pgmpy
 networkx
 numpy
 ipykernel
+flake8
+mypy
+pep8-naming
