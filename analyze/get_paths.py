@@ -2,8 +2,9 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from core.macid_base import MACIDBase
-from typing import List, Set
+from typing import List, Set, Tuple
 from pgmpy.models import BayesianModel
+import networkx as nx
 
 
 def _active_neighbours(mb: MACIDBase, path: List[str], observed: List[str]) -> Set[str]:
@@ -46,6 +47,7 @@ def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Li
     """Find active path from `start_node' to `end_node' given `observed'"""
     return _find_active_path_recurse(mb, [start_node], end_node, observed)
 
+
 def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
     """
     Classify three node structure as a forward (chain), backward (chain), fork or collider at index 'idx' along the path.
@@ -66,7 +68,8 @@ def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
         return 'fork'
 
     else:
-        ValueError(f"unsure how to classify this path at index {i}")
+        ValueError(f"unsure how to classify this path at index {idx}")
+
 
 def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
     shapes = []
@@ -80,7 +83,8 @@ def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
             shapes.append(get_motif(mb, path, i))
     return shapes
 
-def _find_dirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths):
+
+def _find_dirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths: List[List[str]]) -> List[List[str]]:
 
     if path[-1] == finish:
         return path
@@ -95,141 +99,127 @@ def _find_dirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths
                 continue
         return all_paths
 
-def find_all_dir_paths(mb: MACIDBase, start, finish):
+
+def find_all_dir_paths(mb: MACIDBase, start: str, finish: str) -> List[List[str]]:
     """
-    finds all directed paths from start node to end node that exist in the MAID
+    Finds all directed paths from start node to finish node that exist in the MAID.
     """
     all_paths = []
     return _find_dirpath_recurse(mb, [start], finish, all_paths)
 
-def _find_undirpath_recurse(self, path: List[str], finish: str, all_paths: str):
+
+def _find_undirpath_recurse(mb: MACIDBase, path: List[str], finish: str, all_paths: str) -> List[List[str]]:
 
     if path[-1] == finish:
         return path
     else:
-        neighbours = list(self.get_children(path[-1])) + list(self.get_parents(path[-1]))
+        neighbours = list(mb.get_children(path[-1])) + list(mb.get_parents(path[-1]))
         new = set(neighbours).difference(set(path))
         for child in new:
             ext = path + [child]
-            ext = self._find_undirpath_recurse(ext, finish, all_paths)
-            if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full directed path.
+            ext = _find_undirpath_recurse(mb, ext, finish, all_paths)
+            if ext and ext[-1] == finish:  # the "if ext" checks to see that it's a full path.
                 all_paths.append(ext)
             else:
                 continue
         return all_paths
 
-def find_all_undir_path(self, start: str, finish: str):
+
+def find_all_undir_paths(mb: MACIDBase, start: str, finish: str) -> List[List[str]]:
     """
-    finds all direct paths from start node to end node that exist in the MAID
+    Finds all paths from start node to end node that exist in the MAID
     """
     all_paths = []
-    return self._find_undirpath_recurse([start], finish, all_paths)
+    return _find_undirpath_recurse(mb, [start], finish, all_paths)
 
 
-def _directed_decision_free_path(self, start: str, finish: str):
+def directed_decision_free_path(mb: MACIDBase, start: str, finish: str) -> bool:
     """
-    checks to see if a directed decision free path exists
+    Checks to see if a directed decision free path exists
     """
-    start_finish_paths = self.find_all_dir_path(start, finish)
-    dec_free_path_exists = any(set(self.all_decision_nodes).isdisjoint(set(path[1:-1])) for path in start_finish_paths)  # ignore path's start and finish node
+    start_finish_paths = find_all_dir_paths(mb, start, finish)
+    dec_free_path_exists = any(set(mb.all_decision_nodes).isdisjoint(set(path[1:-1])) for path in start_finish_paths)  # ignore path's start and finish node
     if start_finish_paths and dec_free_path_exists:
         return True
     else:
         return False
 
-def _get_path_structure(self, path:List[str]):
+def _get_path_structure(mb: MACIDBase, path: List[str]) -> List[Tuple[str, str]]:
     """
-    returns the path's structure (ie the direction of the edges that make up this path)
+    returns the path's structure (ie pairs showing the direction of the edges that make up this path)
+
+    If a path is D1 -> X <- D2, this function returns: [('D1', 'X'), ('D2', 'X')]
     """
     structure = []
     for i in range(len(path)-1):
-        if path[i] in self.get_parents(path[i+1]):
+        if path[i] in mb.get_parents(path[i+1]):
             structure.append((path[i], path[i+1]))
-        elif path[i+1] in self.get_parents(path[i]):
+        elif path[i+1] in mb.get_parents(path[i]):
             structure.append((path[i+1], path[i]))
     return structure
 
-def path_d_separated_by_Z(self, path:List[str], Z:List[str]=[]):
+
+def path_d_separated_by_Z(mb: MACIDBase, path: List[str], Z: List[str] = []) -> bool:
     """
-    Check if a path is d-separated by set of variables Z.
+    Check if a path is d-separated by the set of variables Z.
     """
     if len(path) < 3:
         return False
 
-    for a, b, c in zip(path[:-2], path[1:-1], path[2:]):
-        structure = get_motif(self, path, path.index(b))
+    for _, b, _ in zip(path[:-2], path[1:-1], path[2:]):
+        structure = get_motif(mb, path, path.index(b))
 
-        if structure in ("chain", "fork") and b in Z:
+        if structure in {'fork', 'forward', 'backward'} and b in Z:
             return True
 
         if structure == "collider":
-            descendants = (nx.descendants(self, b) | {b})
-            if not descendants & set(Z):
+            descendants = nx.descendants(mb, b).union({b})
+            if not descendants.intersection(set(Z)):
                 return True
 
     return False
 
-def frontdoor_indirect_path_not_blocked_by_W(self, start: str, finish: str, W:List[str]=[]):
-    """checks whether an indirect frontdoor path exists that isn't blocked by the nodes in set W."""
-    start_finish_paths = self.find_all_undir_path(start, finish)
+
+def frontdoor_indirect_path_not_blocked_by_W(mb: MACIDBase, start: str, finish: str, W: List[str] = []) -> bool:
+    """
+    checks whether an indirect frontdoor path exists that isn't blocked by the nodes in set W.  
+    - A frontdoor path between X and Z is an (undirected) path in which the first edge comes out of the first node (X→···Z).
+    """
+    
+    start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
-        is_frontdoor_path = path[0] in self.get_parents(path[1])
-        not_blocked_by_W = not self.path_d_separated_by_Z(path, W)
-        contains_collider = "collider" in get_motifs(self, path)
-        if is_frontdoor_path and not_blocked_by_W and contains_collider:   #default (if w = [] is going to be false since any unobserved collider blocks path
+        is_frontdoor_path = path[0] in mb.get_parents(path[1])
+        not_blocked_by_W = not path_d_separated_by_Z(mb, path, W)
+        contains_collider = "collider" in get_motifs(mb, path)
+        # default is False since if w = [], any unobserved collider blocks path
+        if is_frontdoor_path and not_blocked_by_W and contains_collider:   
             return True
     else:
         return False
 
 
-def parents_of_Y_not_descended_from_X(self, X: str,Y: str):
-    """finds the parents of Y not descended from X"""
-    Y_parents = self.get_parents(Y)
-    X_descendants = list(nx.descendants(self, X))
-    print(f" desc of {X} are {X_descendants}")
+def parents_of_Y_not_descended_from_X(mb: MACIDBase, Y: str, X: str) -> List[str]:
+    """
+    Finds the parents of Y not descended from X
+    """
+    Y_parents = mb.get_parents(Y)
+    X_descendants = list(nx.descendants(mb, X))
     return list(set(Y_parents).difference(set(X_descendants)))
 
 
-def get_key_node(self, path:List[str]):
-    """ The key node of a path is the first "fork" node in the path"""
-    for a, b, c in zip(path[:-2], path[1:-1], path[2:]):
-        structure = get_motif(self, path, path.index(b))
-        if structure == "fork":
-            return b
-
-def backdoor_path_active_when_conditioning_on_W(self, start: str, finish: str, W:List[str]=[]):
+def backdoor_path_active_when_conditioning_on_W(mb: MACIDBase, start: str, finish: str, W: List[str] = []) -> bool:
     """
-    returns true if there is a backdoor path that's active when conditioning on nodes in set W.
+    Returns true if there is a backdoor path that's active when conditioning on nodes in set W.
+    - A backdoor path between X and Z is an (undirected) path in which the first edge goes into the first node (X←···Z)
     """
-    start_finish_paths = self.find_all_undir_path(start, finish)
+    start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
 
-        if len(path) > 1:   #must have path of at least 2 nodes
-            is_backdoor_path = path[1] in self.get_parents(path[0])
-            not_blocked_by_W = not self.path_d_separated_by_Z(path, W)
+        if len(path) > 1:   # must have path of at least 2 nodes
+            is_backdoor_path = path[1] in mb.get_parents(path[0])
+            not_blocked_by_W = not path_d_separated_by_Z(mb, path, W)
             if is_backdoor_path and not_blocked_by_W:
                 return True
-
     else:
         return False
 
-def backdoor_path_active_when_conditioning_on_W2(self, start: str, finish: str, W:List[str]=[]):
-    """
-    returns true if there is a backdoor path that's active when conditioning on nodes in set W.
-    """
-
-    start_finish_paths = self.find_all_undir_path(start, finish)
-    for path in start_finish_paths:
-        #print(f"path1 = {path}")
-        if len(path) > 1:   #must have path of at least 2 nodes
-            is_backdoor_path = path[1] in self.get_parents(path[0])
-            #print(f"is_bd_path {is_backdoor_path}")
-            not_blocked_by_W = not self.path_d_separated_by_Z(path, W)
-            #print(f"not_blocked = {not_blocked_by_W}")
-            if is_backdoor_path and not_blocked_by_W:
-                #print(f"path is {path}")
-
-                return True
-
-    else:
-        return False

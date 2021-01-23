@@ -1,5 +1,15 @@
 # ---------- Extra Graphical criterion methods for finding Pfeffer and Gal's Reasoning patterns -----------------------
 
+def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
+    #TODO: move this to the reasoing patterns file
+    """ 
+    Returns the key node of a path (ie the first "fork" node in the path)
+    """
+    for _, b, _ in zip(path[:-2], path[1:-1], path[2:]):
+        structure = get_motif(mb, path, path.index(b))
+        if structure == "fork":
+            return b
+
 def _directed_decision_free_path(self, start: str, finish: str):
     """
     checks to see if a directed decision free path exists
