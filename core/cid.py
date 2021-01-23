@@ -18,7 +18,7 @@ class CID(MACIDBase):
         # TODO update to use MACID relevance graph
         decision_ordering = self._get_valid_order(self.all_decision_nodes)
         for i, decision1 in enumerate(decision_ordering):
-            for j, decision2 in enumerate(decision_ordering[i+1:]):
+            for j, decision2 in enumerate(decision_ordering[i + 1:]):
                 for utility in self.all_utility_nodes:
                     if decision2 in self._get_ancestors_of(utility):
                         cid_with_policy = self.copy()
@@ -27,10 +27,10 @@ class CID(MACIDBase):
                         connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
                         if connected:
                             logging.warning(
-                                    "{} has insufficient recall of {} due to utility {}".format(
-                                        decision2, decision1, utility)
-                                    )
-                            return False                 
+                            "{} has insufficient recall of {} due to utility {}".format(
+                            decision2, decision1, utility)
+                            )
+                            return False
         return True
 
     def impute_random_policy(self) -> None:

@@ -3,7 +3,6 @@
 
 from core.macid_base import MACIDBase
 from typing import List, Set, Tuple
-from pgmpy.models import BayesianModel
 import networkx as nx
 
 
@@ -50,21 +49,21 @@ def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Li
 
 def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
     """
-    Classify three node structure as a forward (chain), backward (chain), fork or collider at index 'idx' along the path.
+    Classify three node structure as a forward (chain), backward (chain), fork or collider at index 'idx' along path.
     """
-    if len(path) == idx+1:
+    if len(path) == idx + 1:
         return 'endpoint'
 
-    elif mb.has_edge(path[idx-1], path[idx]) and mb.has_edge(path[idx], path[idx+1]):
+    elif mb.has_edge(path[idx - 1], path[idx]) and mb.has_edge(path[idx], path[idx + 1]):
         return 'forward'
 
-    elif mb.has_edge(path[idx+1], path[idx]) and mb.has_edge(path[idx], path[idx-1]):
+    elif mb.has_edge(path[idx + 1], path[idx]) and mb.has_edge(path[idx], path[idx - 1]):
         return 'backward'
 
-    elif mb.has_edge(path[idx-1], path[idx]) and mb.has_edge(path[idx+1], path[idx]):
+    elif mb.has_edge(path[idx - 1], path[idx]) and mb.has_edge(path[idx + 1], path[idx]):
         return 'collider'
 
-    elif mb.has_edge(path[idx], path[idx-1]) and mb.has_edge(path[idx], path[idx+1]):
+    elif mb.has_edge(path[idx], path[idx - 1]) and mb.has_edge(path[idx], path[idx + 1]):
         return 'fork'
 
     else:
@@ -75,7 +74,7 @@ def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
     shapes = []
     for i in range(len(path)):
         if i == 0:
-            if path[i] in mb.get_parents(path[i+1]):
+            if path[i] in mb.get_parents(path[i + 1]):
                 shapes.append('forward')
             else:
                 shapes.append('backward')
@@ -138,24 +137,25 @@ def directed_decision_free_path(mb: MACIDBase, start: str, finish: str) -> bool:
     Checks to see if a directed decision free path exists
     """
     start_finish_paths = find_all_dir_paths(mb, start, finish)
-    dec_free_path_exists = any(set(mb.all_decision_nodes).isdisjoint(set(path[1:-1])) for path in start_finish_paths)  # ignore path's start and finish node
+    dec_free_path_exists = any(set(mb.all_decision_nodes).isdisjoint(set(path[1:-1]))
+                               for path in start_finish_paths)  # ignore path's start and finish node
     if start_finish_paths and dec_free_path_exists:
         return True
     else:
         return False
 
+
 def _get_path_structure(mb: MACIDBase, path: List[str]) -> List[Tuple[str, str]]:
     """
     returns the path's structure (ie pairs showing the direction of the edges that make up this path)
-
     If a path is D1 -> X <- D2, this function returns: [('D1', 'X'), ('D2', 'X')]
     """
     structure = []
-    for i in range(len(path)-1):
-        if path[i] in mb.get_parents(path[i+1]):
-            structure.append((path[i], path[i+1]))
-        elif path[i+1] in mb.get_parents(path[i]):
-            structure.append((path[i+1], path[i]))
+    for i in range(len(path) - 1):
+        if path[i] in mb.get_parents(path[i + 1]):
+            structure.append((path[i], path[i + 1]))
+        elif path[i + 1] in mb.get_parents(path[i]):
+            structure.append((path[i + 1], path[i]))
     return structure
 
 
@@ -182,17 +182,17 @@ def path_d_separated_by_Z(mb: MACIDBase, path: List[str], Z: List[str] = []) -> 
 
 def frontdoor_indirect_path_not_blocked_by_W(mb: MACIDBase, start: str, finish: str, W: List[str] = []) -> bool:
     """
-    checks whether an indirect frontdoor path exists that isn't blocked by the nodes in set W.  
-    - A frontdoor path between X and Z is an (undirected) path in which the first edge comes out of the first node (X→···Z).
+    checks whether an indirect frontdoor path exists that isn't blocked by the nodes in set W.
+    - A frontdoor path between X and Z is an (undirected) path in which the first edge comes
+    out of the first node (X→···Z).
     """
-    
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
         is_frontdoor_path = path[0] in mb.get_parents(path[1])
         not_blocked_by_W = not path_d_separated_by_Z(mb, path, W)
         contains_collider = "collider" in get_motifs(mb, path)
         # default is False since if w = [], any unobserved collider blocks path
-        if is_frontdoor_path and not_blocked_by_W and contains_collider:   
+        if is_frontdoor_path and not_blocked_by_W and contains_collider:
             return True
     else:
         return False
@@ -222,4 +222,3 @@ def backdoor_path_active_when_conditioning_on_W(mb: MACIDBase, start: str, finis
                 return True
     else:
         return False
-

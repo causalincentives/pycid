@@ -1,15 +1,15 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
+
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
 from examples.simple_cids import get_3node_cid
 from examples.simple_macids import get_basic2agent, get_basic_subgames
-from analyze.get_paths import backdoor_path_active_when_conditioning_on_W, find_active_path, get_motifs, get_motif, find_all_dir_paths, find_all_undir_paths, \
-    _directed_decision_free_path, path_d_separated_by_Z, frontdoor_indirect_path_not_blocked_by_W, \
-    parents_of_Y_not_descended_from_X
+from analyze.get_paths import backdoor_path_active_when_conditioning_on_W, find_active_path, get_motifs, \
+    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, path_d_separated_by_Z, \
+    frontdoor_indirect_path_not_blocked_by_W, parents_of_Y_not_descended_from_X
 from core.macid import MACID
 
 
@@ -58,11 +58,11 @@ class TestPATHS(unittest.TestCase):
     # @unittest.skip("")
     def test_directed_decision_free_path(self):
         example = get_basic_subgames()
-        self.assertTrue(_directed_decision_free_path(example, 'X1', 'U11'))
-        self.assertTrue(_directed_decision_free_path(example, 'X2', 'U22'))
-        self.assertFalse(_directed_decision_free_path(example, 'X2', 'U3'))
-        self.assertFalse(_directed_decision_free_path(example, 'X2', 'U2'))
-        self.assertFalse(_directed_decision_free_path(example, 'U22', 'U3'))
+        self.assertTrue(directed_decision_free_path(example, 'X1', 'U11'))
+        self.assertTrue(directed_decision_free_path(example, 'X2', 'U22'))
+        self.assertFalse(directed_decision_free_path(example, 'X2', 'U3'))
+        self.assertFalse(directed_decision_free_path(example, 'X2', 'U2'))
+        self.assertFalse(directed_decision_free_path(example, 'U22', 'U3'))
 
     # @unittest.skip("")
     def test_path_d_seperated_by_Z(self):
@@ -70,7 +70,7 @@ class TestPATHS(unittest.TestCase):
             ('X1', 'D'),
             ('X2', 'D'),
             ('D', 'U')],
-            {1: {'D': ['D'], 'U': ['U']}})   
+            {1: {'D': ['D'], 'U': ['U']}})
         self.assertFalse(path_d_separated_by_Z(example, ['X1', 'D', 'U']))
         self.assertTrue(path_d_separated_by_Z(example, ['X1', 'D', 'U'], ['D']))
         self.assertTrue(path_d_separated_by_Z(example, ['X1', 'D', 'X2']))
@@ -84,7 +84,7 @@ class TestPATHS(unittest.TestCase):
             ('X1', 'D'),
             ('X2', 'D'),
             ('D', 'U')],
-            {1: {'D': ['D'], 'U': ['U']}})   
+            {1: {'D': ['D'], 'U': ['U']}})
         self.assertTrue(frontdoor_indirect_path_not_blocked_by_W(example, 'X2', 'X1', ['D']))
         self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X2', 'X1'))
         self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X3', 'X1', ['D']))
@@ -100,7 +100,7 @@ class TestPATHS(unittest.TestCase):
             ('X2', 'D'),
             ('X2', 'U'),
             ('D', 'U')],
-            {1: {'D': ['D'], 'U': ['U']}}) 
+            {1: {'D': ['D'], 'U': ['U']}})
         self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X1'), ['X2'])
         self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X2'), ['X2'])
         self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X3'), ['D', 'X2'])
@@ -113,7 +113,7 @@ class TestPATHS(unittest.TestCase):
             ('X2', 'D'),
             ('X2', 'U'),
             ('D', 'U')],
-            {1: {'D': ['D'], 'U': ['U']}}) 
+            {1: {'D': ['D'], 'U': ['U']}})
         self.assertFalse(backdoor_path_active_when_conditioning_on_W(example, 'X3', 'X2'))
         self.assertTrue(backdoor_path_active_when_conditioning_on_W(example, 'X3', 'X2', ['D']))
         self.assertFalse(backdoor_path_active_when_conditioning_on_W(example, 'X1', 'X2'))

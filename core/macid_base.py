@@ -22,8 +22,9 @@ class MACIDBase(BayesianModel):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(ebunch=edges)
         self.node_types = node_types
-        self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}     # this gives a dictionary matching each agent with their decision and utility nodes
-        self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}     # eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
+        # dictionary matching each agent with their decision and utility nodes eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
+        self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}
+        self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}
         self.all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
         self.all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
@@ -116,8 +117,8 @@ class MACIDBase(BayesianModel):
         """Returns a mechanism graph with an extra parent node+"mec" for each node"""
         mg = self.copy_without_cpds()
         for node in self.nodes:
-            mg.add_node(node+"mec")
-            mg.add_edge(node+"mec", node)
+            mg.add_node(node + "mec")
+            mg.add_edge(node + "mec", node)
         return mg
 
     def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None):
@@ -131,7 +132,7 @@ class MACIDBase(BayesianModel):
         mech_graph = self.mechanism_graph()
         for decision in self.all_decision_nodes:
             for query_node in query:
-                if mech_graph.is_active_trail(decision+"mec", query_node, observed=list(context.keys())):
+                if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
                     cpd = self.get_cpds(decision)
                     if not cpd:
                         raise Exception(f"no DecisionDomain specified for {decision}")
@@ -274,9 +275,9 @@ class MACIDBase(BayesianModel):
         self.draw(node_color=node_color)
 
     def is_s_reachable(self, d1: str, d2: str) -> bool:
-        """ 
+        """
         Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch, 2001)
-        
+
         A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
         such that if a new parent D2' were added to D2, there would be an active path in M from
         D2′ to U given Pa(D)∪{D}, where a path is active in a MAID if it is active in the same graph, viewed as a BN.
@@ -285,8 +286,8 @@ class MACIDBase(BayesianModel):
         mg = self.mechanism_graph()
         agent = mg.whose_node[d1]
         agent_utilities = mg.utility_nodes_agent[agent]
-        con_nodes = [d1] + mg.get_parents(d1) 
-        is_active_trail = any([mg.is_active_trail(d2+"mec", u_node, con_nodes) for u_node in agent_utilities])
+        con_nodes = [d1] + mg.get_parents(d1)
+        is_active_trail = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in agent_utilities])
         return is_active_trail
 
     def strategic_rel_graph(self) -> nx.DiGraph:
@@ -306,10 +307,10 @@ class MACIDBase(BayesianModel):
         Draw the MACID's strategic relevance graph
         """
         rg = self.strategic_rel_graph()
-        nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w', edge_color='k', with_labels=True)
+        nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w',
+                         edge_color='k', with_labels=True)
         plt.figure()
         plt.draw()
-        
 
     def is_strategically_acyclic(self) -> bool:
         """
@@ -317,13 +318,11 @@ class MACIDBase(BayesianModel):
         """
         rg = self.strategic_rel_graph()
         return nx.is_directed_acyclic_graph(rg)
-        
 
     def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """
-        Return a topological ordering (which might not be unique) of the decision nodes 
+        Return a topological ordering (which might not be unique) of the decision nodes.
         if the strategic relevance graph is acyclic
-
         """
         rg = self.strategic_rel_graph()
         if not self.is_strategically_acyclic():
