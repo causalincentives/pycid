@@ -5,7 +5,10 @@ import random
 from typing import List, Tuple
 from core.cid import CID
 from analyze.get_paths import find_active_path
+from core.cpd import DecisionDomain, RandomlySampledFunctionCPD
 
+
+# TODO add a random_macid function
 
 def random_cid(
         n_all: int,
@@ -13,8 +16,9 @@ def random_cid(
         n_utilities: int,
         edge_density: float = 0.4,
         add_sr_edges: bool = True,
-        seed: int = None):
-    """examples a random cid with the specified number of nodes and edges"""
+        add_cpds: bool = True,
+        seed: int = None) -> CID:
+    """Generates a random Cid with the specified number of nodes and edges"""
 
     all_names, decision_names, utility_names = get_node_names(n_all, n_decisions, n_utilities)
     edges = get_edges(all_names, utility_names, edge_density, seed=seed, allow_u_edges=False)
@@ -26,12 +30,17 @@ def random_cid(
 
     for i, d1 in enumerate(decision_names):
         for j, d2 in enumerate(decision_names[i+1:]):
-            if d2 in cid._get_ancestors_of(d1):
-                raise Exception("mis-ordered decisions")
+            assert d2 not in cid._get_ancestors_of(d1)
 
     if add_sr_edges:
         add_sufficient_recalls(cid)
 
+    if add_cpds:
+        for node in cid.nodes:
+            if node in cid.all_decision_nodes:
+                cid.add_cpds(DecisionDomain(node, [0, 1]))
+            else:
+                cid.add_cpds(RandomlySampledFunctionCPD(node, cid.get_parents(node)))
     return cid
 
 

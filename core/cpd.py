@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 from inspect import getsourcelines
 from logging import warning
+import random
 from typing import List, Callable, Dict, Union
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.models import BayesianModel
@@ -37,6 +38,10 @@ class UniformRandomCPD(TabularCPD):
     def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
         """initialize the TabularCPD with a matrix representing a uniform random distribution"""
         parents = cid.get_parents(self.variable)
+        # check that parents are initialized
+        for parent in parents:
+            if not cid.get_cpds(parent):
+                return False
         parents_card = [cid.get_cardinality(p) for p in parents]
         transition_matrix = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
         super().__init__(self.variable, self.variable_card, transition_matrix,
@@ -144,6 +149,21 @@ class FunctionCPD(TabularCPD):
         super().__init__(self.variable, card,
                          matrix, evidence, evidence_card,
                          state_names=state_names)
+
+
+class RandomlySampledFunctionCPD(FunctionCPD):
+    """
+    Instantiates a randomly chosen FunctionCPD for the variable
+    """
+
+    def __init__(self, variable: str, evidence: List[str]) -> None:
+        possible_functions = [
+            lambda *pv: np.prod(pv),
+            lambda *pv: np.sum(pv),
+            lambda *pv: 1-np.prod(pv),
+            lambda *pv: 1-np.sum(pv),
+        ]
+        super().__init__(variable, random.choice(possible_functions), evidence)
 
 
 class DecisionDomain(UniformRandomCPD):

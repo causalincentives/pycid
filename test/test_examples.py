@@ -10,7 +10,7 @@ from examples.story_cids import get_introduced_bias, get_car_accident_predictor,
     get_content_recommender, get_modified_content_recommender
 from examples.story_macids import sequential, tree_doctor, road_example, politician, umbrella, signal, triage
 
-from examples.random_cid import random_cid, random_cids
+from examples.generate import random_cid, random_cids
 import unittest
 
 
