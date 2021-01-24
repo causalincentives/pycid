@@ -83,15 +83,17 @@ class TestBASE(unittest.TestCase):
         mg = example.mechanism_graph()
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
-        self.assertEqual(len(mg.nodes()), len(example.nodes())*2)
+        self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
         
     # @unittest.skip("")
     def test_copy_without_cpds(self):
         cid = get_3node_cid()
         cid_no_cpds = cid.copy_without_cpds()
-        self.assertTrue(len(cid_no_cpds.cpds)==0)
+        self.assertTrue(len(cid_no_cpds.cpds) == 0)
 
-    
+    # @unittest.skip("")
+    def test_sufficient_recall(self):
+        
 
         
 

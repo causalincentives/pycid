@@ -57,68 +57,17 @@ def get_basic_subgames():
     return macid
 
 
-
-
-def road_example():
+def get_path_example():
     macid = MACID([
-        ('S1W', 'B1W'),
-        ('S1W', 'U1W'),
-        ('S1E', 'B1E'),
-        ('S1E', 'U1E'),
-
-        ('B1W', 'U1W'),
-        ('B1W', 'U1E'),
-        ('B1W', 'B2E'),
-        ('B1W', 'U2W'),
-        ('B1W', 'B2W'),
-
-        ('B1E', 'U1E'),
-        ('B1E', 'U1W'),
-        ('B1E', 'B2E'),
-        ('B1E', 'U2E'),
-        ('B1E', 'B2W'),
-
-        ('S2W', 'B2W'),
-        ('S2W', 'U2W'),
-        ('S2E', 'B2E'),
-        ('S2E', 'U2E'),
-
-        ('B2W', 'U1W'),
-        ('B2W', 'U2W'),
-        ('B2W', 'U2E'),
-        ('B2W', 'B3E'),
-        ('B2W', 'U3W'),
-        ('B2W', 'B3W'),
-
-        ('B2E', 'U1E'),
-        ('B2E', 'U2E'),
-        ('B2E', 'U2W'),
-        ('B2E', 'B3E'),
-        ('B2E', 'U3E'),
-        ('B2E', 'B3W'),
-
-        ('S3W', 'B3W'),
-        ('S3W', 'U3W'),
-        ('S3E', 'B3E'),
-        ('S3E', 'U3E'),
-
-        ('B3W', 'U3W'),
-        ('B3W', 'U3E'),
-        ('B3W', 'U2W'),
-
-        ('B3E', 'U3E'),
-        ('B3E', 'U3W'),
-        ('B3E', 'U2E'),
-
-        ],
-        {'1W': {'D': ['B1W'], 'U': ['U1W']}, '1E': {'D': ['B1E'], 'U': ['U1E']}, 
-        '2W': {'D': ['B2W'], 'U': ['U2W']}, '2E': {'D': ['B2E'], 'U': ['U2E']},
-        '3W': {'D': ['B3W'], 'U': ['U3W']}, '3E': {'D': ['B3E'], 'U': ['U3E']}, 
-        },     #defines the decisions, chance nodes and utility nodes for each agent
-         
-         )     
-
+        ('X1', 'X3'),
+        ('X1', 'D'),
+        ('X2', 'D'),
+        ('X2', 'U'),
+        ('D', 'U')],
+        {1: {'D': ['D'], 'U': ['U']}})
     return macid
+
+
 
 
 
