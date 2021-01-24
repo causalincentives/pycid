@@ -11,6 +11,7 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_wit
 from examples.story_cids import get_introduced_bias
 from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames
 from pgmpy.factors.discrete import TabularCPD
+from examples.story_macids import forgetful_movie_star
 
 
 class TestBASE(unittest.TestCase):
@@ -93,11 +94,24 @@ class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
     def test_sufficient_recall(self):
-        example = get_basic2agent()
-        example.draw()
-        example.draw_strategic_rel_graph()
-
+        example = forgetful_movie_star()
+        self.assertFalse(example.sufficient_recall(1))
+        self.assertTrue(example.sufficient_recall(2))
         
+        example2 = get_basic2agent()
+        self.assertTrue(example2.sufficient_recall(1))
+        self.assertTrue(example2.sufficient_recall(2))  
+        with self.assertRaises(Exception):
+            self.assertTrue(example2.sufficient_recall(3))
+
+
+
+
+
+
+
+
+
 
 
 

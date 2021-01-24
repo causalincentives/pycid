@@ -299,6 +299,7 @@ class MACIDBase(BayesianModel):
         if decisions is None:
             decisions = self.all_decision_nodes
         G = nx.DiGraph()
+        G.add_nodes_from(decisions)
         dec_pair_perms = list(itertools.permutations(decisions, 2))
         for dec_pair in dec_pair_perms:
             if self.is_s_reachable(dec_pair[0], dec_pair[1]):
@@ -307,7 +308,7 @@ class MACIDBase(BayesianModel):
 
     def draw_strategic_rel_graph(self, decisions: List[str] = None) -> None:
         """
-        Draw the strategic relevance graph for the given set of decision nodes in the MACID.
+        Draw the MACID's strategic relevance graph for the given set of decision nodes.
         Default: draw the strategic relevance graph for all decision nodes in the MACID.
         """
         if decisions is None:
@@ -325,15 +326,17 @@ class MACIDBase(BayesianModel):
         rg = self.strategic_rel_graph()
         return nx.is_directed_acyclic_graph(rg)
 
-    def check_sufficient_recall(self, agent: Union[str, int] = 0):
+    def sufficient_recall(self, agent: Union[str, int] = 0):
         """
-        Finds whther agent has sufficient recall in a (MA)CID.
+        Finds whether an agent has sufficient recall in a (MA)CID.
         Agent i in the MAID has sufficient recall if the strategic relevance graph
         restricted to contain only i's decision nodes is acyclic.
         """
+        if agent not in self.agents:
+            raise Exception(f"There is no agent {agent}, in this (MA)CID")
+
         rg = self.strategic_rel_graph(self.decision_nodes_agent[agent])
         return nx.is_directed_acyclic_graph(rg)
-
 
     def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """

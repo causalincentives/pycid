@@ -25,6 +25,23 @@ def tree_doctor():
     return macid
 
 
+def forgetful_movie_star():
+    macid = MACID([
+        ('S', 'D11'),
+        ('S', 'D12'),
+        ('D2', 'U2'),
+        ('D2', 'U11'),
+        ('D11', 'U2'),
+        ('D11', 'U11'),
+        ('D11', 'U12'),
+        ('D12', 'U12'),
+        ],
+        {1: {'D': ['D11', 'D12'], 'U': ['U11', 'U12']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+    return macid
+
+
+
 def road_example():
     macid = MACID([
         ('S1W', 'B1W'),
