@@ -290,13 +290,16 @@ class MACIDBase(BayesianModel):
         is_active_trail = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in agent_utilities])
         return is_active_trail
 
-    def strategic_rel_graph(self) -> nx.DiGraph:
+    def strategic_rel_graph(self, decisions: List[str] = None) -> nx.DiGraph:
         """
-        Find the strategic relevance graph of the MAID
-        - an edge D -> D' exists iff D' is s-reachable from D
+        Find the strategic relevance graph for a certain set of decision nodes in the MACID.
+        Default: the set of decision nodes is all decision nodes in the MAID.
+        - an edge D -> D' exists iff D' is s-reachable from D (ie D strategically relies on D')
         """
+        if decisions is None:
+            decisions = self.all_decision_nodes
         G = nx.DiGraph()
-        dec_pair_perms = list(itertools.permutations(self.all_decision_nodes, 2))
+        dec_pair_perms = list(itertools.permutations(decisions, 2))
         for dec_pair in dec_pair_perms:
             if self.is_s_reachable(dec_pair[0], dec_pair[1]):
                 G.add_edge(dec_pair[0], dec_pair[1])
@@ -312,12 +315,22 @@ class MACIDBase(BayesianModel):
         plt.figure()
         plt.draw()
 
-    def is_strategically_acyclic(self) -> bool:
+    def is_full_rg_strategically_acyclic(self) -> bool:
         """
-        Find whether the MACID has an acyclic strategic relevance graph.
+        Finds whether the strategic relevance graph for all of the decision nodes in the MACID is acyclic.
         """
         rg = self.strategic_rel_graph()
         return nx.is_directed_acyclic_graph(rg)
+
+    def check_sufficient_recall(self, agent: Union[str, int] = 0):
+        """
+        Finds whther agent has sufficient recall in a (MA)CID.
+        Agent i in the MAID has sufficient recall if the strategic relevance graph
+        restricted to contain only i's decision nodes is acyclic.
+        """
+        rg = self.strategic_rel_graph(self.decision_nodes_agent[agent])
+        return nx.is_directed_acyclic_graph(rg)
+
 
     def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """
@@ -325,7 +338,7 @@ class MACIDBase(BayesianModel):
         if the strategic relevance graph is acyclic
         """
         rg = self.strategic_rel_graph()
-        if not self.is_strategically_acyclic():
+        if not self.is_full_rg_strategically_acyclic():
             raise Exception('The strategic relevance graph for this MACID is not acyclic and so \
                         no topological ordering can be immediately given.')
         else:

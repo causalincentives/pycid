@@ -61,12 +61,12 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.is_s_reachable('D2','D1'))
 
     # @unittest.skip("") 
-    def test_is_strategically_acyclic(self):
+    def test_is_full_rg_strategically_acyclic(self):
         example = get_basic2agent()
-        self.assertTrue(example.is_strategically_acyclic())
+        self.assertTrue(example.is_full_rg_strategically_acyclic())
         
         example2 = get_basic2agent2()
-        self.assertFalse(example2.is_strategically_acyclic())
+        self.assertFalse(example2.is_full_rg_strategically_acyclic())
         
     # @unittest.skip("")
     def test_get_valid_acyclic_dec_node_ordering(self):
@@ -93,7 +93,9 @@ class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
     def test_sufficient_recall(self):
-        
+        example = get_basic2agent()
+        example.draw()
+        example.draw_strategic_rel_graph()
 
         
 
