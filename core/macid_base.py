@@ -305,16 +305,19 @@ class MACIDBase(BayesianModel):
                 G.add_edge(dec_pair[0], dec_pair[1])
         return G
 
-    def draw_strategic_rel_graph(self) -> None:
+    def draw_strategic_rel_graph(self, decisions: List[str] = None) -> None:
         """
-        Draw the MACID's strategic relevance graph
+        Draw the strategic relevance graph for the given set of decision nodes in the MACID.
+        Default: draw the strategic relevance graph for all decision nodes in the MACID.
         """
-        rg = self.strategic_rel_graph()
+        if decisions is None:
+            decisions = self.all_decision_nodes
+        rg = self.strategic_rel_graph(decisions)
         nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w',
                          edge_color='k', with_labels=True)
         plt.figure()
         plt.draw()
-
+    
     def is_full_rg_strategically_acyclic(self) -> bool:
         """
         Finds whether the strategic relevance graph for all of the decision nodes in the MACID is acyclic.
