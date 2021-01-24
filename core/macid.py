@@ -21,9 +21,10 @@ import matplotlib.cm as cm
 from analyze.get_paths import get_motifs, get_motif
 from core.macid_base import MACIDBase
 
+
 class MACID(MACIDBase):
     def __init__(self, edges: List[Tuple[Union[str, int], str]],
-                node_types: Dict[Union[str, int], Dict]):
+                 node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
 
@@ -42,7 +43,6 @@ class MACID(MACIDBase):
 #         self.numDecisions = len(self.reversed_acyclic_ordering)
 #         self.cpds_to_add = {}
 
-
     def _get_color(self, node: str) -> np.ndarray:
         """
         Assign a unique colour with each new agent's decision and utility nodes
@@ -55,7 +55,8 @@ class MACID(MACIDBase):
 
     def get_SCCs(self) -> List[set]:
         """
-        Returns a list with the maximal strongly connected components of the MACID's strategic relevance graph
+        Return a list with the maximal strongly connected components of the MACID's
+        full strategic relevance graph.
         Uses Tarjan’s algorithm with Nuutila’s modifications
         - complexity is linear in the number of edges and nodes """
         rg = self.strategic_rel_graph()
@@ -73,7 +74,7 @@ class MACID(MACIDBase):
 
     def draw_SCCs(self) -> None:
         """
-        Show the strategic relevance graph's SCCs.
+        Show the SCCs for the MACID's full strategic relevance graph
         """
         rg = self.strategic_rel_graph()
         SCCs = list(nx.strongly_connected_components(rg))

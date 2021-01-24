@@ -1,15 +1,13 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
+
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
-from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_minimal_cid
-from examples.story_cids import get_introduced_bias
-from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames
+from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
+from examples.simple_macids import get_basic2agent, get_basic2agent2
 from pgmpy.factors.discrete import TabularCPD
 from examples.story_macids import forgetful_movie_star
 
@@ -58,22 +56,22 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_is_s_reachable(self):
         example = get_basic2agent()
-        self.assertTrue(example.is_s_reachable('D1','D2'))
-        self.assertFalse(example.is_s_reachable('D2','D1'))
+        self.assertTrue(example.is_s_reachable('D1', 'D2'))
+        self.assertFalse(example.is_s_reachable('D2', 'D1'))
 
-    # @unittest.skip("") 
+    # @unittest.skip("")
     def test_is_full_rg_strategically_acyclic(self):
         example = get_basic2agent()
         self.assertTrue(example.is_full_rg_strategically_acyclic())
-        
+
         example2 = get_basic2agent2()
         self.assertFalse(example2.is_full_rg_strategically_acyclic())
-        
+
     # @unittest.skip("")
     def test_get_valid_acyclic_dec_node_ordering(self):
         example = get_basic2agent()
         self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
-          
+
         example2 = get_basic2agent2()
         with self.assertRaises(Exception):
             example2.get_valid_acyclic_dec_node_ordering()
@@ -85,7 +83,7 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
-        
+
     # @unittest.skip("")
     def test_copy_without_cpds(self):
         cid = get_3node_cid()
@@ -97,25 +95,12 @@ class TestBASE(unittest.TestCase):
         example = forgetful_movie_star()
         self.assertFalse(example.sufficient_recall(1))
         self.assertTrue(example.sufficient_recall(2))
-        
+
         example2 = get_basic2agent()
         self.assertTrue(example2.sufficient_recall(1))
-        self.assertTrue(example2.sufficient_recall(2))  
+        self.assertTrue(example2.sufficient_recall(2))
         with self.assertRaises(Exception):
             self.assertTrue(example2.sufficient_recall(3))
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
