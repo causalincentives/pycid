@@ -44,6 +44,11 @@ def _find_active_path_recurse(mb: MACIDBase, path: List[str],
 
 def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: List[str] = []) -> List[str]:
     """Find active path from `start_node' to `end_node' given `observed'"""
+    considered_nodes = set(observed).union({start_node}, {end_node})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+    
     return _find_active_path_recurse(mb, [start_node], end_node, observed)
 
 
@@ -51,6 +56,10 @@ def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
     """
     Classify three node structure as a forward (chain), backward (chain), fork or collider at index 'idx' along path.
     """
+    for node in path:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     if len(path) == idx + 1:
         return 'endpoint'
 
@@ -71,6 +80,10 @@ def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
 
 
 def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
+    for node in path:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+    
     shapes = []
     for i in range(len(path)):
         if i == 0:
@@ -103,6 +116,10 @@ def find_all_dir_paths(mb: MACIDBase, start: str, finish: str) -> List[List[str]
     """
     Finds all directed paths from start node to finish node that exist in the MAID.
     """
+    considered_nodes = {start}.union({finish})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
     all_paths = []
     return _find_dirpath_recurse(mb, [start], finish, all_paths)
 
@@ -128,6 +145,10 @@ def find_all_undir_paths(mb: MACIDBase, start: str, finish: str) -> List[List[st
     """
     Finds all paths from start node to end node that exist in the MAID
     """
+    considered_nodes = {start}.union({finish})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
     all_paths = []
     return _find_undirpath_recurse(mb, [start], finish, all_paths)
 
@@ -136,6 +157,11 @@ def directed_decision_free_path(mb: MACIDBase, start: str, finish: str) -> bool:
     """
     Checks to see if a directed decision free path exists
     """
+    considered_nodes = {start}.union({finish})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     start_finish_paths = find_all_dir_paths(mb, start, finish)
     dec_free_path_exists = any(set(mb.all_decision_nodes).isdisjoint(set(path[1:-1]))
                                for path in start_finish_paths)  # ignore path's start and finish node
@@ -163,6 +189,11 @@ def path_d_separated_by_Z(mb: MACIDBase, path: List[str], Z: List[str] = []) -> 
     """
     Check if a path is d-separated by the set of variables Z.
     """
+    considered_nodes = set(path).union(set(Z))
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     if len(path) < 3:
         return False
 
@@ -186,6 +217,11 @@ def frontdoor_indirect_path_not_blocked_by_W(mb: MACIDBase, start: str, finish: 
     - A frontdoor path between X and Z is an (undirected) path in which the first edge comes
     out of the first node (X→···Z).
     """
+    considered_nodes = set(W).union({start}, {finish})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
         is_frontdoor_path = path[0] in mb.get_parents(path[1])
@@ -202,6 +238,11 @@ def parents_of_Y_not_descended_from_X(mb: MACIDBase, Y: str, X: str) -> List[str
     """
     Finds the parents of Y not descended from X
     """
+    considered_nodes = {Y}.union({X})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     Y_parents = mb.get_parents(Y)
     X_descendants = list(nx.descendants(mb, X))
     return list(set(Y_parents).difference(set(X_descendants)))
@@ -212,6 +253,11 @@ def backdoor_path_active_when_conditioning_on_W(mb: MACIDBase, start: str, finis
     Returns true if there is a backdoor path that's active when conditioning on nodes in set W.
     - A backdoor path between X and Z is an (undirected) path in which the first edge goes into the first node (X←···Z)
     """
+    considered_nodes = set(W).union({start}, {finish})
+    for node in considered_nodes:
+        if node not in mb.nodes():
+            raise Exception(f"The node {node} is not in the (MA)CID")
+
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
 

@@ -68,6 +68,14 @@ def get_path_example():
     return macid
 
 
+def example_temp():
+    macid = MACID([
+        ('D1mec', 'D1'),
+        ('D1', 'U1'),
+        ('X1', 'U1'),
+        ('X1', 'D1')],
+        {1: {'D': ['D1'], 'U': ['U1']}})
+    return macid
 
 
 

@@ -81,7 +81,7 @@ class MACID(MACIDBase):
         layout = nx.kamada_kawai_layout(rg)
         colors = [self._set_color_SCC(node, SCCs) for node in rg.nodes]
         nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
-        plt.draw()
+        plt.show()
 
 
 

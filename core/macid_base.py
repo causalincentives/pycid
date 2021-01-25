@@ -316,8 +316,7 @@ class MACIDBase(BayesianModel):
         rg = self.strategic_rel_graph(decisions)
         nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w',
                          edge_color='k', with_labels=True)
-        plt.figure()
-        plt.draw()
+        plt.show()
     
     def is_full_rg_strategically_acyclic(self) -> bool:
         """
