@@ -60,6 +60,9 @@ def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
 
+    if idx > len(path) - 1:
+        raise Exception(f"The given index {idx} is not valid for the length of this path {len(path)}")
+
     if len(path) == idx + 1:
         return 'endpoint'
 

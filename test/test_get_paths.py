@@ -37,6 +37,8 @@ class TestPATHS(unittest.TestCase):
         self.assertEqual(get_motif(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'], 5), 'endpoint')
         with self.assertRaises(Exception):
             get_motif(example, ['D3', 'A', 'U2', 'D11', 'D12', 'U3'], 5)
+        with self.assertRaises(Exception):
+            get_motif(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'], 6)
 
     # @unittest.skip("")
     def test_get_motifs(self):
