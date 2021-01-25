@@ -179,6 +179,8 @@ def _get_path_structure(mb: MACIDBase, path: List[str]) -> List[Tuple[str, str]]
     returns the path's structure (ie pairs showing the direction of the edges that make up this path)
     If a path is D1 -> X <- D2, this function returns: [('D1', 'X'), ('D2', 'X')]
     """
+    # TODO Tom: Is the docstring wrong? Should it be [('D1', 'X'), ('X', 'D2')]?
+    #           In that case, would a name like _get_path_edges be clearer?
     structure = []
     for i in range(len(path) - 1):
         if path[i] in mb.get_parents(path[i + 1]):
@@ -192,6 +194,9 @@ def path_d_separated_by_Z(mb: MACIDBase, path: List[str], Z: List[str] = []) -> 
     """
     Check if a path is d-separated by the set of variables Z.
     """
+    # TODO Tom: Terminology. Paths are active or not, while nodes are d-separated or d-connected.
+    #           A better name might be path_is_active. Also, a better name for Z would be
+    #           "observed".
     considered_nodes = set(path).union(set(Z))
     for node in considered_nodes:
         if node not in mb.nodes():
@@ -220,6 +225,8 @@ def frontdoor_indirect_path_not_blocked_by_W(mb: MACIDBase, start: str, finish: 
     - A frontdoor path between X and Z is an (undirected) path in which the first edge comes
     out of the first node (X→···Z).
     """
+    # TODO Tom: What does it mean that the frontdoor path is indirect?
+    #           It seems similar to mb.is_active_trail(), so would be good if the name reflected that.
     considered_nodes = set(W).union({start}, {finish})
     for node in considered_nodes:
         if node not in mb.nodes():
@@ -241,6 +248,10 @@ def parents_of_Y_not_descended_from_X(mb: MACIDBase, Y: str, X: str) -> List[str
     """
     Finds the parents of Y not descended from X
     """
+    # TODO Tom: This method doesn't appear to be heavily used, and is anyway basically a one
+    #           one line operation list(set(Y_parents).difference(set(nx.descendants(mb, X))).
+    #           I'm not sure it's justified to keep this as a separate method. Might be better
+    #           to delete, and just use that oneliner when needed.
     considered_nodes = {Y}.union({X})
     for node in considered_nodes:
         if node not in mb.nodes():
@@ -256,6 +267,8 @@ def backdoor_path_active_when_conditioning_on_W(mb: MACIDBase, start: str, finis
     Returns true if there is a backdoor path that's active when conditioning on nodes in set W.
     - A backdoor path between X and Z is an (undirected) path in which the first edge goes into the first node (X←···Z)
     """
+    # TODO Tom: This is similar to mb.is_active_trail(). It would be good if the name reflected that,
+    #           e.g. is_active_backdoor_trail().
     considered_nodes = set(W).union({start}, {finish})
     for node in considered_nodes:
         if node not in mb.nodes():
