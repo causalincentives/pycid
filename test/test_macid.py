@@ -10,9 +10,8 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_wit
     get_minimal_cid
 from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
-from analyze.get_paths import path_d_separated_by_Z, find_active_path
 
-from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames, example_temp
+from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames, get_basic_subgames2
 
 class TestMACID(unittest.TestCase):
 
@@ -25,23 +24,24 @@ class TestMACID(unittest.TestCase):
         print(example.get_SCCs()[2])
 
     # @unittest.skip("")
-    # def test_get_SCCs(self):
-    #     example = get_basic_subgames()
-    #     #self.assertTrue(len(example.get_SCCs())==3)
-    #     example.draw()
-    #     example.draw_strategic_rel_graph()
-    #     example.draw_SCCs()
-    #     # TODO: change subgame example
-    #     mg = example.mechanism_graph()
-    #     print(path_d_separated_by_Z(mg, ['D11mec', 'D11', 'X1', 'U11'], ['D12', 'D11', 'X2', 'D12mec']))
-    #     print(path_d_separated_by_Z(mg, ['D11mec', 'D11', 'X1', 'U11'], ['D11']))
+    def test_get_SCCs(self):
+        example = get_basic_subgames2()
+        #self.assertTrue(len(example.get_SCCs())==3)
+        example.draw()
+        example.draw_strategic_rel_graph()
+
+        example.draw_SCCs()
+        # # TODO: change subgame example
+        # mg = example.mechanism_graph()
+        # print(path_d_separated_by_Z(mg, ['D11mec', 'D11', 'X1', 'U11'], ['D12', 'D11', 'X2', 'D12mec']))
+        # print(path_d_separated_by_Z(mg, ['D11mec', 'D11', 'X1', 'U11'], ['D11']))
 
 
-    #     example3 = example_temp()
-    #     example3.draw()
+        # example3 = example_temp()
+        # example3.draw()
         
 
-    #     print(path_d_separated_by_Z(example3, ['D1mec', 'D1', 'X1', 'U1'], ['D1']))
+        # print(path_d_separated_by_Z(example3, ['D1mec', 'D1', 'X1', 'U1'], ['D1']))
 
 
 
