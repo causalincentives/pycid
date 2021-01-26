@@ -18,7 +18,7 @@ from collections import defaultdict
 from collections import deque
 import copy
 import matplotlib.cm as cm
-from analyze.get_paths import get_motifs, get_motif
+from core.get_paths import get_motifs, get_motif
 from core.macid_base import MACIDBase
 
 
