@@ -11,7 +11,10 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_wit
 from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 
-from examples.simple_macids import get_basic2agent, get_basic2agent2, get_basic_subgames, get_basic_subgames2
+from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, \
+get_basic_subgames2
+from examples.story_macids import subgame_difference
+from core.get_paths import find_active_path
 
 class TestMACID(unittest.TestCase):
 
@@ -23,14 +26,39 @@ class TestMACID(unittest.TestCase):
         print(example.get_SCCs()[1])
         print(example.get_SCCs()[2])
 
-    # @unittest.skip("")
-    def test_get_SCCs(self):
-        example = get_basic_subgames2()
-        #self.assertTrue(len(example.get_SCCs())==3)
-        example.draw()
-        example.draw_strategic_rel_graph()
+    # # @unittest.skip("")
+    # def test_get_SCCs(self):
+    #     example = get_basic2agent_cyclic()
+    #     self.assertEqual(*example.get_SCCs(), {'D1', 'D2'})
+    #     example2 = get_basic_subgames2()
+    #     self.assertTrue(len(example2.get_SCCs())==3)
 
+    # # @unittest.skip("")
+    # def test_condensed_relevance_graph(self):
+    #     example = get_basic_subgames2()
+    #     a = example.condensed_relevance_graph()
+    #     print(a.graph['mapping'])
+    
+
+
+    # @unittest.skip("")   
+    def test_temp(self):
+        example = subgame_difference()
+        example.draw()
+
+        example.draw_strategic_rel_graph()
         example.draw_SCCs()
+
+        example2 = example.mechanism_graph()
+        example2.draw()
+        example2.remove_nodes_from(['U1_Amec', 'U2_Amec', 'U1_Bmec', 'U2_Bmec', 'Nmec'])
+        example2.draw()
+        print(find_active_path(example2, 'D2mec', 'U1_B', ['D1', 'N', 'D1mec']))
+        print(find_active_path(example2, 'D1mec', 'U2_A', ['D2', 'D1', 'D2mec']))
+
+
+
+
         # # TODO: change subgame example
         # mg = example.mechanism_graph()
         # print(path_d_separated_by_Z(mg, ['D11mec', 'D11', 'X1', 'U11'], ['D12', 'D11', 'X2', 'D12mec']))

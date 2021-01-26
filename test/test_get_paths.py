@@ -7,7 +7,7 @@ import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_3node_cid
-from examples.simple_macids import get_basic2agent, get_basic_subgames, get_path_example
+from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, get_path_example
 from core.get_paths import is_active_backdoor_trail, find_active_path, get_motifs, \
     get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, is_active_backdoor_trail, is_path_active, \
     is_active_indirect_frontdoor_trail, _find_all_dirpath_recurse
@@ -18,7 +18,7 @@ class TestPATHS(unittest.TestCase):
 
     # @unittest.skip("")
     def test_find_active_path(self):
-        example = get_basic2agent()
+        example = get_basic2agent_acyclic()
         self.assertEqual(find_active_path(example, 'D1', 'U1', ['D2']), ['D1', 'U1'])
         self.assertFalse(find_active_path(example, 'D1', 'U1', ['D2', 'U1']))
         with self.assertRaises(Exception):
@@ -70,7 +70,7 @@ class TestPATHS(unittest.TestCase):
     def test_find_all_undir_paths(self):
         example = get_3node_cid()
         self.assertTrue(len(find_all_undir_paths(example, 'S', 'U')) == 2)
-        with self.assertRaises(Exception):  
+        with self.assertRaises(Exception):
             find_all_undir_paths(example, 'S', 'A')
 
         example2 = MACID([

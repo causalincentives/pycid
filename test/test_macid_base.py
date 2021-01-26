@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.simple_macids import get_basic2agent, get_basic2agent2
+from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic
 from pgmpy.factors.discrete import TabularCPD
-from examples.story_macids import forgetful_movie_star
+from examples.story_macids import forgetful_movie_star, subgame_difference
 
 
 class TestBASE(unittest.TestCase):
@@ -55,30 +55,34 @@ class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
     def test_is_s_reachable(self):
-        example = get_basic2agent()
+        example = get_basic2agent_acyclic()
         self.assertTrue(example.is_s_reachable('D1', 'D2'))
         self.assertFalse(example.is_s_reachable('D2', 'D1'))
 
+        example2 = subgame_difference()
+        self.assertTrue(example2.is_s_reachable('D1', 'D2'))
+        self.assertFalse(example2.is_s_reachable('D2', 'D1'))
+
     # @unittest.skip("")
     def test_is_full_rg_strategically_acyclic(self):
-        example = get_basic2agent()
+        example = get_basic2agent_acyclic()
         self.assertTrue(example.is_full_rg_strategically_acyclic())
 
-        example2 = get_basic2agent2()
+        example2 = get_basic2agent_cyclic()
         self.assertFalse(example2.is_full_rg_strategically_acyclic())
 
     # @unittest.skip("")
     def test_get_valid_acyclic_dec_node_ordering(self):
-        example = get_basic2agent()
+        example = get_basic2agent_acyclic()
         self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
 
-        example2 = get_basic2agent2()
+        example2 = get_basic2agent_cyclic()
         with self.assertRaises(Exception):
             example2.get_valid_acyclic_dec_node_ordering()
 
     # @unittest.skip("")
     def test_mechanism_graph(self):
-        example = get_basic2agent()
+        example = get_basic2agent_acyclic()
         mg = example.mechanism_graph()
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
@@ -96,7 +100,7 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.sufficient_recall(1))
         self.assertTrue(example.sufficient_recall(2))
 
-        example2 = get_basic2agent()
+        example2 = get_basic2agent_acyclic()
         self.assertTrue(example2.sufficient_recall(1))
         self.assertTrue(example2.sufficient_recall(2))
         with self.assertRaises(Exception):
