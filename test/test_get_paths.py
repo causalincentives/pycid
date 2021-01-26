@@ -1,15 +1,16 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 #%%
-import sys, os
+import unittest
+import sys
+import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-import unittest
 from examples.simple_cids import get_3node_cid
 from examples.simple_macids import get_basic2agent, get_basic_subgames, get_path_example
-from analyze.get_paths import backdoor_path_active_when_conditioning_on_W, find_active_path, get_motifs, \
-    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, path_d_separated_by_Z, \
-    frontdoor_indirect_path_not_blocked_by_W, parents_of_Y_not_descended_from_X
+from core.get_paths import is_active_backdoor_trail, find_active_path, get_motifs, \
+    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, is_active_backdoor_trail, is_path_active, \
+    is_active_indirect_frontdoor_trail, _find_all_dirpath_recurse
 from core.macid import MACID
 
 
@@ -50,10 +51,18 @@ class TestPATHS(unittest.TestCase):
 
     # @unittest.skip("")
     def test_find_all_dir_paths(self):
-        example = get_basic_subgames()
-        self.assertEqual(*find_all_dir_paths(example, 'D11', 'U3'), ['D11', 'D12', 'U3'])
-        self.assertFalse(find_all_dir_paths(example, 'U2', 'D2'))
-        self.assertTrue(len(find_all_dir_paths(example, 'D2', 'U2')) == 2)
+        example = MACID([
+            ('A', 'B'),
+            ('B', 'C'),
+            ('C', 'D'),
+            ('D', 'E'),
+            ('B', 'F'),
+            ('F', 'E')],
+            {1: {'D': ['D'], 'U': ['E']}})
+        self.assertEqual(find_all_dir_paths(example, 'A', 'E'), [['A', 'B', 'C', 'D', 'E'], ['A', 'B', 'F', 'E']])
+        self.assertEqual(*find_all_dir_paths(example, 'C', 'E'), ['C', 'D', 'E'])
+        self.assertFalse(find_all_dir_paths(example, 'F', 'A'))
+        self.assertTrue(len(find_all_dir_paths(example, 'B', 'E')) == 2)
         with self.assertRaises(Exception):
             find_all_dir_paths(example, 'U2', 'A')
 
@@ -83,55 +92,44 @@ class TestPATHS(unittest.TestCase):
             directed_decision_free_path(example, 'X1', 'A')
 
     # @unittest.skip("")
-    def test_path_d_seperated_by_Z(self):
+    def test_is_path_active(self):
         example = get_path_example()
-        self.assertFalse(path_d_separated_by_Z(example, ['X1', 'D', 'U']))
-        self.assertTrue(path_d_separated_by_Z(example, ['X1', 'D', 'U'], ['D']))
-        self.assertTrue(path_d_separated_by_Z(example, ['X1', 'D', 'X2']))
-        self.assertFalse(path_d_separated_by_Z(example, ['X1', 'D', 'X2'], ['D']))
-        self.assertFalse(path_d_separated_by_Z(example, ['X1', 'D', 'X2'], ['U']))
+        self.assertFalse(is_path_active(example, ['X1', 'D', 'U']))
+        self.assertTrue(is_path_active(example, ['X1', 'D', 'U'], ['D']))
+        self.assertTrue(is_path_active(example, ['X1', 'D', 'X2']))
+        self.assertFalse(is_path_active(example, ['X1', 'D', 'X2'], ['D']))
+        self.assertFalse(is_path_active(example, ['X1', 'D', 'X2'], ['U']))
         with self.assertRaises(Exception):  
-            path_d_separated_by_Z(example, ['X1', 'D', 'A'], ['U'])
+            is_path_active(example, ['X1', 'D', 'A'], ['U'])
         with self.assertRaises(Exception):  
-            path_d_separated_by_Z(example, ['X1', 'D', 'X2'], ['A'])
+            is_path_active(example, ['X1', 'D', 'X2'], ['A'])
 
     # @unittest.skip("")
-    def test_frontdoor_indirect_path_not_blocked_by_W(self):
+    def test_is_active_indirect_frontdoor_trail(self):
         example = get_path_example()
-        self.assertTrue(frontdoor_indirect_path_not_blocked_by_W(example, 'X2', 'X1', ['D']))
-        self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X2', 'X1'))
-        self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X3', 'X1', ['D']))
-        self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X3', 'X1'))
-        self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X1', 'U'))
-        self.assertFalse(frontdoor_indirect_path_not_blocked_by_W(example, 'X1', 'U', ['D', 'X2']))
+        self.assertTrue(is_active_indirect_frontdoor_trail(example, 'X2', 'X1', ['D']))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X2', 'X1'))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X3', 'X1', ['D']))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X3', 'X1'))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X1', 'U'))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X1', 'U', ['D', 'X2']))
         with self.assertRaises(Exception):      
-            frontdoor_indirect_path_not_blocked_by_W(example, 'A', 'U', ['D', 'X2'])
+            is_active_indirect_frontdoor_trail(example, 'A', 'U', ['D', 'X2'])
         with self.assertRaises(Exception):  
-            frontdoor_indirect_path_not_blocked_by_W(example, 'X1', 'U', ['A', 'X2'])
-    
+            is_active_indirect_frontdoor_trail(example, 'X1', 'U', ['A', 'X2'])
+
     # @unittest.skip("")
-    def test_parents_of_Y_not_descended_from_X(self):
+    def test_is_active_backdoor_trail(self):
         example = get_path_example()
-        self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X1'), ['X2'])
-        self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X2'), ['X2'])
-        self.assertCountEqual(parents_of_Y_not_descended_from_X(example, 'U', 'X3'), ['D', 'X2'])
-        with self.assertRaises(Exception):      
-            parents_of_Y_not_descended_from_X(example, 'A', 'X1')
-        with self.assertRaises(Exception):      
-            parents_of_Y_not_descended_from_X(example, 'U', 'A')
-        
-    # @unittest.skip("")
-    def test_backdoor_path_active_when_conditioning_on_W(self):
-        example = get_path_example()
-        self.assertFalse(backdoor_path_active_when_conditioning_on_W(example, 'X3', 'X2'))
-        self.assertTrue(backdoor_path_active_when_conditioning_on_W(example, 'X3', 'X2', ['D']))
-        self.assertFalse(backdoor_path_active_when_conditioning_on_W(example, 'X1', 'X2'))
-        self.assertFalse(backdoor_path_active_when_conditioning_on_W(example, 'X1', 'X2', ['D']))
-        with self.assertRaises(Exception):      
-            self.assertTrue(backdoor_path_active_when_conditioning_on_W(example, 'A', 'X2', ['D']))
-        with self.assertRaises(Exception):      
-            self.assertTrue(backdoor_path_active_when_conditioning_on_W(example, 'X3', 'X2', ['A']))
-        
+        self.assertFalse(is_active_backdoor_trail(example, 'X3', 'X2'))
+        self.assertTrue(is_active_backdoor_trail(example, 'X3', 'X2', ['D']))
+        self.assertFalse(is_active_backdoor_trail(example, 'X1', 'X2'))
+        self.assertFalse(is_active_backdoor_trail(example, 'X1', 'X2', ['D']))
+        with self.assertRaises(Exception):
+            self.assertTrue(is_active_backdoor_trail(example, 'A', 'X2', ['D']))
+        with self.assertRaises(Exception):
+            self.assertTrue(is_active_backdoor_trail(example, 'X3', 'X2', ['A']))
+
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPATHS)
