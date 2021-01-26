@@ -60,6 +60,8 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.is_s_reachable('D2', 'D1'))
 
         example2 = subgame_difference()
+        example2.draw()
+        example2.draw_strategic_rel_graph()
         self.assertTrue(example2.is_s_reachable('D1', 'D2'))
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 

@@ -41,6 +41,23 @@ def forgetful_movie_star():
     return macid
 
 
+def subgame_difference():
+    macid = MACID([
+        ('N', 'D1'),
+        ('N', 'U1_A'),
+        ('N', 'U2_A'),
+        ('D1', 'U1_A'),
+        ('D1', 'U2_A'),
+        ('D1', 'U1_B'),
+        ('D1', 'U2_B'),
+        ('D1', 'D2'),
+        ('D2', 'U1_B'),
+        ('D2', 'U2_B'),
+        ],
+        {1: {'D': ['D1'], 'U': ['U1_A', 'U1_B']},
+         2: {'D': ['D2'], 'U': ['U2_A', 'U2_B']}})
+    return macid
+
 
 def road_example():
     macid = MACID([

@@ -4,7 +4,7 @@ from core.macid import MACID
 from core.cpd import DecisionDomain
 
 
-def get_basic2agent():
+def get_basic2agent_acyclic():
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
@@ -17,8 +17,7 @@ def get_basic2agent():
     return macid
 
 
-
-def get_basic2agent2():
+def get_basic2agent_cyclic():
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -29,6 +28,7 @@ def get_basic2agent2():
          1: {'D': ['D2'], 'U': ['U2']}})
 
     return macid
+
 
 def get_basic_subgames():
     macid = MACID([
@@ -57,6 +57,32 @@ def get_basic_subgames():
     return macid
 
 
+def get_basic_subgames2():
+    macid = MACID([
+        ('X2', 'U3'),
+        ('X2', 'D1'),
+        ('D3', 'U3'),
+        ('D3', 'U2'),
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U1'),
+        ('D2', 'U2'),
+        ('D4', 'U1'),
+        ('D4', 'D2'),
+        ('D4', 'U4'),
+        ('X1', 'D4'),
+        ('X1', 'U4'),
+        ],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']},
+         3: {'D': ['D3'], 'U': ['U3']},
+         4: {'D': ['D4'], 'U': ['U4']},
+
+         })
+
+    return macid
+
+
 def get_path_example():
     macid = MACID([
         ('X1', 'X3'),
@@ -76,12 +102,6 @@ def example_temp():
         ('X1', 'D1')],
         {1: {'D': ['D1'], 'U': ['U1']}})
     return macid
-
-
-
-
-
-
 
 
 def basic2agent_2():

@@ -278,7 +278,7 @@ class MACIDBase(BayesianModel):
         """
         Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch, 2001)
 
-        A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D
+        A node D2 is s-reachable from a node D1 in a MACID M if there is some utility node U ∈ U_D1 ∩ Desc(D1)
         such that if a new parent D2' were added to D2, there would be an active path in M from
         D2′ to U given Pa(D)∪{D}, where a path is active in a MAID if it is active in the same graph, viewed as a BN.
 
@@ -286,8 +286,9 @@ class MACIDBase(BayesianModel):
         mg = self.mechanism_graph()
         agent = mg.whose_node[d1]
         agent_utilities = mg.utility_nodes_agent[agent]
+        rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
         con_nodes = [d1] + mg.get_parents(d1)
-        is_active_trail = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in agent_utilities])
+        is_active_trail = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
         return is_active_trail
 
     def strategic_rel_graph(self, decisions: List[str] = None) -> nx.DiGraph:

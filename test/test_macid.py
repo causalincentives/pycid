@@ -16,6 +16,7 @@ get_basic_subgames2
 from examples.story_macids import subgame_difference
 from core.get_paths import find_active_path
 
+
 class TestMACID(unittest.TestCase):
 
     @unittest.skip("")
@@ -43,7 +44,7 @@ class TestMACID(unittest.TestCase):
 
     # @unittest.skip("")   
 
-    
+
     def test_temp(self):
         example = subgame_difference()
         example.draw()
