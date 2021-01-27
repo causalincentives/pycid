@@ -83,6 +83,29 @@ def get_basic_subgames2():
     return macid
 
 
+def get_basic_subgame3():
+    macid = MACID([
+        ('D4', 'U4'),
+        ('D2', 'U4'),
+        ('D3', 'U4'),
+        ('D2', 'U2'),
+        ('D3', 'U3'),
+        ('D1', 'U2'),
+        ('D1', 'U3'),
+        ('D1', 'U1')
+        ],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']},
+         3: {'D': ['D3'], 'U': ['U3']},
+         4: {'D': ['D4'], 'U': ['U4']},
+
+         })
+
+    return macid
+
+
+
+
 def get_path_example():
     macid = MACID([
         ('X1', 'X3'),

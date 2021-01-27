@@ -20,6 +20,7 @@ import copy
 import matplotlib.cm as cm
 from core.get_paths import get_motifs, get_motif
 from core.macid_base import MACIDBase
+import copy
 
 
 class MACID(MACIDBase):
@@ -76,7 +77,6 @@ class MACID(MACIDBase):
             idx = SCCs.index(SCC)
             if node in SCC:
                 col = colors[idx]
-                print(type(col))
                 return col
 
     def draw_SCCs(self) -> None:
@@ -94,23 +94,51 @@ class MACID(MACIDBase):
 
   # #----------------cyclic relevance graph methods:--------------------------------------
 
-  
 
-
-    
-
-    def component_graph(self):
+    def condensed_relevance_graph(self):
         """
-        Draw and return the component graph whose nodes are the maximal SCCs of the relevance graph
-        the component graph will always be acyclic. Therefore, we can return a topological ordering.
-        comp_graph.graph['mapping'] returns a dictionary matching the original nodes to the nodes in the new component (condensation) graph
+        Draw and return the condensed_relevance graph whose nodes are the maximal SCCs of the full relevance graph of the original MAID.
+        - The condensed_relevance graph will always be acyclic. Therefore, we can return a topological ordering.
         """
         rg = self.strategic_rel_graph()
-        comp_graph = nx.condensation(rg)
-        nx.draw_networkx(comp_graph, with_labels=True)
-        plt.figure(4)
-        plt.draw()
-        return comp_graph
+        con_rel = nx.condensation(rg)
+        nx.draw_networkx(con_rel, with_labels=True)
+        plt.show()
+        return con_rel
+
+    def decision_nodes_in_maid_subgames(self):
+        """ 
+        Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
+        """
+        con_rel = self.condensed_relevance_graph()
+        # con_rel.graph['mapping'] returns a dictionary matching the original relevance graph's
+        # decision nodes with the SCCs they are in in the condensed relevance graph
+        dec_scc_mapping = con_rel.graph['mapping']
+        # invert the dec_scc_mapping dictionary which contains non-unique values:
+        scc_dec_mapping = {}
+        for k, v in dec_scc_mapping.items():
+            scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
+        
+        con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal SCCs of the MA(C)ID
+        powerset = list(itertools.chain.from_iterable(itertools.combinations(con_rel_sccs, r) 
+                                                      for r in range(1, len(con_rel_sccs)+1)))
+        con_rel_subgames = copy.deepcopy(powerset)
+        for subset in powerset:
+            for node in subset:
+                if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
+                    con_rel_subgames.remove(subset)
+
+        dec_subgames = [[scc_dec_mapping[scc] for scc in con_rel_subgame] for con_rel_subgame in con_rel_subgames]
+
+        return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
+        
+        
+
+
+
+
+
+        #Use itertool permute for possible orderings of c graph bodes and then check descendant requirement holds
 
 #     def get_cyclic_topological_ordering(self):
 #         """first checks whether the strategic relevance graph is cyclic
