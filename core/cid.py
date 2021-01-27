@@ -2,7 +2,6 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
-import logging
 from typing import List, Tuple, Dict
 from core.macid_base import MACIDBase
 
@@ -14,24 +13,8 @@ class CID(MACIDBase):
                  utility_nodes: List[str]):
         super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
 
-    def check_sufficient_recall(self) -> bool:
-        # TODO update to use MACID relevance graph
-        decision_ordering = self._get_valid_order(self.all_decision_nodes)
-        for i, decision1 in enumerate(decision_ordering):
-            for j, decision2 in enumerate(decision_ordering[i + 1:]):
-                for utility in self.all_utility_nodes:
-                    if decision2 in self._get_ancestors_of(utility):
-                        cid_with_policy = self.copy()
-                        cid_with_policy.add_edge('pi', decision1)
-                        observed = cid_with_policy.get_parents(decision2) + [decision2]
-                        connected = cid_with_policy.is_active_trail('pi', utility, observed=observed)
-                        if connected:
-                            logging.warning(
-                            "{} has insufficient recall of {} due to utility {}".format(
-                            decision2, decision1, utility)
-                            )
-                            return False
-        return True
+    def copy_without_cpds(self):
+        return CID(self.edges(), self.all_decision_nodes, self.all_utility_nodes)
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes"""

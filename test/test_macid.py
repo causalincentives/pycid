@@ -45,19 +45,33 @@ class TestMACID(unittest.TestCase):
     # @unittest.skip("")   
 
 
+
     def test_temp(self):
-        example = subgame_difference()
-        example.draw()
+        # example = subgame_difference()
+        # example.draw()
 
-        example.draw_strategic_rel_graph()
-        example.draw_SCCs()
+        # example.draw_strategic_rel_graph()
+        # example.draw_SCCs()
 
-        example2 = example.mechanism_graph()
-        example2.draw()
-        example2.remove_nodes_from(['U1_Amec', 'U2_Amec', 'U1_Bmec', 'U2_Bmec', 'Nmec'])
-        example2.draw()
-        print(find_active_path(example2, 'D2mec', 'U1_B', ['D1', 'N', 'D1mec']))
-        print(find_active_path(example2, 'D1mec', 'U2_A', ['D2', 'D1', 'D2mec']))
+        # example2 = example.copy_without_cpds()
+        # example2.draw()
+
+        # example3 = example.mechanism_graph()
+        # example3.draw()
+
+
+        example4 = get_3node_cid()
+        example4.draw()
+        example5 = example4.mechanism_graph()
+        example5.draw()
+
+
+        # example2 = example.mechanism_graph()
+        # example2.draw()
+        # example2.remove_nodes_from(['U1_Amec', 'U2_Amec', 'U1_Bmec', 'U2_Bmec', 'Nmec'])
+        # example2.draw()
+        # print(find_active_path(example2, 'D2mec', 'U1_B', ['D1', 'N', 'D1mec']))
+        # print(find_active_path(example2, 'D1mec', 'U2_A', ['D2', 'D1', 'D2mec']))
 
 
 

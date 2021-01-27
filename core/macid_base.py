@@ -215,13 +215,15 @@ class MACIDBase(BayesianModel):
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
 
-    def _get_color(self, node: str) -> str:
-        if node in self.all_decision_nodes:
-            return 'lightblue'
-        elif node in self.all_utility_nodes:
-            return 'yellow'
+    def _get_color(self, node: str) -> np.ndarray:
+        """
+        Assign a unique colour with each new agent's decision and utility nodes
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
+        if node in self.all_decision_nodes or node in self.all_utility_nodes:
+            return colors[[self.agents.index(self.whose_node[node])]]
         else:
-            return 'lightgray'
+            return 'lightgray'  # chance node
 
     def _get_shape(self, node: str) -> str:
         if node in self.all_decision_nodes:

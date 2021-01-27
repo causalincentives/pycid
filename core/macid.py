@@ -43,6 +43,13 @@ class MACID(MACIDBase):
 #         self.numDecisions = len(self.reversed_acyclic_ordering)
 #         self.cpds_to_add = {}
 
+
+    def copy_without_cpds(self):
+        return MACID(self.edges(),
+                         {agent: {'D': self.decision_nodes_agent[agent],
+                                  'U': self.utility_nodes_agent[agent]}
+                          for agent in self.agents})
+
     def _get_color(self, node: str) -> np.ndarray:
         """
         Assign a unique colour with each new agent's decision and utility nodes
@@ -51,7 +58,7 @@ class MACID(MACIDBase):
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
             return colors[[self.agents.index(self.whose_node[node])]]
         else:
-            return 'lightgray' #chance node
+            return 'lightgray'  # chance node
 
     def get_SCCs(self) -> List[set]:
         """
