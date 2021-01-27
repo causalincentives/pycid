@@ -28,23 +28,6 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-
-# class MACID(BayesianModel):
-#     def __init__(self, ebunch:List[Tuple[str, str]]=None, node_types:Dict=None, utility_domains:Dict=None ):
-#         super(MACID, self).__init__(ebunch=ebunch)
-#         self.node_types = node_types
-#         self.utility_domains = utility_domains
-#         self.utility_nodes = {i:node_types[i]['U'] for i in node_types if i != 'C'}     # this gives a dictionary matching each agent with their decision and utility nodes
-#         self.decision_nodes = {i:node_types[i]['D'] for i in node_types if i != 'C'}     #  eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
-#         self.chance_nodes = node_types['C']     # list of chance nodes
-#         self.agents = [agent for agent in node_types if agent != 'C']   # gives a list of the MAID's agents
-#         self.all_utility_nodes = list(itertools.chain(*self.utility_nodes.values()))
-#         self.all_decision_nodes = list(itertools.chain(*self.decision_nodes.values()))
-#         self.reversed_acyclic_ordering = list(reversed(self.get_acyclic_topological_ordering()))
-#         self.numDecisions = len(self.reversed_acyclic_ordering)
-#         self.cpds_to_add = {}
-
-
     def copy_without_cpds(self):
         return MACID(self.edges(),
                          {agent: {'D': self.decision_nodes_agent[agent],
@@ -90,23 +73,21 @@ class MACID(MACIDBase):
         nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
         plt.show()
 
-
-
-  # #----------------cyclic relevance graph methods:--------------------------------------
-
-
-    def condensed_relevance_graph(self):
+    def condensed_relevance_graph(self) -> nx.DiGraph:
         """
-        Draw and return the condensed_relevance graph whose nodes are the maximal SCCs of the full relevance graph of the original MAID.
+        Return the condensed_relevance graph whose nodes are the maximal SCCs of the full relevance graph of the original MAID.
         - The condensed_relevance graph will always be acyclic. Therefore, we can return a topological ordering.
         """
         rg = self.strategic_rel_graph()
         con_rel = nx.condensation(rg)
-        nx.draw_networkx(con_rel, with_labels=True)
-        plt.show()
         return con_rel
 
-    def decision_nodes_in_maid_subgames(self):
+    def draw_condensed_relevance_graph(self) -> None:
+        con_rel = self.condensed_relevance_graph()
+        nx.draw_networkx(con_rel, with_labels=True)
+        plt.show()
+
+    def all_maid_subgames(self):
         """ 
         Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
         """

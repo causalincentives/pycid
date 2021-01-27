@@ -203,7 +203,7 @@ class MACIDBase(BayesianModel):
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
-    def copy_without_cpds(self):
+    def copy_without_cpds(self) -> MACIDBase:
         return MACIDBase(self.edges(),
                          {agent: {'D': self.decision_nodes_agent[agent],
                                   'U': self.utility_nodes_agent[agent]}

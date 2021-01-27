@@ -83,7 +83,7 @@ def get_basic_subgames2():
     return macid
 
 
-def get_basic_subgame3():
+def get_basic_subgames3():
     macid = MACID([
         ('D4', 'U4'),
         ('D2', 'U4'),
@@ -102,8 +102,6 @@ def get_basic_subgame3():
          })
 
     return macid
-
-
 
 
 def get_path_example():

@@ -13,7 +13,7 @@ class CID(MACIDBase):
                  utility_nodes: List[str]):
         super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
 
-    def copy_without_cpds(self):
+    def copy_without_cpds(self) -> CID:
         return CID(self.edges(), self.all_decision_nodes, self.all_utility_nodes)
 
     def impute_random_policy(self) -> None:
