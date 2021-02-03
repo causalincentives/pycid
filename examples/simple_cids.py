@@ -120,3 +120,22 @@ def get_insufficient_recall_cid() -> CID:
     cpd_u = TabularCPD('U', 2, np.random.randn(2, 4), evidence=['A', 'B'], evidence_card=[2, 2])
     cid.add_cpds(DecisionDomain('A', [0, 1]), DecisionDomain('B', [0, 1]), cpd_u)
     return cid
+
+def get_trim_example_cid() -> CID:
+    cid = CID([
+        ('Y1', 'D1'),
+        ('Y1', 'Y2'),
+        ('Y1', 'D2'),
+        ('Y2', 'D2'),
+        ('Y2', 'U'),
+        ('D1', 'Y2'),
+        ('D1', 'D2'),
+        ('Z1', 'D1'),
+        ('Z1', 'D2'),
+        ('Z1', 'Z2'),
+        ('Z2', 'D2'),
+        ('D2', 'U'),
+    ],
+        decision_nodes=['D1', 'D2'],
+        utility_nodes=['U'])
+    return cid

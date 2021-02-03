@@ -1,6 +1,6 @@
 """Value of Information
 
-Criterion for Information incentive on X:
+Criterion for Information incentive on node X:
     (i) X is not a descendant of the decision node, D.
     (ii) U∈Desc(D) (U must be a descendant of D)
     (iii) X is d-connected to U | Fa_D\{X}"""
@@ -13,7 +13,7 @@ from core.macid_base import MACIDBase
 
 
 def admits_voi(cid: MACIDBase, decision: str, node: str) -> bool:
-    """Return True if cid admits value of information for node and decision"""
+    """Return True if cid admits value of information for node"""
 
     agent_utils = cid.utility_nodes_agent[cid.whose_node[decision]]  # this agent's utility nodes
 

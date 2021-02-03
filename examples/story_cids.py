@@ -82,6 +82,20 @@ def get_content_recommender() -> CID:
 
     return cid
 
+def get_content_recommender2() -> CID:
+    cid = CID([
+        ('O', 'M'),
+        ('M', 'P'),
+        ('P', 'I'),
+        ('I', 'C'),
+        ('P', 'C'),
+        ],
+        decision_nodes=['P'],
+        utility_nodes=['C']
+        )
+
+    return cid
+
 
 def get_modified_content_recommender() -> CID:
     cid = CID([

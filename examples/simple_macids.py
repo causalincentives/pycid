@@ -4,7 +4,7 @@ from core.macid import MACID
 from core.cpd import DecisionDomain
 
 
-def get_basic2agent_acyclic():
+def get_basic2agent_acyclic() -> MACID:
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
@@ -17,7 +17,7 @@ def get_basic2agent_acyclic():
     return macid
 
 
-def get_basic2agent_cyclic():
+def get_basic2agent_cyclic() -> MACID:
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -30,7 +30,7 @@ def get_basic2agent_cyclic():
     return macid
 
 
-def get_basic_subgames():
+def get_basic_subgames() -> MACID:
     macid = MACID([
         ('D11', 'U11'),
         ('D11', 'U2'),
@@ -57,7 +57,7 @@ def get_basic_subgames():
     return macid
 
 
-def get_basic_subgames2():
+def get_basic_subgames2() -> MACID:
     macid = MACID([
         ('X2', 'U3'),
         ('X2', 'D1'),
@@ -83,7 +83,7 @@ def get_basic_subgames2():
     return macid
 
 
-def get_basic_subgames3():
+def get_basic_subgames3() -> MACID:
     macid = MACID([
         ('D4', 'U4'),
         ('D2', 'U4'),
@@ -104,7 +104,7 @@ def get_basic_subgames3():
     return macid
 
 
-def get_path_example():
+def get_path_example() -> MACID:
     macid = MACID([
         ('X1', 'X3'),
         ('X1', 'D'),
@@ -115,7 +115,7 @@ def get_path_example():
     return macid
 
 
-def example_temp():
+def example_temp() -> MACID:
     macid = MACID([
         ('D1mec', 'D1'),
         ('D1', 'U1'),
@@ -125,7 +125,7 @@ def example_temp():
     return macid
 
 
-def basic2agent_2():
+def basic2agent_2() -> MACID:
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
@@ -158,7 +158,7 @@ def basic2agent_2():
     return macid
 
 
-def basic_rel_agent():
+def basic_rel_agent() -> MACID:
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U2'),
@@ -172,7 +172,7 @@ def basic_rel_agent():
     return macid
 
 
-def basic_rel_agent2():
+def basic_rel_agent2() -> MACID:
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -184,7 +184,7 @@ def basic_rel_agent2():
 
     return macid
 
-def basic_rel_agent3():
+def basic_rel_agent3() -> MACID:
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -199,7 +199,7 @@ def basic_rel_agent3():
 
     return macid
 
-def basic_rel_agent4():
+def basic_rel_agent4() -> MACID:
     macid = MACID([
         ('D1', 'Ch'),
         ('Ch', 'D2'),
@@ -214,7 +214,7 @@ def basic_rel_agent4():
     return macid
 
 
-def basic2agent_3():
+def basic2agent_3() -> MACID:
     from pgmpy.factors.discrete.CPD import TabularCPD
     macid = MACID([
         ('D1', 'D2'),                   # KM_NE should = {'D1': 1, 'D2': 0, 'D3': 1}
@@ -268,7 +268,7 @@ def basic2agent_3():
     return macid
 
 
-def c2d():
+def c2d() -> MACID:
     macid = MACID([
         ('C1', 'U1'),
         ('C1', 'U2'),
