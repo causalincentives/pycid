@@ -30,7 +30,7 @@ class MACID(MACIDBase):
 
     def copy_without_cpds(self):
         return MACID(self.edges(),
-                         {agent: {'D': self.decision_nodes_agent[agent],
+                      {agent: {'D': self.decision_nodes_agent[agent],
                                   'U': self.utility_nodes_agent[agent]}
                           for agent in self.agents})
 

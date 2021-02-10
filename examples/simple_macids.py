@@ -124,6 +124,28 @@ def example_temp() -> MACID:
         {1: {'D': ['D1'], 'U': ['U1']}})
     return macid
 
+def example_temp() -> MACID:
+    macid = MACID([
+        ('D1', 'D2a'),
+        ('D1', 'D2b'),
+        ('X1', 'U1'),
+        ('X1', 'D1')],
+        {1: {'D': ['D1'], 'U': ['U1']}})
+    return macid
+
+
+def temp():
+    macid = MACID([
+        ('X', 'D1'),
+        ('X', 'U1'),
+        ('D1', 'U1'),
+        ('D1', 'D2'),
+        ('D1', 'U2'),
+        ('D2', 'U2')
+        ],
+        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
+    return macid
+
 
 def basic2agent_2() -> MACID:
     macid = MACID([

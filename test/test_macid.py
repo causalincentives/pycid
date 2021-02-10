@@ -12,7 +12,7 @@ from examples.story_cids import get_introduced_bias
 from pgmpy.factors.discrete import TabularCPD
 
 from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, \
-get_basic_subgames2, get_basic_subgames3
+get_basic_subgames2, get_basic_subgames3, temp
 from examples.story_macids import subgame_difference
 from core.get_paths import find_active_path
 import networkx as nx
@@ -37,6 +37,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(len(macid.all_maid_subgames()) == 4)
         macid = get_basic_subgames3()
         self.assertTrue(len(macid.all_maid_subgames()) == 5)
+
 
 
 if __name__ == "__main__":

@@ -8,11 +8,13 @@ from analyze.value_of_information import admits_voi, admits_voi_list
 from core.cpd import FunctionCPD
 
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
-from examples.story_cids import get_introduced_bias, get_content_recommender, get_content_recommender2, get_modified_content_recommender
+from examples.story_cids import get_introduced_bias, get_content_recommender, get_content_recommender2, \
+    get_modified_content_recommender, get_grade_predictor
 from analyze.d_reduction import nonrequisite, d_reduction
-from core.get_paths import find_active_path
+from core.get_paths import find_active_path, find_all_dir_paths
 from analyze.value_of_information import admits_voi_list
-from analyze.value_of_control_UNTESTED import dreduction, has_control_inc, all_control_inc_nodes
+from analyze.value_of_control_UNTESTED import admits_voc, admits_voc_list, admits_ici, admits_ici_list
+from analyze.response_incentive_UNTESTED import admits_ri, admits_ri_list
 
 class TestAnalyze(unittest.TestCase):
 
@@ -81,7 +83,35 @@ class TestAnalyze(unittest.TestCase):
         self.assertCountEqual(reduced_cid.get_parents('D2'), ['Y2'])
 
 
+    def test_value_of_control(self):
+        cid = get_content_recommender()
+        self.assertCountEqual(admits_voc_list(cid, 'P'), ['O', 'I', 'M', 'C'])
+        cid2 = get_modified_content_recommender()
+        self.assertCountEqual(admits_voc_list(cid2, 'P'), ['O', 'M', 'C'])
+        self.assertTrue(admits_voc(cid2, 'P', 'M'))
+        self.assertFalse(admits_voc(cid2, 'P', 'I'))
+        
 
+
+    def test_instrumental_control_incentive(self):
+        cid = get_content_recommender()
+        self.assertTrue(admits_ici(cid, 'P', 'I'))
+        self.assertFalse(admits_ici(cid, 'P', 'O'))
+        self.assertCountEqual(admits_ici_list(cid, 'P'), ['I', 'P', 'C'])
+        
+
+    def test_response_incentive(self):
+        cid = get_grade_predictor()
+        self.assertCountEqual(admits_ri_list(cid, 'P'), ['R', 'HS'])
+        self.assertFalse(admits_ri(cid, 'P', 'E'))
+        self.assertTrue(admits_ri(cid, 'P', 'R'))
+        cid.remove_edge('HS', 'P')
+        self.assertEqual(admits_ri_list(cid, 'P'), [])
+        
+
+        
+
+        
         # cid.draw()
         # print(len(cid.edges))
 

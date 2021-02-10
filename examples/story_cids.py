@@ -111,3 +111,20 @@ def get_modified_content_recommender() -> CID:
     )
 
     return cid
+
+
+def get_grade_predictor() -> CID:
+    cid = CID([
+        ('R', 'HS'),
+        ('HS', 'E'),
+        ('HS', 'P'),
+        ('E', 'Gr'),
+        ('Gr', 'Ac'),
+        ('Ge', 'P'),
+        ('P', 'Ac'),
+        ],
+        decision_nodes=['P'],
+        utility_nodes=['Ac']
+        )
+
+    return cid

@@ -1,26 +1,28 @@
+from core.cid import CID
+from core.macid_base import MACIDBase
+from core.get_paths import find_all_dir_paths
+import networkx as nx
+from analyze.d_reduction import d_reduction
+from typing import List
 
-"""Response incentive
-Criterion for response incentive on X:
-(i) there is a directed path from X--> D in the reduced graph G*
-"""
-
-def has_response_inc(self, node: str, agent):
+def admits_ri(cid: MACIDBase, decision: str, node: str) -> bool:
     """
-    returns True if a node faces a response incentive"
+    Return True if a single-decision cid admits a response incentive on node.
+     - A single decision CID G admits a response incentive on X ∈ V \ {D} if
+    and only if the reduced graph G* min has a directed path X --> D.
     """
-    agent_dec = self.all_decision_nodes[agent] #decision made by this agent (this incentive is currently only proven to hold for the single decision case)
-    agent_utils = self.all_utility_nodes[agent] #this agent's utility nodes
-
-    if len(agent_dec) > 1:
-        return "This incentive currently only applies to the single decision case"
-
-    trimmed_MACID = self.dreduction(agent)
-
-    if agent_dec[0] in nx.descendants(trimmed_MACID, node):
-            return True
+    if node == decision:
+        return False
+        
+    reduced_cid = d_reduction(cid)
+    if find_all_dir_paths(reduced_cid, node, decision): 
+        return True
 
     return False
 
-def all_response_inc_nodes(self, agent):
 
-    return [x for x in list(self.nodes) if self.has_response_inc(x, agent)]
+def admits_ri_list(cid: MACIDBase, decision: str) -> List[str]:
+    """
+    Return list of nodes in single-decision cid that admit a response incentive.
+    """
+    return [x for x in list(cid.nodes) if admits_ri(cid, decision, x)]
