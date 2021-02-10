@@ -2,7 +2,6 @@ from core.cid import CID
 from core.macid_base import MACIDBase
 from core.get_paths import find_all_dir_paths
 import networkx as nx
-from analyze.value_of_information import admits_voi
 from analyze.d_reduction import d_reduction
 from typing import List
 

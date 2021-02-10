@@ -38,6 +38,8 @@ class TestMACID(unittest.TestCase):
         macid = get_basic_subgames3()
         self.assertTrue(len(macid.all_maid_subgames()) == 5)
 
+    def test_temp(self):
+        
 
 
 if __name__ == "__main__":

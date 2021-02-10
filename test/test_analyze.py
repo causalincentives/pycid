@@ -12,9 +12,9 @@ from examples.story_cids import get_introduced_bias, get_content_recommender, ge
     get_modified_content_recommender, get_grade_predictor
 from analyze.d_reduction import nonrequisite, d_reduction
 from core.get_paths import find_active_path, find_all_dir_paths
-from analyze.value_of_information import admits_voi_list
-from analyze.value_of_control_UNTESTED import admits_voc, admits_voc_list, admits_ici, admits_ici_list
-from analyze.response_incentive_UNTESTED import admits_ri, admits_ri_list
+from analyze.value_of_information import admits_voi_list, voi
+from analyze.value_of_control import admits_voc, admits_voc_list, admits_ici, admits_ici_list
+from analyze.response_incentive import admits_ri, admits_ri_list
 
 class TestAnalyze(unittest.TestCase):
 
@@ -61,17 +61,6 @@ class TestAnalyze(unittest.TestCase):
         cid.impute_conditional_expectation_decision('D', 'Y')
         self.assertAlmostEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), 0.333, 2)
 
-    # def test_trim(self):
-    #     cid = get_trim_example_cid()
-    #     cid.draw()
-    #     print(admits_voi_list(cid, 'D2'))
-    #     print(admits_voi_list(cid, 'D1'))        
-       
-        # cid2 = trim(cid)
-
-
-        # cid2.draw()
-
     def test_d_reduction(self):
         cid = get_trim_example_cid()
         self.assertTrue(nonrequisite(cid, 'D2', 'D1'))
@@ -91,15 +80,12 @@ class TestAnalyze(unittest.TestCase):
         self.assertTrue(admits_voc(cid2, 'P', 'M'))
         self.assertFalse(admits_voc(cid2, 'P', 'I'))
         
-
-
     def test_instrumental_control_incentive(self):
         cid = get_content_recommender()
         self.assertTrue(admits_ici(cid, 'P', 'I'))
         self.assertFalse(admits_ici(cid, 'P', 'O'))
         self.assertCountEqual(admits_ici_list(cid, 'P'), ['I', 'P', 'C'])
         
-
     def test_response_incentive(self):
         cid = get_grade_predictor()
         self.assertCountEqual(admits_ri_list(cid, 'P'), ['R', 'HS'])
@@ -108,19 +94,6 @@ class TestAnalyze(unittest.TestCase):
         cid.remove_edge('HS', 'P')
         self.assertEqual(admits_ri_list(cid, 'P'), [])
         
-
-        
-
-        
-        # cid.draw()
-        # print(len(cid.edges))
-
-        # # print(admits_voi_list(cid, 'P'))
-
-        # temp = trim(cid)
-        # print(len(temp.edges))
-        # print(temp.get_parents('D2'))
-        # temp.draw()
 
 
 

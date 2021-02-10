@@ -1,8 +1,9 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
+# %%
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
@@ -15,11 +16,11 @@ class TestCID(unittest.TestCase):
     # @unittest.skip("")
     def test_sufficient_recall(self):
         two_decisions = get_2dec_cid()
-        self.assertTrue(two_decisions.check_sufficient_recall())
+        self.assertTrue(two_decisions.sufficient_recall())
         sequential = get_sequential_cid()
-        self.assertTrue(sequential.check_sufficient_recall())
+        self.assertTrue(sequential.sufficient_recall())
         two_decisions.remove_edge('S2', 'D2')
-        self.assertFalse(two_decisions.check_sufficient_recall())
+        self.assertFalse(two_decisions.sufficient_recall())
 
     # @unittest.skip("")
     def test_solve(self):
@@ -61,3 +62,5 @@ class TestCID(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCID)
     unittest.TextTestRunner().run(suite)
+
+# %%

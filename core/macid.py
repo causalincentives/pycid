@@ -112,209 +112,146 @@ class MACID(MACIDBase):
         dec_subgames = [[scc_dec_mapping[scc] for scc in con_rel_subgame] for con_rel_subgame in con_rel_subgames]
 
         return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
-        
-        
 
 
+#### --------- TODO: All below methods are currently untested as Im going to try and align them with Tom's neater way of doing things!
+
+    def _get_scc_topological_ordering(self):
+        """first checks whether the strategic relevance graph is cyclic
+        if it's cyclic
+        Returns a topological ordering (which might not be unique) of the decision nodes
+        """  
+        con_rel_graph = self.condensed_relevance_graph()
+        return list(nx.topological_sort(con_rel_graph))
 
 
-
-        #Use itertool permute for possible orderings of c graph bodes and then check descendant requirement holds
-
-#     def get_cyclic_topological_ordering(self):
-#         """first checks whether the strategic relevance graph is cyclic
-#         if it's cyclic
-#         returns a topological ordering (which might not be unique) of the decision nodes
-#         """
-#         rg = self.strategic_rel_graph()
-#         if self.strategically_acyclic():
-#             return TypeError(f"Relevance graph is acyclic")
-#         else:
-#             comp_graph = self.component_graph()
-#             return list(nx.topological_sort(comp_graph))
-
-
-#         numSCCs = nx.number_strongly_connected_components(rg)
-#         print(f"num = {numSCCs}")
+    def random_instantiation_dec_nodes(self) -> None:
+        """
+        TODO: Change to using Tom's random instantiation
+        imputes random uniform policy to all decision nodes (NullCPDs) - arbitrary fully mixed strategy profile for MACID   #perhaps add something checking whether it's "isinstance(cpd, NullCPD)" is true
+        """
+        for dec in self.all_decision_nodes:
+            dec_card = self.get_cardinality(dec)
+            parents = self.get_parents(dec)
+            parents_card = [self.get_cardinality(par) for par in parents]
+            table = np.ones((dec_card, np.product(parents_card).astype(int))) / dec_card
+            uniform_cpd = TabularCPD(variable=dec, variable_card=dec_card,
+                                     values=table, evidence=parents,
+                                     evidence_card=parents_card
+                                     )
+            print(uniform_cpd)
+            self.add_cpds(uniform_cpd)
 
 
-#     def _set_color_SCC(self, node, SCCs):
-#         colors = cm.rainbow(np.linspace(0, 1, len(SCCs)))
-#         for SCC in SCCs:
-#             if node in SCC:
-#                 col = colors[SCCs.index(SCC)]
-#         return col
-    
-            
-   
+    def _instantiate_initial_tree(self) -> List[defaultdict]:
+        #creates a tree (a nested dictionary) which we use to fill up with the subgame perfect NE of each sub-tree.
+        cardinalities = map(self.get_cardinality, self.all_decision_nodes)
+        decision_cardinalities = dict(zip(self.all_decision_nodes, cardinalities)) 
 
-# # ---------- methods setting up MACID for probabilistic inference ------
+        #gives number of pure strategies for each decision node (ie taking into account prev decisions)
+        action_space_list = list(itertools.accumulate(decision_cardinalities.values(), operator.mul))  
+        cols_in_each_tree_row = [1] + action_space_list
 
+        actions_for_dec_list = []
+        for card in decision_cardinalities.values():
+            actions_for_dec_list.append(list(range(card))) # appending the range of actions each decion can make as a list
+        # creates entry for final row of decision array (cartesian product of actions_seq_list))
+        final_row_actions = list(itertools.product(*actions_for_dec_list))     
 
+        tree_initial = defaultdict(dict)   # creates a nested dictionary
+        for i in range(0, self.numDecisions+1):
+            for j in range(cols_in_each_tree_row[i]):   # initialises entire decision/action array with empty tuples.
+                tree_initial[i][j] = ()
 
-#     def random_instantiation_dec_nodes(self):
-#         """
-#         imputes random uniform policy to all decision nodes (NullCPDs) - arbitrary fully mixed strategy profile for MACID   #perhaps add something checking whether it's "isinstance(cpd, NullCPD)" is true
-#         """
-#         for dec in self.all_decision_nodes:
-#             dec_card = self.get_cardinality(dec)
-#             parents = self.get_parents(dec)
-#             parents_card = [self.get_cardinality(par) for par in parents]
-#             table = np.ones((dec_card, np.product(parents_card).astype(int))) / dec_card
-#             uniform_cpd = TabularCPD(variable=dec, variable_card=dec_card,
-#                             values=table, evidence=parents,
-#                             evidence_card=parents_card
-#                             )
-#             print(uniform_cpd)
-#             self.add_cpds(uniform_cpd)
+        for i in range(cols_in_each_tree_row[-1]):
+            tree_initial[self.numDecisions][i] = final_row_actions[i]
+
+        trees_queue = [tree_initial]  # list of all possible decision trees
+        return trees_queue
 
 
+    def _reduce_tree_once(self, queue: List[str], bp):
+        #finds node not yet evaluated and then updates tree by evaluating this node - we apply this repeatedly to fill up all nodes in the tree
+        tree = queue.pop(0)
+        for row in range(len(tree) -2, -1,-1):
+            for col in range (0, len(tree[row])):
+                node_full = bool(tree[row][col])
+                if node_full:
+                    continue
+                else:    # if node is empty => update it by finding maximum children
+                    queue_update = self._max_childen(tree, row, col, queue, bp)
+                    return queue_update
+
+    def _max_childen(self, tree, row: int, col: int, queue, bp):
+        # adds to the queue the tree(s) filled with the node updated with whichever child(ren) yield the most utilty for the agent making the decision.
+        cardinalities = map(self.get_cardinality, self.all_decision_nodes)
+        decision_cardinalities = dict(zip(self.all_decision_nodes, cardinalities)) #returns a dictionary matching each decision with its cardinality
+        reversed_acyclic_ordering = list(reversed(self.get_valid_acyclic_dec_node_ordering()))     
+        temp_list = []
+        dec_num_act = decision_cardinalities[reversed_acyclic_ordering[row]]  # number of possible actions for that decision
+        for indx in range(col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering
+            temp_list.append(self._get_ev(tree[row+1][indx], row, bp))
+        max_indexes = [i for i, j in enumerate(temp_list) if j == max(l)]
+
+        for i in range(len(max_indexes)):
+            tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
+            new_tree = copy.deepcopy(tree)
+            queue.append(new_tree)
+        return queue
 
 
+    def _get_ev(self, dec_list: List[int], row: int, bp) -> float:
+        # TODO: use EU in MACIDBASE!
+        #returns the expected value of that decision for the agent making the decision
+        dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
+        agent = self._get_dec_agent(dec)      #gets the agent making that decision
+        utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
+        reversed_acyclic_ordering = list(reversed(self.get_valid_acyclic_dec_node_ordering()))     
 
-# # ----------- methods for finding MACID properties -----------
+        h = bp.query(variables=utils, evidence=dict(zip(reversed_acyclic_ordering, dec_list)))
+        ev = 0
+        for idx, prob in np.ndenumerate(h.values):
+            for i in range(len(utils)): # account for each agent having multiple utilty nodes
+                if prob != 0:
+                    ev += prob*self.utility_domains[utils[i]][idx[i]]
 
-#     def _get_dec_agent(self, dec: str):
-#         """
-#         finds which agent a decision node belongs to
-#         """
-#         for agent, decisions in self.decision_nodes.items():
-#             if dec in decisions:
-#                 return agent
+                        #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
+        return ev
 
-#     def _get_util_agent(self, util: str):
-#         """
-#         finds which agent a utility node belongs to
-#         """
-#         for agent, utilities in self.utility_nodes.items():
-#             if util in utilities:
-#                 return agent
+    def _stopping_condition(self, queue) -> bool:
+        """stopping condition for recursive tree filling"""
+        tree = queue[0]
+        root_node_full = bool(tree[0][0])
+        return root_node_full
 
-#     def get_node_type(self, node):
-#         """
-#         finds a node's type
-#         """
-#         if node in self.chance_nodes:
-#             return 'c'
-#         elif node in self.all_decision_nodes:
-#             return 'p'  #gambit calls decision nodes player nodes
-#         elif node in self.all_utility_nodes:
-#             return 'u'
-#         else:
-#             return "node is not in MACID"
+    def _PSNE_finder(self):
+        """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        - first initialises the maid with uniform random conditional probability distributions at every decision.
+        - then fills up a queue with trees containing each solution
+        - the queue will contain only one entry (tree) if there's only one pure strategy subgame perfect NE"""
+        self.random_instantiation_dec_nodes()
 
+        bp = BeliefPropagation(self)
+        queue = self._instantiate_initial_tree()
+        while not self._stopping_condition(queue):
+            queue = self._reduce_tree_once(queue, bp)
+        return queue
 
-
-
-# -------------Methods for returning all pure strategy subgame perfect NE ------------------------------------------------------------
-
-
-#     def _instantiate_initial_tree(self):
-#         #creates a tree (a nested dictionary) which we use to fill up with the subgame perfect NE of each sub-tree.
-#         cardinalities = map(self.get_cardinality, self.all_decision_nodes)
-#         decision_cardinalities = dict(zip(self.all_decision_nodes, cardinalities)) #returns a dictionary matching each decision with its cardinality
-
-#         action_space_list = list(itertools.accumulate(decision_cardinalities.values(), operator.mul))  #gives number of pure strategies for each decision node (ie taking into account prev decisions)
-#         cols_in_each_tree_row = [1] + action_space_list
-
-#         actions_for_dec_list = []
-#         for card in decision_cardinalities.values():
-#             actions_for_dec_list.append(list(range(card)))     # appending the range of actions each decion can make as a list
-#         final_row_actions = list(itertools.product(*actions_for_dec_list))     # creates entry for final row of decision array (cartesian product of actions_seq_list))
-
-#         tree_initial = defaultdict(dict)   # creates a nested dictionary
-#         for i in range(0, self.numDecisions+1):
-#             for j in range(cols_in_each_tree_row[i]):     #initialises entire decision/action array with empty tuples.
-#                 tree_initial[i][j] = ()
-
-#         for i in range(cols_in_each_tree_row[-1]):
-#             tree_initial[self.numDecisions][i] = final_row_actions[i]
-
-#         trees_queue = [tree_initial]  # list of all possible decision trees
-#         return trees_queue
+    def get_all_PSNE(self) -> List[List[str]]:
+        """yields all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
+        !should still decide how the solutions are best displayed! """
+        solutions = self._PSNE_finder()
+        solution_array = []
+        for tree in solutions:
+            for row in range(len(tree)-1):
+                for col in tree[row]:
+                    chosen_dec = tree[row][col][:row]
+                    matching_of_chosen_dec = zip(self.reversed_acyclic_ordering, chosen_dec)
+                    matching_of_solution = zip(self.reversed_acyclic_ordering, tree[row][col])
+                    solution_array.append((list(matching_of_chosen_dec), list(matching_of_solution)))
+        return solution_array
 
 
-#     def _reduce_tree_once(self, queue:List[str], bp):
-#         #finds node not yet evaluated and then updates tree by evaluating this node - we apply this repeatedly to fill up all nodes in the tree
-#         tree = queue.pop(0)
-#         for row in range(len(tree) -2, -1,-1):
-#             for col in range (0, len(tree[row])):
-#                 node_full = bool(tree[row][col])
-#                 if node_full:
-#                     continue
-#                 else:    # if node is empty => update it by finding maximum children
-#                     queue_update = self._max_childen(tree, row, col, queue, bp)
-#                     return queue_update
-
-#     def _max_childen(self, tree, row: int, col: int, queue, bp):
-#         # adds to the queue the tree(s) filled with the node updated with whichever child(ren) yield the most utilty for the agent making the decision.
-#         cardinalities = map(self.get_cardinality, self.all_decision_nodes)
-#         decision_cardinalities = dict(zip(self.all_decision_nodes, cardinalities)) #returns a dictionary matching each decision with its cardinality
-
-#         l = []
-#         dec_num_act = decision_cardinalities[self.reversed_acyclic_ordering[row]]  # number of possible actions for that decision
-#         for indx in range (col*dec_num_act, (col*dec_num_act)+dec_num_act):   # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all actions that agent is considering
-#             l.append(self._get_ev(tree[row+1][indx], row, bp))
-#         max_indexes = [i for i, j in enumerate(l) if j == max(l)]
-
-#         for i in range(len(max_indexes)):
-#             tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
-#             new_tree = copy.deepcopy(tree)
-#             queue.append(new_tree)
-#         return queue
-
-
-#     def _get_ev(self, dec_list:List[int], row: int, bp):
-#         #returns the expected value of that decision for the agent making the decision
-#         dec = self.reversed_acyclic_ordering[row]   #gets the decision being made on this row
-#         agent = self._get_dec_agent(dec)      #gets the agent making that decision
-#         utils = self.utility_nodes[agent]       #gets the utility nodes for that agent
-
-#         h = bp.query(variables=utils, evidence=dict(zip(self.reversed_acyclic_ordering, dec_list)))
-#         ev = 0
-#         for idx, prob in np.ndenumerate(h.values):
-#             for i in range(len(utils)): # account for each agent having multiple utilty nodes
-#                 if prob != 0:
-#                     ev += prob*self.utility_domains[utils[i]][idx[i]]
-
-#                         #ev += prob*self.utility_values[agent][idx[agent-1]]     #(need agent -1 because idx starts from 0, but agents starts from 1)
-#         return ev
-
-#     def _stopping_condition(self, queue):
-#         """stopping condition for recursive tree filling"""
-#         tree = queue[0]
-#         root_node_full = bool(tree[0][0])
-#         return root_node_full
-
-#     def _PSNE_finder(self):
-#         """this finds all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
-#         - first initialises the maid with uniform random conditional probability distributions at every decision.
-#         - then fills up a queue with trees containing each solution
-#         - the queue will contain only one entry (tree) if there's only one pure strategy subgame perfect NE"""
-#         self.random_instantiation_dec_nodes()
-
-#         bp = BeliefPropagation(self)
-#         queue = self._instantiate_initial_tree()
-#         while not self._stopping_condition(queue):
-#             queue = self._reduce_tree_once(queue, bp)
-#         return queue
-
-#     def get_all_PSNE(self):
-#         """yields all pure strategy subgame perfect NE when the strategic relevance graph is acyclic
-#         !should still decide how the solutions are best displayed! """
-#         solutions = self._PSNE_finder()
-#         solution_array = []
-#         for tree in solutions:
-#             for row in range(len(tree)-1):
-#                 for col in tree[row]:
-#                     chosen_dec = tree[row][col][:row]
-#                     matching_of_chosen_dec = zip(self.reversed_acyclic_ordering, chosen_dec)
-#                     matching_of_solution = zip(self.reversed_acyclic_ordering, tree[row][col])
-#                     solution_array.append((list(matching_of_chosen_dec), list(matching_of_solution)))
-#         return solution_array
-
-
-#             # can adapt how it displays the result (perhaps break into each agent's information sets)
 
 
 

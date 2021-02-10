@@ -1,9 +1,8 @@
-from core.cid import CID
 from core.macid_base import MACIDBase
 from core.get_paths import find_all_dir_paths
-import networkx as nx
 from analyze.d_reduction import d_reduction
 from typing import List
+
 
 def admits_ri(cid: MACIDBase, decision: str, node: str) -> bool:
     """
@@ -13,7 +12,7 @@ def admits_ri(cid: MACIDBase, decision: str, node: str) -> bool:
     """
     if node == decision:
         return False
-        
+
     reduced_cid = d_reduction(cid)
     if find_all_dir_paths(reduced_cid, node, decision): 
         return True
