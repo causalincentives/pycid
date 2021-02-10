@@ -47,6 +47,9 @@ class MACIDBase(BayesianModel):
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
+            if isinstance(cpd, FunctionCPD) and set(cpd.evidence) != set(self.get_parents(cpd.variable)):
+                raise Exception(f"parents {cpd.evidence} of {cpd} " + \
+                                f"don't match graph parents {self.get_parents(cpd.variable)} ")
             self.cpds_to_add[cpd.variable] = cpd
 
         for var in nx.topological_sort(self):
