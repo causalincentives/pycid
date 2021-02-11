@@ -207,12 +207,14 @@ class MACIDBase(BayesianModel):
                                        context, intervene=intervene))
 
     def copy_without_cpds(self) -> MACIDBase:
+        """copy the MACIDBase object without its CPDs"""
         return MACIDBase(self.edges(),
                          {agent: {'D': self.decision_nodes_agent[agent],
                                   'U': self.utility_nodes_agent[agent]}
                           for agent in self.agents})
 
     def copy(self) -> MACIDBase:
+        """copy the MACIDBase object"""
         model_copy = self.copy_without_cpds()
         if self.cpds:
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
@@ -293,8 +295,23 @@ class MACIDBase(BayesianModel):
         agent_utilities = mg.utility_nodes_agent[agent]
         rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
         con_nodes = [d1] + mg.get_parents(d1)
-        is_active_trail = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
-        return is_active_trail
+        s_reachable = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
+        return s_reachable
+
+    def is_r_reachable(self, decision: str, node: str) -> bool:
+        """
+        Determine whether node is r-reachable from decision in the (MA)CID
+        - A node 𝑉 is r-reachable from a decision 𝐷 ∈ 𝑫^𝑖 in a MAID, M = (𝑵, 𝑽, 𝑬), 
+        if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
+        """
+        mg = self.mechanism_graph()
+        agent = mg.whose_node(decision)
+        agent_utilities = mg.utility_nodes_agent[agent]
+        rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, decision)]
+        con_nodes = [decision] + mg.get_parents(decision)
+        r_reachable = any([mg.is_active_trail(node + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
+        return r_reachable
+
 
     def strategic_rel_graph(self, decisions: List[str] = None) -> nx.DiGraph:
         """

@@ -65,6 +65,8 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(example2.is_s_reachable('D1', 'D2'))
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 
+        
+
     # @unittest.skip("")
     def test_is_full_rg_strategically_acyclic(self):
         example = get_basic2agent_acyclic()
