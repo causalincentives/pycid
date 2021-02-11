@@ -40,6 +40,7 @@ def get_fitness_tracker() -> CID:
         ('P', 'SC'),
         ('P', 'F'),
         ('SC', 'C'),
+        ('SC', 'EWD'),
         ],
         decision_nodes=['C'],
         utility_nodes=['F'])

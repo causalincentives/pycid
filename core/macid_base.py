@@ -293,9 +293,9 @@ class MACIDBase(BayesianModel):
         mg = self.mechanism_graph()
         agent = mg.whose_node[d1]
         agent_utilities = mg.utility_nodes_agent[agent]
-        rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
+        descendent_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
         con_nodes = [d1] + mg.get_parents(d1)
-        s_reachable = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
+        s_reachable = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in descendent_agent_utilities])
         return s_reachable
 
     def is_r_reachable(self, decision: str, node: str) -> bool:
@@ -315,7 +315,7 @@ class MACIDBase(BayesianModel):
 
     def strategic_rel_graph(self, decisions: List[str] = None) -> nx.DiGraph:
         """
-        Find the strategic relevance graph for a certain set of decision nodes in the MACID.
+        Find the strategic relevance graph for a set of decision nodes in the MACID.
         Default: the set of decision nodes is all decision nodes in the MAID.
         - an edge D -> D' exists iff D' is s-reachable from D (ie D strategically relies on D')
         """
