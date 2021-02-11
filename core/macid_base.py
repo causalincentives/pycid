@@ -305,7 +305,7 @@ class MACIDBase(BayesianModel):
         if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
         """
         mg = self.mechanism_graph()
-        agent = mg.whose_node(decision)
+        agent = mg.whose_node[decision]
         agent_utilities = mg.utility_nodes_agent[agent]
         rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, decision)]
         con_nodes = [decision] + mg.get_parents(decision)

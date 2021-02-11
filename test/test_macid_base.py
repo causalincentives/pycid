@@ -65,7 +65,18 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(example2.is_s_reachable('D1', 'D2'))
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 
-        
+    # @unittest.skip("")
+    def test_is_r_reachable(self):
+        example = subgame_difference()
+        self.assertFalse(example.is_r_reachable('D2', 'D1'))   
+        self.assertFalse(example.is_r_reachable('D2', 'N'))  
+        self.assertFalse(example.is_r_reachable('D1', 'N'))
+        self.assertTrue(example.is_r_reachable('D1', 'D2'))   
+  
+ 
+
+
+
 
     # @unittest.skip("")
     def test_is_full_rg_strategically_acyclic(self):
