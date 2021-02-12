@@ -293,9 +293,9 @@ class MACIDBase(BayesianModel):
         mg = self.mechanism_graph()
         agent = mg.whose_node[d1]
         agent_utilities = mg.utility_nodes_agent[agent]
-        descendent_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
+        descended_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, d1)]
         con_nodes = [d1] + mg.get_parents(d1)
-        s_reachable = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in descendent_agent_utilities])
+        s_reachable = any([mg.is_active_trail(d2 + "mec", u_node, con_nodes) for u_node in descended_agent_utilities])
         return s_reachable
 
     def is_r_reachable(self, decision: str, node: str) -> bool:
