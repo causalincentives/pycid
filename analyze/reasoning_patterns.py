@@ -1,7 +1,7 @@
 from core.macid_base import MACIDBase
 from core.macid import MACID
 import networkx as nx
-from typing import List
+from typing import List, Dict
 from core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
                 is_active_indirect_frontdoor_trail, is_path_active
 import copy
@@ -17,7 +17,7 @@ def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
             return b
 
 
-def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]):
+def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
     """
     checks whether an effective directed path exists
 
@@ -29,7 +29,7 @@ def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective
     else:
         return False
 
-def _effective_undir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]):
+def _effective_undir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
     """
     checks whether an effective undirected path exists
     """
@@ -41,7 +41,7 @@ def _effective_undir_path_exists(mb: MACIDBase, start: str, finish: str, effecti
         return False
 
 
-def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str]):
+def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str]) -> bool:
     """
     checks whether a path is effective
     """
@@ -53,8 +53,8 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str])
         return False
 
 
-def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish: str, 
-                                               effective_set: List[str], y: List[str] = []):
+def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish: str,
+                                               effective_set: List[str], y: List[str] = []) -> bool:
     """
     checks whether a directed effective path exists that doesn't pass through any of the nodes in the set y.
     """
@@ -67,7 +67,8 @@ def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish
         return False
 
 
-def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, effective_set: List[str], w: List[str]=[]):
+def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, 
+                                                  effective_set: List[str], w: List[str]= []) -> List[str]:
     """
     Returns the effective backdoor path not blocked if we condition on nodes in set w. 
     If no such path exists, this returns False.
@@ -82,7 +83,8 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
         return False
 
 
-def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, effective_set: List[str], w: List[str]=[]):
+def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, 
+                                               effective_set: List[str], w: List[str] = []) -> List[str]:
     """
     returns an effective undirected path not blocked if we condition on nodes in set w. If no such path exists, this returns false.
     """
@@ -92,10 +94,10 @@ def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish
         if _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
     else:
-        return False
+        return None
 
 
-def direct_effect(macid: MACID, decision: str):
+def direct_effect(macid: MACID, decision: str) -> bool:
     """checks to see whether this decision is motivated by a direct effect reasoning patter.
     Graphical Criterion:
     1) There is a directed decision free path from D_A to a utility node U_A
@@ -112,7 +114,7 @@ def direct_effect(macid: MACID, decision: str):
         return False
 
 
-def manipulation(macid: MACID, decision: str, effective_set: List[str]):
+def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     """checks to see whether this decision is motivated by an incentive for manipulation
     Graphical Criterion:
     1) There is a directed decision-free path from D_A to an effective decision node D_B.
@@ -150,7 +152,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]):
         return False
 
 
-def signaling(macid: MACID, decision: str, effective_set: List[str]):
+def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     """checks to see whether this decision is motivated by an incentive for signaling
 
     Graphical Criterion:
@@ -201,7 +203,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]):
         return False
 
 
-def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]):
+def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     """checks to see whether this decision is motivated by an incentive for revealing or denying
 
     Graphical Criterion:
@@ -244,7 +246,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]):
         return False
 
 
-def find_motivations(mb: MACID):
+def find_motivations(mb: MACID) -> Dict[str, str]:
     """ This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over another, when all
     other agents are playing WD strategies (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
