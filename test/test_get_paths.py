@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_3node_cid
 from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, get_path_example
 from core.get_paths import is_active_backdoor_trail, find_active_path, get_motifs, \
-    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, is_active_backdoor_trail, is_path_active, \
+    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, is_active_backdoor_trail, is_active_path, is_path_active, \
     is_active_indirect_frontdoor_trail, _find_all_dirpath_recurse
 from core.macid import MACID
 
@@ -92,17 +92,18 @@ class TestPATHS(unittest.TestCase):
             directed_decision_free_path(example, 'X1', 'A')
 
     # @unittest.skip("")
-    def test_is_path_active(self):
+    def test_is_active_path(self):
         example = get_path_example()
-        self.assertFalse(is_path_active(example, ['X1', 'D', 'U']))
-        self.assertTrue(is_path_active(example, ['X1', 'D', 'U'], ['D']))
-        self.assertTrue(is_path_active(example, ['X1', 'D', 'X2']))
-        self.assertFalse(is_path_active(example, ['X1', 'D', 'X2'], ['D']))
-        self.assertFalse(is_path_active(example, ['X1', 'D', 'X2'], ['U']))
-        with self.assertRaises(Exception):  
-            is_path_active(example, ['X1', 'D', 'A'], ['U'])
-        with self.assertRaises(Exception):  
-            is_path_active(example, ['X1', 'D', 'X2'], ['A'])
+        example.draw()
+        self.assertTrue(is_active_path(example, ['X1', 'D', 'U']))
+        self.assertFalse(is_active_path(example, ['X1', 'D', 'U'], ['D']))
+        self.assertFalse(is_active_path(example, ['X1', 'D', 'X2']))
+        self.assertTrue(is_active_path(example, ['X1', 'D', 'X2'], ['D']))
+        self.assertTrue(is_active_path(example, ['X1', 'D', 'X2'], ['U']))
+        with self.assertRaises(Exception):
+            is_active_path(example, ['X1', 'D', 'A'], ['U'])
+        with self.assertRaises(Exception):
+            is_active_path(example, ['X1', 'D', 'X2'], ['A'])
 
     # @unittest.skip("")
     def test_is_active_indirect_frontdoor_trail(self):

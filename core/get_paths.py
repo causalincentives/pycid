@@ -195,7 +195,7 @@ def _get_path_edges(mb: MACIDBase, path: List[str]) -> List[Tuple[str, str]]:
     return structure
 
 
-def is_path_active(mb: MACIDBase, path: List[str], observed: List[str] = []) -> bool:
+def is_active_path(mb: MACIDBase, path: List[str], observed: List[str] = []) -> bool:
     """
     Check if a specifc path remains active given the 'observed' set of variables.
     """
@@ -205,20 +205,20 @@ def is_path_active(mb: MACIDBase, path: List[str], observed: List[str] = []) -> 
             raise Exception(f"The node {node} is not in the (MA)CID")
 
     if len(path) < 3:
-        return False
+        return True
 
     for _, b, _ in zip(path[:-2], path[1:-1], path[2:]):
         structure = get_motif(mb, path, path.index(b))
 
         if structure in {'fork', 'forward', 'backward'} and b in observed:
-            return True
+            return False
 
         if structure == "collider":
             descendants = nx.descendants(mb, b).union({b})
             if not descendants.intersection(set(observed)):
-                return True
+                return False
 
-    return False
+    return True
 
 
 def is_active_indirect_frontdoor_trail(mb: MACIDBase, start_node: str, end_node: str, observed: List[str] = []) -> bool:
@@ -236,7 +236,7 @@ def is_active_indirect_frontdoor_trail(mb: MACIDBase, start_node: str, end_node:
     start_to_end_paths = find_all_undir_paths(mb, start_node, end_node)
     for path in start_to_end_paths:
         is_frontdoor_path = path[0] in mb.get_parents(path[1])
-        not_blocked_by_observed = not is_path_active(mb, path, observed)
+        not_blocked_by_observed = is_active_path(mb, path, observed)
         contains_collider = "collider" in get_motifs(mb, path)
         # default is False since if w = [], any unobserved collider blocks path
         if is_frontdoor_path and not_blocked_by_observed and contains_collider:
@@ -260,7 +260,7 @@ def is_active_backdoor_trail(mb: MACIDBase, start_node: str, end_node: str, obse
 
         if len(path) > 1:   # must have path of at least 2 nodes
             is_backdoor_path = path[1] in mb.get_parents(path[0])
-            not_blocked_by_observed = not is_path_active(mb, path, observed)
+            not_blocked_by_observed = is_active_path(mb, path, observed)
             if is_backdoor_path and not_blocked_by_observed:
                 return True
     else:

@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 from core.macid import MACID
-from analyze.reasoning_patterns import direct_effect, find_motivations, manipulation, revealing_or_denying, signaling
+from analyze.reasoning_patterns import direct_effect, get_reasoning_patterns, manipulation, revealing_or_denying, signaling
 import unittest
 
 
@@ -60,29 +60,29 @@ class TestReasoning(unittest.TestCase):
         with self.assertRaises(Exception):
             revealing_or_denying(macid, 'D1', effective_set2)
 
-    def test_motivations(self):
+    def test_get_reasoning_patterns(self):
         macid = MACID([('D1', 'U'), ('D2', 'D1')],
                       {1: {'D': ['D1', 'D2'], 'U': ['U']}})
-        self.assertEqual(find_motivations(macid)['dir_effect'], ['D1'])
+        self.assertEqual(get_reasoning_patterns(macid)['dir_effect'], ['D1'])
 
         macid2 = MACID([('D1', 'U2'), ('D1', 'D2'), ('D2', 'U1'), ('D2', 'U2')],
                        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
-        self.assertEqual(find_motivations(macid2)['dir_effect'], ['D2'])
-        self.assertEqual(find_motivations(macid2)['manip'], ['D1'])
+        self.assertEqual(get_reasoning_patterns(macid2)['dir_effect'], ['D2'])
+        self.assertEqual(get_reasoning_patterns(macid2)['manip'], ['D1'])
 
         macid3 = MACID([('X', 'U1'), ('X', 'U2'),
                        ('X', 'D1'), ('D1', 'D2'),
                        ('D2', 'U1'), ('D2', 'U2')],
                        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
-        self.assertEqual(find_motivations(macid3)['dir_effect'], ['D2'])
-        self.assertEqual(find_motivations(macid3)['sig'], ['D1'])
+        self.assertEqual(get_reasoning_patterns(macid3)['dir_effect'], ['D2'])
+        self.assertEqual(get_reasoning_patterns(macid3)['sig'], ['D1'])
 
         macid4 = MACID([('D1', 'X2'), ('X1', 'X2'),
                        ('X2', 'D2'), ('D2', 'U1'),
                        ('D2', 'U2'), ('X1', 'U2')],
                        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
-        self.assertEqual(find_motivations(macid4)['dir_effect'], ['D2'])
-        self.assertEqual(find_motivations(macid4)['rev_den'], ['D1'])
+        self.assertEqual(get_reasoning_patterns(macid4)['dir_effect'], ['D2'])
+        self.assertEqual(get_reasoning_patterns(macid4)['rev_den'], ['D1'])
 
 
 if __name__ == "__main__":
