@@ -8,7 +8,7 @@ import copy
 
 
 def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
-    """ 
+    """
     Returns the key node of a path (ie the first "fork" node in the path)
     """
     for _, b, _ in zip(path[:-2], path[1:-1], path[2:]):
@@ -29,6 +29,7 @@ def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective
     else:
         return False
 
+
 def _effective_undir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
     """
     checks whether an effective undirected path exists
@@ -46,7 +47,8 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str])
     checks whether a path is effective
     """
     dec_nodes_in_path = set(mb.all_decision_nodes).intersection(set(path[1:]))  # exclude first node of the path
-    all_dec_nodes_effective = all(dec_node in effective_set for dec_node in dec_nodes_in_path)   # all([]) evaluates to true => this covers case where path has no decision nodes
+    all_dec_nodes_effective = all(dec_node in effective_set for dec_node in dec_nodes_in_path)
+    # all([]) evaluates to true => this covers case where path has no decision nodes
     if all_dec_nodes_effective:
         return True
     else:
@@ -67,10 +69,10 @@ def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish
         return False
 
 
-def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, 
-                                                  effective_set: List[str], w: List[str]= []) -> List[str]:
+def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
+                                                  effective_set: List[str], w: List[str] = []) -> List[str]:
     """
-    Returns the effective backdoor path not blocked if we condition on nodes in set w. 
+    Returns the effective backdoor path not blocked if we condition on nodes in set w.
     If no such path exists, this returns False.
     """
     start_finish_paths = find_all_undir_paths(mb, start, finish)
@@ -83,10 +85,11 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
         return False
 
 
-def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, 
+def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
                                                effective_set: List[str], w: List[str] = []) -> List[str]:
     """
-    returns an effective undirected path not blocked if we condition on nodes in set w. If no such path exists, this returns false.
+    Returns an effective undirected path not blocked if we condition on nodes in set w.
+    If no such path exists, this returns false.
     """
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
@@ -118,7 +121,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     """checks to see whether this decision is motivated by an incentive for manipulation
     Graphical Criterion:
     1) There is a directed decision-free path from D_A to an effective decision node D_B.
-    2) There is a directed, effective path from D_B to U_A (an effective path is a path in which all 
+    2) There is a directed, effective path from D_B to U_A (an effective path is a path in which all
     decision nodes, except possibly the initial node, and except fork nodes, are effective)
     3) There is a directed, effective path from D_A to U_B that does not pass through D_B.
     """
@@ -237,9 +240,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
                 for u_b in agent_b_utils:
                     decision_b_parents_not_desc_decision = [node for node in macid.get_parents(decision_b)
                                                             if node not in set(nx.descendants(macid, decision))]
-                    
                     cond_nodes = [decision_b] + decision_b_parents_not_desc_decision
-
                     if is_active_indirect_frontdoor_trail(macid, decision, u_b, cond_nodes):
                         return True
     else:
@@ -248,13 +249,14 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
 
 def get_reasoning_patterns(mb: MACID) -> Dict[str, str]:
     """ Return a dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
-    This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over another, when all
-    other agents are playing WD strategies (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
+    This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over
+    another, when all other agents are playing WD strategies.
+    (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
     motivations = {'dir_effect': [], 'sig': [], 'manip': [], 'rev_den': []}
     effective_set = list(mb.all_decision_nodes)
     while True:
-        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set) \
+        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set)
                    or signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
 
         if len(new_set) == len(effective_set):
@@ -272,9 +274,3 @@ def get_reasoning_patterns(mb: MACID) -> Dict[str, str]:
             motivations['rev_den'].append(decision)
 
     return motivations
-
-
-
-
-
-

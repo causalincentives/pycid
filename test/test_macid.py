@@ -1,33 +1,23 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
-import sys, os
+# %%
+import sys
+import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
-import numpy as np
-from examples.simple_cids import get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_minimal_cid
-from examples.story_cids import get_introduced_bias
-from pgmpy.factors.discrete import TabularCPD
-
-from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, \
-get_basic_subgames2, get_basic_subgames3, temp
-from examples.story_macids import subgame_difference
-from core.get_paths import find_active_path
-import networkx as nx
-import itertools
-import copy
+from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_different_dec_cardinality, \
+    get_basic2agent_cyclic, get_basic_subgames, get_basic_subgames2, get_basic_subgames3
 
 
 class TestMACID(unittest.TestCase):
 
     # @unittest.skip("")
-    def test_get_SCCs(self):    
+    def test_get_sccs(self):
         macid = get_basic2agent_cyclic()
-        self.assertEqual(*macid.get_SCCs(), {'D1', 'D2'})
+        self.assertEqual(*macid.get_sccs(), {'D1', 'D2'})
         macid = get_basic_subgames2()
-        self.assertTrue(len(macid.get_SCCs())==3)
+        self.assertTrue(len(macid.get_sccs()) == 3)
 
     # @unittest.skip("")
     def test_all_maid_subgames(self):
@@ -38,13 +28,15 @@ class TestMACID(unittest.TestCase):
         macid = get_basic_subgames3()
         self.assertTrue(len(macid.all_maid_subgames()) == 5)
 
-    def test_temp(self):
-        
+    def test_get_all_pure_spe(self):
+        macid = basic2agent_tie_break()
+        self.assertTrue(len(macid.get_all_pure_spe()) == 2)
+        macid2 = basic2agent()
+        self.assertEqual(macid2.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 0)]])
+        macid3 = basic_different_dec_cardinality()
+        self.assertEqual(macid3.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 2)]])
 
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID)
     unittest.TextTestRunner().run(suite)
-
-
-

@@ -83,6 +83,7 @@ def get_content_recommender() -> CID:
 
     return cid
 
+
 def get_content_recommender2() -> CID:
     cid = CID([
         ('O', 'M'),

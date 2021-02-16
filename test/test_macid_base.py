@@ -1,7 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
@@ -60,31 +60,26 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.is_s_reachable('D2', 'D1'))
 
         example2 = subgame_difference()
-        example2.draw()
-        example2.draw_strategic_rel_graph()
         self.assertTrue(example2.is_s_reachable('D1', 'D2'))
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 
     # @unittest.skip("")
     def test_is_r_reachable(self):
         example = subgame_difference()
-        self.assertFalse(example.is_r_reachable('D2', 'D1'))   
-        self.assertFalse(example.is_r_reachable('D2', 'N'))  
+        self.assertFalse(example.is_r_reachable('D2', 'D1'))
+        self.assertFalse(example.is_r_reachable('D2', 'N'))
         self.assertFalse(example.is_r_reachable('D1', 'N'))
-        self.assertTrue(example.is_r_reachable('D1', 'D2'))   
-  
- 
-
-
-
+        self.assertTrue(example.is_r_reachable('D1', 'D2'))
+        example.draw()
+        example.draw_relevance_graph()
 
     # @unittest.skip("")
-    def test_is_full_rg_strategically_acyclic(self):
+    def test_is_full_relevance_graph_acyclic(self):
         example = get_basic2agent_acyclic()
-        self.assertTrue(example.is_full_rg_strategically_acyclic())
+        self.assertTrue(example.is_full_relevance_graph_acyclic())
 
         example2 = get_basic2agent_cyclic()
-        self.assertFalse(example2.is_full_rg_strategically_acyclic())
+        self.assertFalse(example2.is_full_relevance_graph_acyclic())
 
     # @unittest.skip("")
     def test_get_valid_acyclic_dec_node_ordering(self):

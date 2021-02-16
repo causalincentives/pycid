@@ -50,8 +50,8 @@ def get_basic_subgames() -> MACID:
         ('X2', 'D12'),
         ],
         {0: {'D': ['D11', 'D12'], 'U': ['U11']},
-        1: {'D': ['D2'], 'U': ['U2', 'U22']},
-        2: {'D': ['D3'], 'U': ['U3']},
+         1: {'D': ['D2'], 'U': ['U2', 'U22']},
+         2: {'D': ['D3'], 'U': ['U3']},
          })
 
     return macid
@@ -115,39 +115,40 @@ def get_path_example() -> MACID:
     return macid
 
 
-def example_temp() -> MACID:
+def basic2agent_tie_break() -> MACID:
     macid = MACID([
-        ('D1mec', 'D1'),
-        ('D1', 'U1'),
-        ('X1', 'U1'),
-        ('X1', 'D1')],
-        {1: {'D': ['D1'], 'U': ['U1']}})
-    return macid
-
-def example_temp() -> MACID:
-    macid = MACID([
-        ('D1', 'D2a'),
-        ('D1', 'D2b'),
-        ('X1', 'U1'),
-        ('X1', 'D1')],
-        {1: {'D': ['D1'], 'U': ['U1']}})
-    return macid
-
-
-def temp():
-    macid = MACID([
-        ('X', 'D1'),
-        ('X', 'U1'),
-        ('D1', 'U1'),
         ('D1', 'D2'),
+        ('D1', 'U1'),
         ('D1', 'U2'),
-        ('D2', 'U2')
+        ('D2', 'U2'),
+        ('D2', 'U1'),
         ],
-        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
+
+    cpd_d1 = DecisionDomain('D1', [0, 1])
+    cpd_d2 = DecisionDomain('D2', [0, 1])
+    cpd_u1 = TabularCPD('U1', 6, np.array([[0, 1, 0, 0],
+                                           [0, 0, 0, 1],
+                                           [0, 0, 0, 0],
+                                           [1, 0, 1, 0],
+                                           [0, 0, 0, 0],
+                                           [0, 0, 0, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+    cpd_u2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 0],
+                                           [1, 0, 0, 0],
+                                           [0, 0, 1, 1],
+                                           [0, 0, 0, 0],
+                                           [0, 0, 0, 0],
+                                           [0, 1, 0, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+
     return macid
 
 
-def basic2agent_2() -> MACID:
+def basic2agent() -> MACID:
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
@@ -180,64 +181,7 @@ def basic2agent_2() -> MACID:
     return macid
 
 
-def basic_rel_agent() -> MACID:
-    macid = MACID([
-        ('D1', 'D2'),
-        ('D1', 'U2'),
-        ('D1', 'U1'),
-        ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']},
-         2: {'D': ['D2'], 'U': ['U2']}})
-
-    return macid
-
-
-def basic_rel_agent2() -> MACID:
-    macid = MACID([
-        ('D1', 'U1'),
-        ('D1', 'U2'),
-        ('D2', 'U2'),
-        ('D2', 'U1')
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']},
-         2: {'D': ['D2'], 'U': ['U2']}})
-
-    return macid
-
-def basic_rel_agent3() -> MACID:
-    macid = MACID([
-        ('D1', 'U1'),
-        ('D1', 'U2'),
-        ('D2', 'U2'),
-        ('D2', 'U1'),
-        ('Ch', 'D1'),
-        ('Ch', 'U1'),
-        ('Ch', 'U2')
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']},
-         2: {'D': ['D2'], 'U': ['U2']}})
-
-    return macid
-
-def basic_rel_agent4() -> MACID:
-    macid = MACID([
-        ('D1', 'Ch'),
-        ('Ch', 'D2'),
-        ('Ch', 'U1'),
-        ('Ch', 'U2'),
-        ('D2', 'U1'),
-        ('D2', 'U2')
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']},
-         2: {'D': ['D2'], 'U': ['U2']}},
-        )
-    return macid
-
-
 def basic2agent_3() -> MACID:
-    from pgmpy.factors.discrete.CPD import TabularCPD
     macid = MACID([
         ('D1', 'D2'),                   # KM_NE should = {'D1': 1, 'D2': 0, 'D3': 1}
         ('D1', 'D3'),
@@ -321,4 +265,35 @@ def c2d() -> MACID:
                                            [0, 0, 0, 0, 1, 0, 0, 0]]),
                         evidence=['C1', 'D1', 'D2'], evidence_card=[2, 2, 2])
     macid.add_cpds(cpd_c1, cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def basic_different_dec_cardinality():
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1'),
+        ],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}}
+        )
+
+    cpd_d1 = DecisionDomain('D1', [0, 1])
+    cpd_d2 = DecisionDomain('D2', [0, 1, 2])
+
+    cpd_u1 = TabularCPD('U1', 4, np.array([[0, 0, 1, 0, 0, 0],
+                                           [0, 1, 0, 1, 0, 0],
+                                           [0, 0, 0, 0, 1, 0],
+                                           [1, 0, 0, 0, 0, 1]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 3])
+    cpd_u2 = TabularCPD('U2', 4, np.array([[0, 0, 0, 0, 1, 0],
+                                           [1, 0, 1, 1, 0, 0],
+                                           [0, 1, 0, 0, 0, 0],
+                                           [0, 0, 0, 0, 0, 1]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 3])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+
     return macid

@@ -1,4 +1,3 @@
-#%%
 import sys
 import os
 import unittest
@@ -8,11 +7,9 @@ from analyze.effects import introduced_total_effect, total_effect
 from analyze.value_of_information import admits_voi, admits_voi_list
 from core.cpd import FunctionCPD
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
-from examples.story_cids import get_fitness_tracker, get_introduced_bias, get_content_recommender, get_content_recommender2, \
+from examples.story_cids import get_fitness_tracker, get_introduced_bias, get_content_recommender, \
     get_modified_content_recommender, get_grade_predictor
 from analyze.requisite_graph import nonrequisite, requisite_graph
-from core.get_paths import find_active_path, find_all_dir_paths
-from analyze.value_of_information import admits_voi_list, voi
 from analyze.value_of_control import admits_voc, admits_voc_list
 from analyze.response_incentive import admits_ri, admits_ri_list
 from analyze.instrumental_control_incentive import admits_ici, admits_ici_list

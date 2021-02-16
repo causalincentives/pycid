@@ -1,16 +1,15 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
 import unittest
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_3node_cid
-from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, get_basic_subgames, get_path_example
+from examples.simple_macids import get_basic2agent_acyclic, get_basic_subgames, get_path_example
 from core.get_paths import is_active_backdoor_trail, find_active_path, get_motifs, \
-    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, is_active_backdoor_trail, is_active_path, is_path_active, \
-    is_active_indirect_frontdoor_trail, _find_all_dirpath_recurse
+    get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, \
+    is_active_path, is_active_indirect_frontdoor_trail
 from core.macid import MACID
 
 
@@ -79,7 +78,7 @@ class TestPATHS(unittest.TestCase):
             {1: {'D': ['D'], 'U': ['U']}})
         self.assertEqual(*find_all_undir_paths(example2, 'X1', 'D'), ['X1', 'D'])
         self.assertFalse(find_all_undir_paths(example2, 'X1', 'U'))
-        
+
     # @unittest.skip("")
     def test_directed_decision_free_path(self):
         example = get_basic_subgames()
@@ -88,7 +87,7 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(directed_decision_free_path(example, 'X2', 'U3'))
         self.assertFalse(directed_decision_free_path(example, 'X2', 'U2'))
         self.assertFalse(directed_decision_free_path(example, 'U22', 'U3'))
-        with self.assertRaises(Exception):  
+        with self.assertRaises(Exception):
             directed_decision_free_path(example, 'X1', 'A')
 
     # @unittest.skip("")
@@ -114,9 +113,9 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X3', 'X1'))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X1', 'U'))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X1', 'U', ['D', 'X2']))
-        with self.assertRaises(Exception):      
+        with self.assertRaises(Exception):
             is_active_indirect_frontdoor_trail(example, 'A', 'U', ['D', 'X2'])
-        with self.assertRaises(Exception):  
+        with self.assertRaises(Exception):
             is_active_indirect_frontdoor_trail(example, 'X1', 'U', ['A', 'X2'])
 
     # @unittest.skip("")

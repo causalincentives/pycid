@@ -48,7 +48,7 @@ class MACIDBase(BayesianModel):
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             if isinstance(cpd, FunctionCPD) and set(cpd.evidence) != set(self.get_parents(cpd.variable)):
-                raise Exception(f"parents {cpd.evidence} of {cpd} " + \
+                raise Exception(f"parents {cpd.evidence} of {cpd} " +
                                 f"don't match graph parents {self.get_parents(cpd.variable)} ")
             self.cpds_to_add[cpd.variable] = cpd
 
@@ -300,9 +300,10 @@ class MACIDBase(BayesianModel):
 
     def is_r_reachable(self, decision: str, node: str) -> bool:
         """
-        Determine whether node is r-reachable from decision in the (MA)CID
-        - A node 𝑉 is r-reachable from a decision 𝐷 ∈ 𝑫^𝑖 in a MAID, M = (𝑵, 𝑽, 𝑬), 
+        Determine whether node is r-reachable from decision in the (MA)CID.
+        - A node 𝑉 is r-reachable from a decision 𝐷 ∈ 𝑫^𝑖 in a MAID, M = (𝑵, 𝑽, 𝑬),
         if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
+        - If a node V is r-reachable from a decision D that means D strategically or probabilisticaly relies on V.
         """
         mg = self.mechanism_graph()
         agent = mg.whose_node[decision]
@@ -312,62 +313,63 @@ class MACIDBase(BayesianModel):
         r_reachable = any([mg.is_active_trail(node + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
         return r_reachable
 
-
-    def strategic_rel_graph(self, decisions: List[str] = None) -> nx.DiGraph:
+    def relevance_graph(self, decisions: List[str] = None) -> nx.DiGraph:
         """
-        Find the strategic relevance graph for a set of decision nodes in the MACID.
+        Find the relevance graph for a set of decision nodes in the MACID
+        see: Hammond, L., Fox, J., Everitt, T., Abate, A., & Wooldridge, M. (2021).
+        Equilibrium Refinements for Multi-Agent Influence Diagrams: Theory and Practice.
         Default: the set of decision nodes is all decision nodes in the MAID.
-        - an edge D -> D' exists iff D' is s-reachable from D (ie D strategically relies on D')
+        - an edge D -> D' exists iff D' is r-reachable from D (ie D strategically or probabilistically relies on D')
         """
         if decisions is None:
             decisions = self.all_decision_nodes
-        G = nx.DiGraph()
-        G.add_nodes_from(decisions)
+        rel_graph = nx.DiGraph()
+        rel_graph.add_nodes_from(decisions)
         dec_pair_perms = list(itertools.permutations(decisions, 2))
         for dec_pair in dec_pair_perms:
             if self.is_s_reachable(dec_pair[0], dec_pair[1]):
-                G.add_edge(dec_pair[0], dec_pair[1])
-        return G
+                rel_graph.add_edge(dec_pair[0], dec_pair[1])
+        return rel_graph
 
-    def draw_strategic_rel_graph(self, decisions: List[str] = None) -> None:
+    def draw_relevance_graph(self, decisions: List[str] = None) -> None:
         """
-        Draw the MACID's strategic relevance graph for the given set of decision nodes.
-        Default: draw the strategic relevance graph for all decision nodes in the MACID.
+        Draw the MACID's relevance graph for the given set of decision nodes.
+        Default: draw the relevance graph for all decision nodes in the MACID.
         """
         if decisions is None:
             decisions = self.all_decision_nodes
-        rg = self.strategic_rel_graph(decisions)
+        rg = self.relevance_graph(decisions)
         nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w',
                          edge_color='k', with_labels=True)
         plt.show()
-    
-    def is_full_rg_strategically_acyclic(self) -> bool:
+
+    def is_full_relevance_graph_acyclic(self) -> bool:
         """
-        Finds whether the strategic relevance graph for all of the decision nodes in the MACID is acyclic.
+        Finds whether the relevance graph for all of the decision nodes in the MACID is acyclic.
         """
-        rg = self.strategic_rel_graph()
+        rg = self.relevance_graph()
         return nx.is_directed_acyclic_graph(rg)
 
     def sufficient_recall(self, agent: Union[str, int] = 0):
         """
         Finds whether an agent has sufficient recall in a (MA)CID.
-        Agent i in the MAID has sufficient recall if the strategic relevance graph
+        Agent i in the MAID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
         """
         if agent not in self.agents:
             raise Exception(f"There is no agent {agent}, in this (MA)CID")
 
-        rg = self.strategic_rel_graph(self.decision_nodes_agent[agent])
+        rg = self.relevance_graph(self.decision_nodes_agent[agent])
         return nx.is_directed_acyclic_graph(rg)
 
     def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """
         Return a topological ordering (which might not be unique) of the decision nodes.
-        if the strategic relevance graph is acyclic
+        if the relevance graph is acyclic
         """
-        rg = self.strategic_rel_graph()
-        if not self.is_full_rg_strategically_acyclic():
-            raise Exception('The strategic relevance graph for this MACID is not acyclic and so \
+        rg = self.relevance_graph()
+        if not self.is_full_relevance_graph_acyclic():
+            raise Exception('The relevance graph for this MACID is not acyclic and so \
                         no topological ordering can be immediately given.')
         else:
             return list(nx.topological_sort(rg))

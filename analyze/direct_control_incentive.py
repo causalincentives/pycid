@@ -1,9 +1,8 @@
 from core.cid import CID
-from core.get_paths import find_all_dir_paths
 import networkx as nx
 from analyze.requisite_graph import requisite_graph
 from analyze.value_of_control import admits_voc
-from core.get_paths import is_active_backdoor_trail, find_all_dir_paths
+from core.get_paths import find_all_dir_paths
 from typing import List
 
 

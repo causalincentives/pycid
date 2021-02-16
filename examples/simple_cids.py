@@ -121,6 +121,7 @@ def get_insufficient_recall_cid() -> CID:
     cid.add_cpds(DecisionDomain('A', [0, 1]), DecisionDomain('B', [0, 1]), cpd_u)
     return cid
 
+
 def get_trim_example_cid() -> CID:
     cid = CID([
         ('Y1', 'D1'),
