@@ -128,7 +128,6 @@ class MACID(MACIDBase):
             self.impute_random_decision(dec)  # impute random fully mixed policy to all decision nodes.
 
         bp = BeliefPropagation(self)
-        print(f"type is {type(bp)}")
         queue = self._instantiate_initial_tree()
 
         while not self._stopping_condition(queue):

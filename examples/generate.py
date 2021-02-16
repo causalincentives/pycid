@@ -1,10 +1,14 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
+import sys
+import os
 import random
 from typing import List, Tuple
 from core.cid import CID
-from analyze.get_paths import find_active_path
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
+from core.get_paths import find_active_path
 from core.cpd import DecisionDomain, RandomlySampledFunctionCPD, UniformRandomCPD
 
 
