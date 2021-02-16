@@ -20,7 +20,7 @@ from analyze.direct_control_incentive import admits_dir_voc, admits_dir_voc_list
 class TestAnalyze(unittest.TestCase):
 
     # @unittest.skip("")
-    def test_value_of_information(self):
+    def test_value_of_information(self) -> None:
         cid = get_introduced_bias()
         self.assertTrue(admits_voi(cid, 'D', 'A'))
         self.assertEqual(set(admits_voi_list(cid, 'D')), {'A', 'X', 'Z', 'Y'})
@@ -35,7 +35,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertCountEqual(admits_voi_list(cid2, 'P'), ['R', 'HS', 'E', 'Gr'])
 
     # @unittest.skip("")
-    def testTotalEffect(self):
+    def testTotalEffect(self) -> None:
         cid = get_minimal_cid()
         cid.impute_random_policy()
         self.assertEqual(total_effect(cid, 'A', 'B', 0, 1), 1)
@@ -46,7 +46,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertEqual(total_effect(cid, 'A', 'Y', 0, 1), 0.5)
 
     # @unittest.skip("")
-    def testIntroducedEffect(self):
+    def testIntroducedEffect(self) -> None:
         cid = get_introduced_bias()
         cid.impute_random_policy()
         self.assertEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), -0.5)
@@ -71,7 +71,7 @@ class TestAnalyze(unittest.TestCase):
         cid.impute_conditional_expectation_decision('D', 'Y')
         self.assertAlmostEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), 0.333, 2)
 
-    def test_requisite_graph(self):
+    def test_requisite_graph(self) -> None:
         cid = get_trim_example_cid()
         self.assertTrue(nonrequisite(cid, 'D2', 'D1'))
         self.assertFalse(nonrequisite(cid, 'D2', 'Y2'))
@@ -81,7 +81,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertEqual(len(req_graph.edges), 7)
         self.assertCountEqual(req_graph.get_parents('D2'), ['Y2'])
 
-    def test_value_of_control(self):
+    def test_value_of_control(self) -> None:
         cid = get_content_recommender()
         self.assertCountEqual(admits_voc_list(cid, 'P'), ['O', 'I', 'M', 'C'])
         cid2 = get_modified_content_recommender()
@@ -93,7 +93,7 @@ class TestAnalyze(unittest.TestCase):
         with self.assertRaises(Exception):
             admits_voc(cid2, 'B', 'I')
 
-    def test_instrumental_control_incentive(self):
+    def test_instrumental_control_incentive(self) -> None:
         cid = get_content_recommender()
         self.assertTrue(admits_ici(cid, 'P', 'I'))
         self.assertFalse(admits_ici(cid, 'P', 'O'))
@@ -103,7 +103,7 @@ class TestAnalyze(unittest.TestCase):
         with self.assertRaises(Exception):
             admits_voi(cid, 'B', 'O')
 
-    def test_response_incentive(self):
+    def test_response_incentive(self) -> None:
         cid = get_grade_predictor()
         self.assertCountEqual(admits_ri_list(cid, 'P'), ['R', 'HS'])
         self.assertFalse(admits_ri(cid, 'P', 'E'))
@@ -115,7 +115,7 @@ class TestAnalyze(unittest.TestCase):
         with self.assertRaises(Exception):
             admits_ri(cid, 'B', 'E')
 
-    def test_indirect_value_of_control(self):
+    def test_indirect_value_of_control(self) -> None:
         cid = get_fitness_tracker()
         self.assertFalse(admits_indir_voc(cid, 'C', 'TF'))
         self.assertTrue(admits_indir_voc(cid, 'C', 'SC'))
@@ -125,7 +125,7 @@ class TestAnalyze(unittest.TestCase):
         with self.assertRaises(Exception):
             admits_voi(cid, 'B', 'TF')
 
-    def test_direct_value_of_control(self):
+    def test_direct_value_of_control(self) -> None:
         cid = get_fitness_tracker()
         self.assertFalse(admits_dir_voc(cid, 'C', 'TF'))
         self.assertTrue(admits_dir_voc(cid, 'C', 'F'))

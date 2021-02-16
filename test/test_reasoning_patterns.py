@@ -12,7 +12,7 @@ import unittest
 
 class TestReasoning(unittest.TestCase):
 
-    def test_direct_effect(self):
+    def test_direct_effect(self) -> None:
         macid = MACID([('D1', 'U'), ('D2', 'D1')],
                       {1: {'D': ['D1', 'D2'], 'U': ['U']}})
         self.assertTrue(direct_effect(macid, 'D1'))
@@ -20,7 +20,7 @@ class TestReasoning(unittest.TestCase):
         with self.assertRaises(Exception):
             direct_effect(macid, 'D3')
 
-    def test_manipulation(self):
+    def test_manipulation(self) -> None:
         macid = MACID([('D1', 'U2'), ('D1', 'D2'), ('D2', 'U1'), ('D2', 'U2')],
                       {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}})
         effective_set = ['D2']  # by direct effect
@@ -32,7 +32,7 @@ class TestReasoning(unittest.TestCase):
         with self.assertRaises(Exception):
             manipulation(macid, 'D1', effective_set2)
 
-    def test_signaling(self):
+    def test_signaling(self) -> None:
         macid = MACID([('X', 'U1'), ('X', 'U2'),
                        ('X', 'D1'), ('D1', 'D2'),
                        ('D2', 'U1'), ('D2', 'U2')],
@@ -46,7 +46,7 @@ class TestReasoning(unittest.TestCase):
         with self.assertRaises(Exception):
             signaling(macid, 'D1', effective_set2)
 
-    def test_revealing_or_denying(self):
+    def test_revealing_or_denying(self) -> None:
         macid = MACID([('D1', 'X2'), ('X1', 'X2'),
                        ('X2', 'D2'), ('D2', 'U1'),
                        ('D2', 'U2'), ('X1', 'U2')],
@@ -60,7 +60,7 @@ class TestReasoning(unittest.TestCase):
         with self.assertRaises(Exception):
             revealing_or_denying(macid, 'D1', effective_set2)
 
-    def test_get_reasoning_patterns(self):
+    def test_get_reasoning_patterns(self) -> None:
         macid = MACID([('D1', 'U'), ('D2', 'D1')],
                       {1: {'D': ['D1', 'D2'], 'U': ['U']}})
         self.assertEqual(get_reasoning_patterns(macid)['dir_effect'], ['D1'])

@@ -3,7 +3,7 @@ from core.macid import MACID
 import networkx as nx
 from typing import List, Dict
 from core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
-                is_active_indirect_frontdoor_trail, is_path_active
+                is_active_indirect_frontdoor_trail, is_active_path
 import copy
 
 
@@ -78,7 +78,7 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
         is_backdoor_path = path[1] in mb.get_parents(path[0])
-        not_blocked_by_w = is_path_active(mb, path, w)
+        not_blocked_by_w = is_active_path(mb, path, w)
         if is_backdoor_path and _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
     else:
@@ -93,7 +93,7 @@ def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish
     """
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
-        not_blocked_by_w = is_path_active(mb, path, w)
+        not_blocked_by_w = is_active_path(mb, path, w)
         if _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
     else:

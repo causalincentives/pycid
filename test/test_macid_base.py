@@ -15,7 +15,7 @@ from examples.story_macids import forgetful_movie_star, subgame_difference
 class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
-    def test_assign_cpd(self):
+    def test_assign_cpd(self) -> None:
         three_node = get_3node_cid()
         three_node.add_cpds(TabularCPD('D', 2, np.eye(2), evidence=['S'], evidence_card=[2]))
         three_node.check_model()
@@ -23,7 +23,7 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd, np.array([[1, 0], [0, 1]])))
 
     # @unittest.skip("")
-    def test_query(self):
+    def test_query(self) -> None:
         three_node = get_3node_cid()
         with self.assertRaises(Exception):
             three_node._query(['U'], {})
@@ -31,7 +31,7 @@ class TestBASE(unittest.TestCase):
             three_node._query(['U'], {'D': 0})
 
     # @unittest.skip("")
-    def test_expected_utility(self):
+    def test_expected_utility(self) -> None:
         three_node = get_3node_cid()
         five_node = get_5node_cid()
         eu00 = three_node.expected_utility({'D': 0, 'S': 0})
@@ -44,7 +44,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(eu001, 1)
 
     # @unittest.skip("")
-    def test_intervention(self):
+    def test_intervention(self) -> None:
         cid = get_minimal_cid()
         cid.impute_random_policy()
         self.assertEqual(cid.expected_value(['B'], {})[0], 0.5)
@@ -54,7 +54,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
 
     # @unittest.skip("")
-    def test_is_s_reachable(self):
+    def test_is_s_reachable(self) -> None:
         example = get_basic2agent_acyclic()
         self.assertTrue(example.is_s_reachable('D1', 'D2'))
         self.assertFalse(example.is_s_reachable('D2', 'D1'))
@@ -64,7 +64,7 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 
     # @unittest.skip("")
-    def test_is_r_reachable(self):
+    def test_is_r_reachable(self) -> None:
         example = subgame_difference()
         self.assertFalse(example.is_r_reachable('D2', 'D1'))
         self.assertFalse(example.is_r_reachable('D2', 'N'))
@@ -74,7 +74,7 @@ class TestBASE(unittest.TestCase):
         example.draw_relevance_graph()
 
     # @unittest.skip("")
-    def test_is_full_relevance_graph_acyclic(self):
+    def test_is_full_relevance_graph_acyclic(self) -> None:
         example = get_basic2agent_acyclic()
         self.assertTrue(example.is_full_relevance_graph_acyclic())
 
@@ -82,7 +82,7 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example2.is_full_relevance_graph_acyclic())
 
     # @unittest.skip("")
-    def test_get_valid_acyclic_dec_node_ordering(self):
+    def test_get_valid_acyclic_dec_node_ordering(self) -> None:
         example = get_basic2agent_acyclic()
         self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
 
@@ -91,7 +91,7 @@ class TestBASE(unittest.TestCase):
             example2.get_valid_acyclic_dec_node_ordering()
 
     # @unittest.skip("")
-    def test_mechanism_graph(self):
+    def test_mechanism_graph(self) -> None:
         example = get_basic2agent_acyclic()
         mg = example.mechanism_graph()
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
@@ -99,13 +99,13 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
 
     # @unittest.skip("")
-    def test_copy_without_cpds(self):
+    def test_copy_without_cpds(self) -> None:
         cid = get_3node_cid()
         cid_no_cpds = cid.copy_without_cpds()
         self.assertTrue(len(cid_no_cpds.cpds) == 0)
 
     # @unittest.skip("")
-    def test_sufficient_recall(self):
+    def test_sufficient_recall(self) -> None:
         example = forgetful_movie_star()
         self.assertFalse(example.sufficient_recall(1))
         self.assertTrue(example.sufficient_recall(2))

@@ -29,31 +29,27 @@ def run_notebook(notebook_path):
 
 class TestNotebooks(unittest.TestCase):
 
-    def test_solve_cid_notebook(self):
-        _, errors = run_notebook('notebooks/solve_cid.ipynb')
-        self.assertEqual(len(errors), 0)
-
-    def test_fairness_notebook(self):
+    def test_fairness_notebook(self) -> None:
         _, errors = run_notebook('notebooks/fairness.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_CID_Basics_Tutorial_notebook(self):
+    def test_CID_Basics_Tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/CID_Basics_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_CID_Incentives_Tutorial_notebook(self):
+    def test_CID_Incentives_Tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/CID_Incentives_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_generate_cid_notebook(self):
+    def test_generate_cid_notebook(self) -> None:
         _, errors = run_notebook('notebooks/generate_cid.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_MACID_Basics_Tutorial_notebook(self):
+    def test_MACID_Basics_Tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/MACID_Basics_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_Reasoning_Patterns_Tutorial_notebook(self):
+    def test_Reasoning_Patterns_Tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/Reasoning_Patterns_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 

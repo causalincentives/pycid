@@ -76,7 +76,7 @@ def random_cids(
         for uname in cid.all_utility_nodes:
             for edge in cid.edges:
                 assert uname != edge[0]
-        if cid.check_sufficient_recall():
+        if cid.sufficient_recall():
             cids.append(cid)
 
     return cids

@@ -16,7 +16,7 @@ from core.macid import MACID
 class TestPATHS(unittest.TestCase):
 
     # @unittest.skip("")
-    def test_find_active_path(self):
+    def test_find_active_path(self) -> None:
         example = get_basic2agent_acyclic()
         self.assertEqual(find_active_path(example, 'D1', 'U1', ['D2']), ['D1', 'U1'])
         self.assertFalse(find_active_path(example, 'D1', 'U1', ['D2', 'U1']))
@@ -28,7 +28,7 @@ class TestPATHS(unittest.TestCase):
             find_active_path(example, 'D1', 'U3', ['D2'])
 
     # @unittest.skip("")
-    def test_get_motif(self):
+    def test_get_motif(self) -> None:
         example = get_basic_subgames()
         self.assertEqual(get_motif(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'], 0), 'backward')
         self.assertEqual(get_motif(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'], 1), 'fork')
@@ -41,7 +41,7 @@ class TestPATHS(unittest.TestCase):
             get_motif(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'], 6)
 
     # @unittest.skip("")
-    def test_get_motifs(self):
+    def test_get_motifs(self) -> None:
         example = get_basic_subgames()
         motifs = get_motifs(example, ['D3', 'D2', 'U2', 'D11', 'D12', 'U3'])
         self.assertEqual(motifs, ['backward', 'fork', 'collider', 'fork', 'forward', 'endpoint'])
@@ -49,7 +49,7 @@ class TestPATHS(unittest.TestCase):
             get_motifs(example, ['D3', 'A', 'U2', 'D11', 'D12', 'U3'])
 
     # @unittest.skip("")
-    def test_find_all_dir_paths(self):
+    def test_find_all_dir_paths(self) -> None:
         example = MACID([
             ('A', 'B'),
             ('B', 'C'),
@@ -66,7 +66,7 @@ class TestPATHS(unittest.TestCase):
             find_all_dir_paths(example, 'U2', 'A')
 
     # @unittest.skip("")
-    def test_find_all_undir_paths(self):
+    def test_find_all_undir_paths(self) -> None:
         example = get_3node_cid()
         self.assertTrue(len(find_all_undir_paths(example, 'S', 'U')) == 2)
         with self.assertRaises(Exception):
@@ -80,7 +80,7 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(find_all_undir_paths(example2, 'X1', 'U'))
 
     # @unittest.skip("")
-    def test_directed_decision_free_path(self):
+    def test_directed_decision_free_path(self) -> None:
         example = get_basic_subgames()
         self.assertTrue(directed_decision_free_path(example, 'X1', 'U11'))
         self.assertTrue(directed_decision_free_path(example, 'X2', 'U22'))
@@ -91,7 +91,7 @@ class TestPATHS(unittest.TestCase):
             directed_decision_free_path(example, 'X1', 'A')
 
     # @unittest.skip("")
-    def test_is_active_path(self):
+    def test_is_active_path(self) -> None:
         example = get_path_example()
         example.draw()
         self.assertTrue(is_active_path(example, ['X1', 'D', 'U']))
@@ -105,7 +105,7 @@ class TestPATHS(unittest.TestCase):
             is_active_path(example, ['X1', 'D', 'X2'], ['A'])
 
     # @unittest.skip("")
-    def test_is_active_indirect_frontdoor_trail(self):
+    def test_is_active_indirect_frontdoor_trail(self) -> None:
         example = get_path_example()
         self.assertTrue(is_active_indirect_frontdoor_trail(example, 'X2', 'X1', ['D']))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, 'X2', 'X1'))
@@ -119,7 +119,7 @@ class TestPATHS(unittest.TestCase):
             is_active_indirect_frontdoor_trail(example, 'X1', 'U', ['A', 'X2'])
 
     # @unittest.skip("")
-    def test_is_active_backdoor_trail(self):
+    def test_is_active_backdoor_trail(self) -> None:
         example = get_path_example()
         self.assertFalse(is_active_backdoor_trail(example, 'X3', 'X2'))
         self.assertTrue(is_active_backdoor_trail(example, 'X3', 'X2', ['D']))

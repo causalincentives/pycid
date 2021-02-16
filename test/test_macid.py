@@ -13,14 +13,14 @@ from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_dif
 class TestMACID(unittest.TestCase):
 
     # @unittest.skip("")
-    def test_get_sccs(self):
+    def test_get_sccs(self) -> None:
         macid = get_basic2agent_cyclic()
         self.assertEqual(*macid.get_sccs(), {'D1', 'D2'})
         macid = get_basic_subgames2()
         self.assertTrue(len(macid.get_sccs()) == 3)
 
     # @unittest.skip("")
-    def test_all_maid_subgames(self):
+    def test_all_maid_subgames(self) -> None:
         macid = get_basic2agent_cyclic()
         self.assertCountEqual(*macid.all_maid_subgames(), {'D1', 'D2'})
         macid = get_basic_subgames()
@@ -28,7 +28,7 @@ class TestMACID(unittest.TestCase):
         macid = get_basic_subgames3()
         self.assertTrue(len(macid.all_maid_subgames()) == 5)
 
-    def test_get_all_pure_spe(self):
+    def test_get_all_pure_spe(self) -> None:
         macid = basic2agent_tie_break()
         self.assertTrue(len(macid.get_all_pure_spe()) == 2)
         macid2 = basic2agent()

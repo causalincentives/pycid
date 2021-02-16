@@ -16,13 +16,13 @@ import unittest
 
 class TestExamples(unittest.TestCase):
 
-    def test_random_cid(self):
+    def test_random_cid(self) -> None:
         random_cid(4, 1, 1)
         random_cid(8, 2, 2)
         random_cid(12, 3, 3)
         random_cids(n_cids=1)[0]
 
-    def test_simple_cid_examples(self):
+    def test_simple_cid_examples(self) -> None:
         get_minimal_cid()
         get_5node_cid()
         get_5node_cid()
@@ -30,7 +30,7 @@ class TestExamples(unittest.TestCase):
         get_2dec_cid()
         get_insufficient_recall_cid()
 
-    def test_simple_macid_examples(self):
+    def test_simple_macid_examples(self) -> None:
         get_basic2agent_acyclic
         get_basic2agent_cyclic
         basic2agent
@@ -39,14 +39,14 @@ class TestExamples(unittest.TestCase):
         c2d()
         sequential()
 
-    def test_story_cid_examples(self):
+    def test_story_cid_examples(self) -> None:
         get_introduced_bias()
         get_car_accident_predictor()
         get_fitness_tracker()
         get_content_recommender()
         get_modified_content_recommender()
 
-    def test_story_macid_examples(self):
+    def test_story_macid_examples(self) -> None:
         tree_doctor()
         road_example()
         basic2agent_3()
