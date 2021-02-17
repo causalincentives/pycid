@@ -39,6 +39,7 @@ def _find_active_path_recurse(mb: MACIDBase, path: List[str],
             ext = _find_active_path_recurse(mb, path + [neighbour], end_node, observed)
             if ext:
                 return ext
+    return []  # should never happen
 
 
 def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: List[str] = []) -> List[str]:
