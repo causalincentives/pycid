@@ -13,6 +13,7 @@ from collections import defaultdict
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
+from __future__ import annotations
 
 
 class MACID(MACIDBase):
@@ -20,7 +21,7 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-    def copy_without_cpds(self):
+    def copy_without_cpds(self) -> MACID:
         return MACID(self.edges(),
                      {agent: {'D': self.decision_nodes_agent[agent],
                               'U': self.utility_nodes_agent[agent]}
