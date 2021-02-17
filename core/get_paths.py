@@ -107,11 +107,11 @@ def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> 
 
     if path[-1] == end_node:
         return [path]
-    paths = []
+    path_extensions = []
     children = mb.get_children(path[-1])
     for child in children:
-        paths.extend(_find_all_dirpath_recurse(mb, path + [child], end_node))
-    return paths
+        path_extensions.extend(_find_all_dirpath_recurse(mb, path + [child], end_node))
+    return path_extensions
 
 
 def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
