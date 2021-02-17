@@ -95,7 +95,7 @@ class MACIDBase(BayesianModel):
         @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple) -> Any:
             nonlocal descendant_utility_nodes
-            context = {p: pv[i] for i, p in enumerate(parents)}
+            context : Dict[str, int] = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
                 context[d] = d_idx
@@ -124,7 +124,7 @@ class MACIDBase(BayesianModel):
             mg.add_edge(node + "mec", node)
         return mg
 
-    def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None):
+    def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).
@@ -202,7 +202,8 @@ class MACIDBase(BayesianModel):
 
         For example:
         cid = get_minimal_cid()
-        out = self.expected_utility({'D':1}) #TODO: give example that uses context"""
+        out = self.expected_utility({'D':1}) #TODO: give example that uses context
+        """
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
