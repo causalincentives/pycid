@@ -103,7 +103,7 @@ class FunctionCPD(TabularCPD):
     def __str__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
-    def parent_values(self, cid: BayesianModel) -> Union[List[List], None]:
+    def parent_values(self, cid: BayesianModel) -> List[List]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values = []
         for p in self.evidence:
@@ -111,7 +111,7 @@ class FunctionCPD(TabularCPD):
             if p_cpd and hasattr(p_cpd, 'state_names'):
                 parent_values.append(p_cpd.state_names[p])
             else:
-                return None
+                return []
         return parent_values
 
     def possible_values(self, cid: BayesianModel) -> Union[List[List], None]:

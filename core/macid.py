@@ -13,6 +13,7 @@ from collections import defaultdict
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
+from __future__ import annotations
 
 
 class MACID(MACIDBase):

@@ -95,10 +95,10 @@ class MACIDBase(BayesianModel):
         @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple) -> Any:
             nonlocal descendant_utility_nodes
-            context: Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
+            context : Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
-                context[d] = d_idx
+                context[d] = d_idx  # TODO should this be id2name[d_idx]?
                 eu.append(new.expected_value(descendant_utility_nodes, context))
             return idx2name[np.argmax(eu)]
 
@@ -194,7 +194,7 @@ class MACIDBase(BayesianModel):
             if np.isnan(ev).any():
                 raise Exception("query {} | {} generated Nan from idx: {}, prob: {}, \
                                 consider imputing a random decision".format(variables, context, idx, prob))
-        return ev.tolist()
+        return ev.tolist()  # type: ignore
 
     def expected_utility(self, context: Dict["str", "Any"],
                          intervene: dict = None, agent: Union[str, int] = 0) -> float:
@@ -349,7 +349,7 @@ class MACIDBase(BayesianModel):
         Finds whether the relevance graph for all of the decision nodes in the MACID is acyclic.
         """
         rg = self.relevance_graph()
-        return nx.is_directed_acyclic_graph(rg)
+        return nx.is_directed_acyclic_graph(rg)  # type: ignore
 
     def sufficient_recall(self, agent: Union[str, int] = 0) -> bool:
         """
@@ -361,7 +361,7 @@ class MACIDBase(BayesianModel):
             raise Exception(f"There is no agent {agent}, in this (MA)CID")
 
         rg = self.relevance_graph(self.decision_nodes_agent[agent])
-        return nx.is_directed_acyclic_graph(rg)
+        return nx.is_directed_acyclic_graph(rg)  # type: ignore
 
     def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
         """
