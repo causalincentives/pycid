@@ -1,8 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
 from core.macid_base import MACIDBase
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Union
 import networkx as nx
 
 
@@ -10,7 +9,7 @@ def _active_neighbours(mb: MACIDBase, path: List[str], observed: List[str]) -> S
     """Find possibly active extensions of path conditional on the `observed' set of nodes."""
     end_of_path = path[-1]
     last_forward = len(path) > 1 and end_of_path in mb.get_children(path[-2])
-    possible_colliders = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])
+    possible_colliders: Set[str] = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])
 
     # if going upward or at a possible collider, it's possible to continue to a parent
     if end_of_path in possible_colliders or not last_forward:
@@ -48,7 +47,7 @@ def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Li
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    
+
     return _find_active_path_recurse(mb, [start_node], end_node, observed)
 
 
@@ -80,7 +79,7 @@ def get_motif(mb: MACIDBase, path: List[str], idx: int) -> str:
         return 'fork'
 
     else:
-        ValueError(f"unsure how to classify this path at index {idx}")
+        raise Exception(f"unsure how to classify this path at index {idx}")
 
 
 def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
@@ -102,7 +101,8 @@ def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
     return shapes
 
 
-def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str, all_paths: List[List[str]]) -> List[List[str]]:
+def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
+                              all_paths: List[List[str]]) -> Union[List[List[str]], List[str]]:
     """Find all directed paths beginning with 'path' as a prefix and ending at the end node"""
 
     if path[-1] == end_node:
@@ -127,11 +127,12 @@ def find_all_dir_paths(mb: MACIDBase, start: str, end_node: str) -> List[List[st
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    all_paths = []
+    all_paths: List[List[str]] = []
     return _find_all_dirpath_recurse(mb, [start], end_node, all_paths)
 
 
-def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str, all_paths: str) -> List[List[str]]:
+def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
+                                all_paths: List[List[str]]) -> List[List[str]]:
     """Find all undirected paths beginning with 'path' as a prefix and ending at the end node"""
 
     if path[-1] == end_node:
@@ -157,7 +158,7 @@ def find_all_undir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    all_paths = []
+    all_paths: List[List[str]] = []
     return _find_all_undirpath_recurse(mb, [start_node], end_node, all_paths)
 
 
@@ -184,7 +185,7 @@ def _get_path_edges(mb: MACIDBase, path: List[str]) -> List[Tuple[str, str]]:
     Returns the structure of a path's edges as a list of pairs.
     In each pair, the first argument states where an edge starts and the second argument states
     where that same edge finishes. For example, if a (colliding) path is D1 -> X <- D2, this function
-    returns: [('D1', 'X'), ('D2', 'X')] 
+    returns: [('D1', 'X'), ('D2', 'X')]
     """
     structure = []
     for i in range(len(path) - 1):

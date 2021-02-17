@@ -59,8 +59,8 @@ def get_5node_cid_with_scaled_utility() -> CID:
         utility_nodes=['U1', 'U2'])
     cpd_s1 = UniformRandomCPD('S1', [0, 1])
     cpd_s2 = UniformRandomCPD('S2', [0, 1])
-    cpd_u1 = FunctionCPD('U1', lambda s1, d: 10*int(s1 == d), evidence=['S1', 'D'])
-    cpd_u2 = FunctionCPD('U2', lambda s2, d: 2*int(s2 == d), evidence=['S2', 'D'])
+    cpd_u1 = FunctionCPD('U1', lambda s1, d: 10 * int(s1 == d), evidence=['S1', 'D'])
+    cpd_u2 = FunctionCPD('U2', lambda s2, d: 2 * int(s2 == d), evidence=['S2', 'D'])
     cpd_d = DecisionDomain('D', [0, 1])
     cid.add_cpds(cpd_d, cpd_s1, cpd_s2, cpd_u1, cpd_u2)
     return cid

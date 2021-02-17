@@ -1,5 +1,5 @@
 import numpy as np
-from pgmpy.factors.discrete import TabularCPD
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from core.macid import MACID
 from core.cpd import DecisionDomain
 
@@ -10,8 +10,7 @@ def get_basic2agent_acyclic() -> MACID:
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
+        ('D2', 'U1')],
         {1: {'D': ['D1'], 'U': ['U1']},
          2: {'D': ['D2'], 'U': ['U2']}})
     return macid
@@ -22,8 +21,8 @@ def get_basic2agent_cyclic() -> MACID:
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
+        ('D2', 'U1')],
+
         {0: {'D': ['D1'], 'U': ['U1']},
          1: {'D': ['D2'], 'U': ['U2']}})
 
@@ -47,12 +46,10 @@ def get_basic_subgames() -> MACID:
         ('D12', 'U3'),
         ('D12', 'U22'),
         ('X2', 'U22'),
-        ('X2', 'D12'),
-        ],
+        ('X2', 'D12')],
         {0: {'D': ['D11', 'D12'], 'U': ['U11']},
          1: {'D': ['D2'], 'U': ['U2', 'U22']},
-         2: {'D': ['D3'], 'U': ['U3']},
-         })
+         2: {'D': ['D3'], 'U': ['U3']}})
 
     return macid
 
@@ -71,14 +68,11 @@ def get_basic_subgames2() -> MACID:
         ('D4', 'D2'),
         ('D4', 'U4'),
         ('X1', 'D4'),
-        ('X1', 'U4'),
-        ],
+        ('X1', 'U4')],
         {1: {'D': ['D1'], 'U': ['U1']},
          2: {'D': ['D2'], 'U': ['U2']},
          3: {'D': ['D3'], 'U': ['U3']},
-         4: {'D': ['D4'], 'U': ['U4']},
-
-         })
+         4: {'D': ['D4'], 'U': ['U4']}})
 
     return macid
 
@@ -92,8 +86,7 @@ def get_basic_subgames3() -> MACID:
         ('D3', 'U3'),
         ('D1', 'U2'),
         ('D1', 'U3'),
-        ('D1', 'U1')
-        ],
+        ('D1', 'U1')],
         {1: {'D': ['D1'], 'U': ['U1']},
          2: {'D': ['D2'], 'U': ['U2']},
          3: {'D': ['D3'], 'U': ['U3']},
@@ -121,8 +114,7 @@ def basic2agent_tie_break() -> MACID:
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
+        ('D2', 'U1')],
         {0: {'D': ['D1'], 'U': ['U1']},
          1: {'D': ['D2'], 'U': ['U2']}})
 
@@ -154,8 +146,7 @@ def basic2agent() -> MACID:
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
+        ('D2', 'U1')],
         {0: {'D': ['D1'], 'U': ['U1']},
          1: {'D': ['D2'], 'U': ['U2']}})
 
@@ -194,8 +185,7 @@ def basic2agent_3() -> MACID:
         ('D2', 'U3'),
         ('D3', 'U1'),
         ('D3', 'U2'),
-        ('D3', 'U3'),
-        ],
+        ('D3', 'U3')],
         {0: {'D': ['D1'], 'U': ['U1']},
          1: {'D': ['D2'], 'U': ['U2']},
          2: {'D': ['D3'], 'U': ['U3']}})
@@ -244,8 +234,7 @@ def c2d() -> MACID:
         ('D1', 'D2'),
         ('D2', 'U1'),
         ('D2', 'U2'),
-        ('C1', 'D2'),
-        ],
+        ('C1', 'D2')],
         {0: {'D': ['D1'], 'U': ['U1']},
          1: {'D': ['D2'], 'U': ['U2']}})
 
@@ -268,17 +257,15 @@ def c2d() -> MACID:
     return macid
 
 
-def basic_different_dec_cardinality():
+def basic_different_dec_cardinality() -> MACID:
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D2', 'U2'),
-        ('D2', 'U1'),
-        ],
+        ('D2', 'U1')],
         {0: {'D': ['D1'], 'U': ['U1']},
-         1: {'D': ['D2'], 'U': ['U2']}}
-        )
+         1: {'D': ['D2'], 'U': ['U2']}})
 
     cpd_d1 = DecisionDomain('D1', [0, 1])
     cpd_d2 = DecisionDomain('D2', [0, 1, 2])

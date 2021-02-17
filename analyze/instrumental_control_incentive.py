@@ -6,7 +6,7 @@ from typing import List
 def admits_ici(cid: CID, decision: str, node: str) -> bool:
     """
     Return True if a single-decision cid admits an instrumental control incentive on node.
-    - A single-decision CID G admits an instrumental control incentive on X ∈ V 
+    - A single-decision CID G admits an instrumental control incentive on X ∈ V
         if and only if G has a directed path from the decision D to a utility node U ∈ U that passes through X,
         i.e. a directed path D --> X --> U.
     """

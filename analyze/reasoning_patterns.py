@@ -1,13 +1,13 @@
 from core.macid_base import MACIDBase
 from core.macid import MACID
 import networkx as nx
-from typing import List, Dict
+from typing import Any, List, Dict, Union
 from core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
-                is_active_indirect_frontdoor_trail, is_active_path
+    is_active_indirect_frontdoor_trail, is_active_path
 import copy
 
 
-def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
+def _get_key_node(mb: MACIDBase, path: List[str]) -> Union[str, None]:
     """
     Returns the key node of a path (ie the first "fork" node in the path)
     """
@@ -15,6 +15,7 @@ def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
         structure = get_motif(mb, path, path.index(b))
         if structure == "fork":
             return b
+    return None
 
 
 def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
@@ -69,11 +70,11 @@ def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish
         return False
 
 
-def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
-                                                  effective_set: List[str], w: List[str] = []) -> List[str]:
+def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, effective_set: List[str],
+                                                  w: List[str] = []) -> Union[List[str], None]:
     """
     Returns the effective backdoor path not blocked if we condition on nodes in set w.
-    If no such path exists, this returns False.
+    If no such path exists, this returns None.
     """
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
@@ -82,14 +83,14 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
         if is_backdoor_path and _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
     else:
-        return False
+        return None
 
 
 def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
-                                               effective_set: List[str], w: List[str] = []) -> List[str]:
+                                               effective_set: List[str], w: List[str] = []) -> Union[List[str], None]:
     """
     Returns an effective undirected path not blocked if we condition on nodes in set w.
-    If no such path exists, this returns false.
+    If no such path exists, this returns None.
     """
     start_finish_paths = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
@@ -195,7 +196,10 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
                     if _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set, cond_nodes):
                         path = _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set,
                                                                              cond_nodes)
-                        key_node = _get_key_node(macid, path)
+                        if _get_key_node(macid, path):
+                            key_node = _get_key_node(macid, path)
+                        else:
+                            return False
                         decision_parents_not_desc_key_node = [node for node in macid.get_parents(decision)
                                                               if node not in set(nx.descendants(macid, key_node))]
                         cond_nodes2 = [decision] + decision_parents_not_desc_key_node
@@ -247,17 +251,17 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
         return False
 
 
-def get_reasoning_patterns(mb: MACID) -> Dict[str, str]:
+def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
     """ Return a dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
     This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over
     another, when all other agents are playing WD strategies.
     (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
-    motivations = {'dir_effect': [], 'sig': [], 'manip': [], 'rev_den': []}
+    motivations: Dict[str, List[str]] = {'dir_effect': [], 'sig': [], 'manip': [], 'rev_den': []}
     effective_set = list(mb.all_decision_nodes)
     while True:
-        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set)
-                   or signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
+        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set) or
+                   signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
 
         if len(new_set) == len(effective_set):
             break

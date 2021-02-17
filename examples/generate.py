@@ -33,7 +33,7 @@ def random_cid(
             assert uname != edge[0]
 
     for i, d1 in enumerate(decision_names):
-        for j, d2 in enumerate(decision_names[i+1:]):
+        for j, d2 in enumerate(decision_names[i + 1:]):
             assert d2 not in cid._get_ancestors_of(d1)
 
     if add_sr_edges:
@@ -57,13 +57,12 @@ def random_cids(
         edge_density: float = .4,
         n_cids: int = 10,
         seed: int = None,
-        add_sr_edges=True,
-        ):
+        add_sr_edges: bool = True) -> List[CID]:
     """generates a bunch of CIDs with sufficient recall
 
     if add_sr_edges=True, then sufficient recall is ensured by adding edges
     otherwise it is ensured by resampling graphs"""
-    cids = []
+    cids: List[CID] = []
 
     while len(cids) < n_cids:
         n_all = random.randint(*ns_range)
@@ -82,7 +81,7 @@ def random_cids(
     return cids
 
 
-def get_node_names(n_all: int, n_decisions: int, n_utilities: int):
+def get_node_names(n_all: int, n_decisions: int, n_utilities: int) -> Tuple[List[str], List[str], List[str]]:
     """examples lists of node names for decision, utility, and chance nodes"""
     n_structural = n_all - n_decisions - n_utilities
     structure_names = ['S{}'.format(i) for i in range(n_structural)]
@@ -108,14 +107,13 @@ def get_edges(
         names: List[str],
         utility_names: List[str],
         edge_density: float,
-        seed=None,
-        allow_u_edges=False,
-        ):
+        seed: int = None,
+        allow_u_edges: bool = False) -> List[Tuple[str, str]]:
     random.seed(seed)
     edges = []
     nodes_with_edges = set()
     for i, name1 in enumerate(names):
-        for name2 in names[i+1:]:
+        for name2 in names[i + 1:]:
             if random.random() < edge_density:
                 if allow_u_edges or name1 not in utility_names:
                     edges.append((name1, name2))
@@ -155,7 +153,7 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
         while True:
             i = random.randrange(1, len(path) - 1)
             # print('consider {}--{}--{}'.format(path[i-1], path[i], path[i+1]),end='')
-            collider = ((path[i-1], path[i]) in cid2.edges) and ((path[i+1], path[i]) in cid2.edges)
+            collider = ((path[i - 1], path[i]) in cid2.edges) and ((path[i + 1], path[i]) in cid2.edges)
             if not collider:
                 if dec2 not in cid2._get_ancestors_of(path[i]):
                     # print('add {}->{}'.format(path[i], dec2), end=' ')
@@ -169,7 +167,7 @@ def add_sufficient_recalls(cid: CID) -> None:
     for utility_node in cid.all_utility_nodes:
         # decisions = cid._get_valid_order(cid.decision_nodes)  # cannot be trusted...
         for i, dec1 in enumerate(cid.all_decision_nodes):
-            for dec2 in cid.all_decision_nodes[i+1:]:
+            for dec2 in cid.all_decision_nodes[i + 1:]:
                 if dec1 in cid._get_ancestors_of(dec2):
                     _add_sufficient_recall(cid, dec1, dec2, utility_node)
                 else:

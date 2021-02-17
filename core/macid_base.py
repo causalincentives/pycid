@@ -25,8 +25,8 @@ class MACIDBase(BayesianModel):
         # dictionary matching each agent with their decision and utility nodes eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}
         self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}
-        self.all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
-        self.all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
+        self.all_decision_nodes: List[str] = list(set().union(*list(self.decision_nodes_agent.values())))
+        self.all_utility_nodes: List[str] = list(set().union(*list(self.utility_nodes_agent.values())))
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
         self.whose_node = {}
         for agent in self.agents:
@@ -48,8 +48,8 @@ class MACIDBase(BayesianModel):
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             if isinstance(cpd, FunctionCPD) and set(cpd.evidence) != set(self.get_parents(cpd.variable)):
-                raise Exception(f"parents {cpd.evidence} of {cpd} " +
-                                f"don't match graph parents {self.get_parents(cpd.variable)} ")
+                raise Exception(f"parents {cpd.evidence} of {cpd} " + f"don't match graph parents \
+                                {self.get_parents(cpd.variable)}")
             self.cpds_to_add[cpd.variable] = cpd
 
         for var in nx.topological_sort(self):
@@ -68,7 +68,7 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def _get_valid_order(self, nodes: List[str]):
+    def _get_valid_order(self, nodes: List[str]) -> List[str]:
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
 
@@ -93,7 +93,7 @@ class MACIDBase(BayesianModel):
         new = self.copy()  # this "freezes" the policy so it doesn't adapt to future interventions
 
         @lru_cache(maxsize=1000)
-        def opt_policy(*pv: tuple):
+        def opt_policy(*pv: tuple) -> Any:
             nonlocal descendant_utility_nodes
             context = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
@@ -238,7 +238,7 @@ class MACIDBase(BayesianModel):
         else:
             return 'o'
 
-    def _get_label(self, node: str) -> str:
+    def _get_label(self, node: str) -> Any:
         cpd = self.get_cpds(node)
         if hasattr(cpd, "label"):
             return cpd.label
@@ -270,10 +270,10 @@ class MACIDBase(BayesianModel):
                              node_shape=shape(node))
         plt.show()
 
-    def draw_property(self, node_property: Callable[[str], bool], color='red') -> None:
+    def draw_property(self, node_property: Callable[[str], bool], color: str = 'red') -> None:
         """Draw a CID with nodes satisfying property highlighted"""
 
-        def node_color(node: str) -> str:
+        def node_color(node: str) -> Any:
             if node_property(node):
                 return color
             else:
@@ -350,7 +350,7 @@ class MACIDBase(BayesianModel):
         rg = self.relevance_graph()
         return nx.is_directed_acyclic_graph(rg)
 
-    def sufficient_recall(self, agent: Union[str, int] = 0):
+    def sufficient_recall(self, agent: Union[str, int] = 0) -> bool:
         """
         Finds whether an agent has sufficient recall in a (MA)CID.
         Agent i in the MAID has sufficient recall if the relevance graph

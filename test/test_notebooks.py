@@ -2,11 +2,12 @@ import unittest
 import os
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
+from typing import Any, List, Tuple
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def run_notebook(notebook_path):
+def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
     full_path = os.path.join(ROOT_DIR, notebook_path)
     nb_name, _ = os.path.splitext(os.path.basename(full_path))
 

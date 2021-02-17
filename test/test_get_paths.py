@@ -1,5 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
+#%%
 import unittest
 import sys
 import os
@@ -59,7 +60,7 @@ class TestPATHS(unittest.TestCase):
             ('F', 'E')],
             {1: {'D': ['D'], 'U': ['E']}})
         self.assertEqual(find_all_dir_paths(example, 'A', 'E'), [['A', 'B', 'C', 'D', 'E'], ['A', 'B', 'F', 'E']])
-        self.assertEqual(*find_all_dir_paths(example, 'C', 'E'), ['C', 'D', 'E'])
+        self.assertEqual(find_all_dir_paths(example, 'C', 'E'), [['C', 'D', 'E']])
         self.assertFalse(find_all_dir_paths(example, 'F', 'A'))
         self.assertTrue(len(find_all_dir_paths(example, 'B', 'E')) == 2)
         with self.assertRaises(Exception):
@@ -76,7 +77,7 @@ class TestPATHS(unittest.TestCase):
             ('X1', 'D'),
             ('X2', 'U')],
             {1: {'D': ['D'], 'U': ['U']}})
-        self.assertEqual(*find_all_undir_paths(example2, 'X1', 'D'), ['X1', 'D'])
+        self.assertEqual(find_all_undir_paths(example2, 'X1', 'D'), [['X1', 'D']])
         self.assertFalse(find_all_undir_paths(example2, 'X1', 'U'))
 
     # @unittest.skip("")
@@ -93,7 +94,6 @@ class TestPATHS(unittest.TestCase):
     # @unittest.skip("")
     def test_is_active_path(self) -> None:
         example = get_path_example()
-        example.draw()
         self.assertTrue(is_active_path(example, ['X1', 'D', 'U']))
         self.assertFalse(is_active_path(example, ['X1', 'D', 'U'], ['D']))
         self.assertFalse(is_active_path(example, ['X1', 'D', 'X2']))
@@ -134,3 +134,5 @@ class TestPATHS(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPATHS)
     unittest.TextTestRunner().run(suite)
+
+# %%

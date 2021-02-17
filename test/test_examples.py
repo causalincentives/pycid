@@ -1,7 +1,7 @@
+#%%
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
-
-
+sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_5node_cid, get_minimal_cid, get_2dec_cid, get_5node_cid_with_scaled_utility, \
     get_insufficient_recall_cid
 from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_different_dec_cardinality, \
@@ -59,3 +59,5 @@ class TestExamples(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestExamples)
     unittest.TextTestRunner().run(suite)
+
+# %%

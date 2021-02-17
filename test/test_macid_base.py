@@ -1,5 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
+# %%
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -70,8 +71,6 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.is_r_reachable('D2', 'N'))
         self.assertFalse(example.is_r_reachable('D1', 'N'))
         self.assertTrue(example.is_r_reachable('D1', 'D2'))
-        example.draw()
-        example.draw_relevance_graph()
 
     # @unittest.skip("")
     def test_is_full_relevance_graph_acyclic(self) -> None:

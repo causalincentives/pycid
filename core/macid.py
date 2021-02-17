@@ -2,10 +2,10 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 import numpy as np
-from typing import List, Tuple, Dict, Union
+from typing import Any, List, Tuple, Dict, Union
 # import numpy.typing as npt
 import itertools
-from pgmpy.inference import BeliefPropagation
+from pgmpy.inference import BeliefPropagation  # type: ignore
 import networkx as nx
 import matplotlib.pyplot as plt
 import operator
@@ -45,7 +45,7 @@ class MACID(MACIDBase):
         rg = self.relevance_graph()
         return list(nx.strongly_connected_components(rg))
 
-    def _set_color_scc(self, node: str, sccs) -> np.ndarray:
+    def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
         "Assign a unique color to the set of nodes in each SCC."
         colors = cm.rainbow(np.linspace(0, 1, len(sccs)))
         for scc in sccs:
@@ -89,13 +89,13 @@ class MACID(MACIDBase):
         # decision nodes with the sccs they are in in the condensed relevance graph
         dec_scc_mapping = con_rel.graph['mapping']
         # invert the dec_scc_mapping dictionary which contains non-unique values:
-        scc_dec_mapping = {}
+        scc_dec_mapping: Dict[int, List[str]] = {}
         for k, v in dec_scc_mapping.items():
             scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
 
         con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
         powerset = list(itertools.chain.from_iterable(itertools.combinations(con_rel_sccs, r)
-                                                      for r in range(1, len(con_rel_sccs)+1)))
+                                                      for r in range(1, len(con_rel_sccs) + 1)))
         con_rel_subgames = copy.deepcopy(powerset)
         for subset in powerset:
             for node in subset:
@@ -113,7 +113,7 @@ class MACID(MACIDBase):
         con_rel_graph = self.condensed_relevance_graph()
         return list(nx.topological_sort(con_rel_graph))
 
-    def get_all_pure_spe(self) -> List[tuple]:
+    def get_all_pure_spe(self) -> List[List[Tuple[Any, List[Tuple[Any, Any]], Any]]]:
         """Return all pure policy subgame perfect NE in the MAID when the relevance graph is acyclic"""
         solutions = self._pure_spe_finder()
         spe_arrays = [self._create_spe_array(tree) for tree in solutions]
@@ -128,19 +128,20 @@ class MACID(MACIDBase):
             self.impute_random_decision(dec)  # impute random fully mixed policy to all decision nodes.
 
         bp = BeliefPropagation(self)
+        print(type(bp))
         queue = self._instantiate_initial_tree()
 
         while not self._stopping_condition(queue):
             queue = self._reduce_tree_once(queue, bp)
         return queue
 
-    def _stopping_condition(self, queue: List[defaultdict]):
+    def _stopping_condition(self, queue: List[defaultdict]) -> bool:
         """stopping condition for recursive tree filling"""
         tree = queue[0]
         root_node_full = bool(tree[0][0])
         return root_node_full
 
-    def _create_spe_array(self, tree: defaultdict) -> List[tuple]:
+    def _create_spe_array(self, tree: defaultdict) -> List[Tuple[Any, List[Tuple[Any, Any]], Any]]:
         """Return the subgame perfect equilibirium in a nested list form
         Example output: [('D1', [], 0), ('D2', [('D1, 0)], 1), ('D2', [('D1, 1)], 0)]
 
@@ -153,13 +154,13 @@ class MACID(MACIDBase):
         decision_cardinalities = [self.get_cardinality(dec) for dec in dec_list]
 
         spe_array = []
-        for row in range(len(tree)-1):
+        for row in range(len(tree) - 1):
             cols = tree[row].keys()
             for i in cols:
                 divisor = 1
                 action_values = []
                 for j, dec_card in reversed(list(enumerate(decision_cardinalities[:row]))):
-                    action_values.append((i//divisor) % decision_cardinalities[j])
+                    action_values.append((i // divisor) % decision_cardinalities[j])
                     divisor *= dec_card
                 decision_context_values = list(reversed(action_values))
                 decision_context = list(zip(dec_list[:row], decision_context_values))
@@ -182,8 +183,8 @@ class MACID(MACIDBase):
         # create entry for final row of decision array
         final_row_actions = list(itertools.product(*actions_for_dec_list))
 
-        tree_initial = defaultdict(dict)   # creates a nested dictionary
-        for i in range(0, len(self.all_decision_nodes)+1):
+        tree_initial: defaultdict = defaultdict(dict)   # creates a nested dictionary
+        for i in range(0, len(self.all_decision_nodes) + 1):
             for j in range(cols_in_each_tree_row[i]):     # initialise tree with empty tuples.
                 tree_initial[i][j] = ()
 
@@ -193,7 +194,7 @@ class MACID(MACIDBase):
         trees_queue = [tree_initial]  # list of all possible decision trees
         return trees_queue
 
-    def _reduce_tree_once(self, queue: List[str], bp) -> List[defaultdict]:
+    def _reduce_tree_once(self, queue: List[defaultdict], bp) -> List[defaultdict]:
         """Find first node in tree not yet evaluated using prefix-traversal
         and then update the tree by evaluating this node - apply this repeatedly
         until tree is full"""
@@ -207,7 +208,7 @@ class MACID(MACIDBase):
                     queue_update = self._max_childen(tree, row, col, queue, bp)
                     return queue_update
 
-    def _max_childen(self, tree, row: int, col: int, queue: List[defaultdict], bp) -> List[defaultdict]:
+    def _max_childen(self, tree: defaultdict, row: int, col: int, queue: List[defaultdict], bp) -> List[defaultdict]:
         """ Add to the queue the tree(s) filled with the node updated with whichever
         child(ren) yield the most utilty for the agent making the decision."""
         macid = self.copy_without_cpds()
@@ -217,12 +218,12 @@ class MACID(MACIDBase):
 
         # using col*dec_num_act and (col*dec_num_act)+dec_num_act so we iterate over all of the
         # agent's considered actions (children in the tree)
-        for indx in range(col*dec_num_act, (col*dec_num_act)+dec_num_act):
-            children_ev.append(self._get_ev(tree[row+1][indx], row, bp))
+        for indx in range(col * dec_num_act, (col * dec_num_act) + dec_num_act):
+            children_ev.append(self._get_ev(tree[row + 1][indx], row, bp))
         max_indexes = [i for i, j in enumerate(children_ev) if j == max(children_ev)]
 
         for i in range(len(max_indexes)):
-            tree[row][col] = tree[row+1][(col*dec_num_act)+max_indexes[i]]
+            tree[row][col] = tree[row + 1][(col * dec_num_act) + max_indexes[i]]
             new_tree = copy.deepcopy(tree)
             queue.append(new_tree)
         return queue
@@ -242,5 +243,5 @@ class MACID(MACIDBase):
         for idx, prob in np.ndenumerate(factor.values):
             for i in range(len(utils)):  # account for each agent having multiple utilty nodes
                 if prob != 0:
-                    ev += prob*idx[i]
+                    ev += prob * idx[i]
         return ev

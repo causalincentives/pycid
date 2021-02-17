@@ -21,7 +21,7 @@ def admits_voi(cid: CID, decision: str, node: str) -> bool:
     elif node == decision or node in nx.descendants(cid, decision):
         return False
     # condition (ii)
-    descended_agent_utilities = [util for util in agent_utilities if util in nx.descendants(cid, decision)]  
+    descended_agent_utilities = [util for util in agent_utilities if util in nx.descendants(cid, decision)]
     d_family = [decision] + cid.get_parents(decision)
     con_nodes = [i for i in d_family if i != node]
     voi = any([cid.is_active_trail(node, u_node, con_nodes) for u_node in descended_agent_utilities])
@@ -35,7 +35,7 @@ def admits_voi_list(cid: CID, decision: str) -> List[str]:
     return [x for x in list(cid.nodes) if admits_voi(cid, decision, x)]
 
 
-def voi(cid: CID, decision: str, variable: str):
+def voi(cid: CID, decision: str, variable: str) -> float:
     # TODO test this method
     new = cid.copy()
     new.add_edge(variable, decision)

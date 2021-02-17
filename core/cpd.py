@@ -7,8 +7,8 @@ from inspect import getsourcelines
 from logging import warning
 import random
 from typing import List, Callable, Dict, Union
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.models import BayesianModel
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
+from pgmpy.models import BayesianModel  # type: ignore
 import numpy as np
 
 
@@ -83,7 +83,7 @@ class FunctionCPD(TabularCPD):
             if lambda_pos > -1:  # can't infer label if not defined by lambda expression
                 colon = sl.find(':', lambda_pos, len(sl))
                 end = sl.find(',', colon, len(sl))  # TODO this only works for simple expressions with no commas
-                self.label = sl[colon+2: end]
+                self.label = sl[colon + 2: end]
             elif hasattr(self.f, "__name__"):
                 self.label = self.f.__name__
             else:
@@ -122,7 +122,7 @@ class FunctionCPD(TabularCPD):
         else:
             return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
 
-    def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
+    def initialize_tabular_cpd(self, cid: BayesianModel) -> Union[bool, None]:
         """Initialize the probability table for the inherited TabularCPD
 
         Returns True if successful, False otherwise
@@ -149,6 +149,7 @@ class FunctionCPD(TabularCPD):
         super().__init__(self.variable, card,
                          matrix, evidence, evidence_card,
                          state_names=state_names)
+        return None
 
 
 class RandomlySampledFunctionCPD(FunctionCPD):
@@ -160,8 +161,8 @@ class RandomlySampledFunctionCPD(FunctionCPD):
         possible_functions = [
             lambda *pv: np.prod(pv),
             lambda *pv: np.sum(pv),
-            lambda *pv: 1-np.prod(pv),
-            lambda *pv: 1-np.sum(pv),
+            lambda *pv: 1 - np.prod(pv),
+            lambda *pv: 1 - np.sum(pv),
         ]
         super().__init__(variable, random.choice(possible_functions), evidence)
 
