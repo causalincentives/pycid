@@ -7,7 +7,7 @@ from core.get_paths import directed_decision_free_path, find_all_dir_paths, find
 import copy
 
 
-def _get_key_node(mb: MACIDBase, path: List[str]) -> Union[str, None]:
+def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
     """
     Returns the key node of a path (ie the first "fork" node in the path)
     """
@@ -15,7 +15,7 @@ def _get_key_node(mb: MACIDBase, path: List[str]) -> Union[str, None]:
         structure = get_motif(mb, path, path.index(b))
         if structure == "fork":
             return b
-    return None
+    return ""  # shouldn't happen
 
 
 def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
@@ -71,7 +71,7 @@ def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish
 
 
 def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, effective_set: List[str],
-                                                  w: List[str] = []) -> Optional[List[str]]:
+                                                  w: List[str] = []) -> List[str]:
     """
     Returns the effective backdoor path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
@@ -82,7 +82,7 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
         not_blocked_by_w = is_active_path(mb, path, w)
         if is_backdoor_path and _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
-    return None
+    return []
 
 
 def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
