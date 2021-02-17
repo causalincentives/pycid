@@ -114,15 +114,14 @@ def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> 
     return paths
 
 
-def find_all_dir_paths(mb: MACIDBase, start: str, end_node: str) -> List[List[str]]:
+def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
     """
     Find all directed paths from start node to end node that exist in the (MA)CID.
     """
-    considered_nodes = {start}.union({end_node})
-    for node in considered_nodes:
+    for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    return _find_all_dirpath_recurse(mb, [start], end_node)
+    return _find_all_dirpath_recurse(mb, [start_node], end_node)
 
 
 def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
