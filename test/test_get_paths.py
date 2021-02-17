@@ -79,6 +79,16 @@ class TestPATHS(unittest.TestCase):
             {1: {'D': ['D'], 'U': ['U']}})
         self.assertEqual(find_all_undir_paths(example2, 'X1', 'D'), [['X1', 'D']])
         self.assertFalse(find_all_undir_paths(example2, 'X1', 'U'))
+        example3 = MACID([
+            ('A', 'B'),
+            ('B', 'C'),
+            ('C', 'D'),
+            ('D', 'E'),
+            ('B', 'F'),
+            ('F', 'E')],
+            {1: {'D': ['D'], 'U': ['E']}})
+        example3.draw()
+        print(find_all_undir_paths(example3, 'F', 'A'))
 
     # @unittest.skip("")
     def test_directed_decision_free_path(self) -> None:
