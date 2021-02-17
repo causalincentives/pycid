@@ -82,8 +82,8 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
         not_blocked_by_w = is_active_path(mb, path, w)
         if is_backdoor_path and _path_is_effective(mb, path, effective_set) and not_blocked_by_w:
             return path
-    else:
-        return None
+
+    return None
 
 
 def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,

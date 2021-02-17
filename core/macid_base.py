@@ -95,7 +95,7 @@ class MACIDBase(BayesianModel):
         @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple) -> Any:
             nonlocal descendant_utility_nodes
-            context : Dict[str, int] = {p: pv[i] for i, p in enumerate(parents)}
+            context: Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
                 context[d] = d_idx

@@ -1,6 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
+from __future__ import annotations
 import numpy as np
 from typing import Any, List, Tuple, Dict, Union
 # import numpy.typing as npt
@@ -20,7 +20,7 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-    def copy_without_cpds(self):
+    def copy_without_cpds(self) -> MACID:
         return MACID(self.edges(),
                      {agent: {'D': self.decision_nodes_agent[agent],
                               'U': self.utility_nodes_agent[agent]}
@@ -194,7 +194,7 @@ class MACID(MACIDBase):
         trees_queue = [tree_initial]  # list of all possible decision trees
         return trees_queue
 
-    def _reduce_tree_once(self, queue: List[defaultdict], bp) -> List[defaultdict]:
+    def _reduce_tree_once(self, queue: List[defaultdict], bp: BeliefPropagation) -> List[defaultdict]:
         """Find first node in tree not yet evaluated using prefix-traversal
         and then update the tree by evaluating this node - apply this repeatedly
         until tree is full"""
