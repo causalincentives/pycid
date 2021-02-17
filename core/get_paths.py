@@ -9,7 +9,7 @@ def _active_neighbours(mb: MACIDBase, path: List[str], observed: List[str]) -> S
     """Find possibly active extensions of path conditional on the `observed' set of nodes."""
     end_of_path = path[-1]
     last_forward = len(path) > 1 and end_of_path in mb.get_children(path[-2])
-    possible_colliders: Set[str] = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])
+    possible_colliders: Set[str] = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])  # type: ignore
 
     # if going upward or at a possible collider, it's possible to continue to a parent
     if end_of_path in possible_colliders or not last_forward:
