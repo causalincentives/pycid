@@ -1,7 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from core.macid_base import MACIDBase
-from typing import List, Set, Tuple, Union
+from typing import List, Set, Tuple
 import networkx as nx
 
 
@@ -124,43 +124,34 @@ def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[Li
     return _find_all_dirpath_recurse(mb, [start_node], end_node)
 
 
-def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
-                                all_paths: List[List[str]]) -> List[List[str]]:
-    """Find all undirected paths beginning with 'path' as a prefix and ending at the end node"""
+def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> List[List[str]]:
+    """Find all undirected paths beginning with 'path' as a prefix and ending at the end node."""
 
     if path[-1] == end_node:
-        return path
-    else:
-        neighbours = list(mb.get_children(path[-1])) + list(mb.get_parents(path[-1]))
-        new = set(neighbours).difference(set(path))
-        for child in new:
-            ext = path + [child]
-            ext = _find_all_undirpath_recurse(mb, ext, end_node, all_paths)
-            if ext and ext[-1] == end_node:  # the "if ext" checks to see that it's a full path.
-                all_paths.append(ext)
-            else:
-                continue
-        return all_paths
+        return [path]
+    path_extensions = []
+    neighbours = list(mb.get_children(path[-1])) + list(mb.get_parents(path[-1]))
+    neighbours_not_in_path = set(neighbours).difference(set(path))
+    for child in neighbours_not_in_path:
+        path_extensions.extend(_find_all_undirpath_recurse(mb, path + [child], end_node))
+    return path_extensions
 
 
 def find_all_undir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
     """
-    Finds all paths from start node to end node that exist in the MAID
+    Finds all undirected paths from start node to end node that exist in the (MA)CID.
     """
-    considered_nodes = {start_node}.union({end_node})
-    for node in considered_nodes:
+    for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    all_paths: List[List[str]] = []
-    return _find_all_undirpath_recurse(mb, [start_node], end_node, all_paths)
+    return _find_all_undirpath_recurse(mb, [start_node], end_node)
 
 
 def directed_decision_free_path(mb: MACIDBase, start_node: str, end_node: str) -> bool:
     """
     Checks to see if a directed decision free path exists
     """
-    considered_nodes = {start_node}.union({end_node})
-    for node in considered_nodes:
+    for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
 

@@ -1,6 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-#%%
+
 import unittest
 import sys
 import os
@@ -87,8 +87,8 @@ class TestPATHS(unittest.TestCase):
             ('B', 'F'),
             ('F', 'E')],
             {1: {'D': ['D'], 'U': ['E']}})
-        example3.draw()
-        print(find_all_undir_paths(example3, 'F', 'A'))
+        self.assertCountEqual(find_all_undir_paths(example3, 'F', 'A'),
+                              [['F', 'E', 'D', 'C', 'B', 'A'], ['F', 'B', 'A']])
 
     # @unittest.skip("")
     def test_directed_decision_free_path(self) -> None:

@@ -1,5 +1,5 @@
-#%%
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_5node_cid, get_minimal_cid, get_2dec_cid, get_5node_cid_with_scaled_utility, \

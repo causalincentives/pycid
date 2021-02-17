@@ -40,9 +40,9 @@ def voi(cid: CID, decision: str, variable: str) -> float:
     new = cid.copy()
     new.add_edge(variable, decision)
     new.impute_optimal_policy()
-    ev1 : float = new.expected_utility({})
+    ev1: float = new.expected_utility({})
     new = cid.copy()
     new.remove_edge(variable, decision)
     new.impute_optimal_policy()
-    ev2 : float = new.expected_utility({})
+    ev2: float = new.expected_utility({})
     return ev1 - ev2

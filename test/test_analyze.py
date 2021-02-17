@@ -35,7 +35,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertCountEqual(admits_voi_list(cid2, 'P'), ['R', 'HS', 'E', 'Gr'])
 
     # @unittest.skip("")
-    def testTotalEffect(self) -> None:
+    def test_total_effect(self) -> None:
         cid = get_minimal_cid()
         cid.impute_random_policy()
         self.assertEqual(total_effect(cid, 'A', 'B', 0, 1), 1)
@@ -46,7 +46,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertEqual(total_effect(cid, 'A', 'Y', 0, 1), 0.5)
 
     # @unittest.skip("")
-    def testIntroducedEffect(self) -> None:
+    def test_introduced_total_effect(self) -> None:
         cid = get_introduced_bias()
         cid.impute_random_policy()
         self.assertEqual(introduced_total_effect(cid, 'A', 'D', 'Y', 0, 1), -0.5)

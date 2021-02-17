@@ -6,9 +6,9 @@ from functools import lru_cache
 import matplotlib.pyplot as plt
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from pgmpy.models import BayesianModel # type: ignore
+from pgmpy.models import BayesianModel  # type: ignore
 from typing import List, Tuple, Dict, Any, Callable, Union
-from pgmpy.inference.ExactInference import BeliefPropagation # type: ignore
+from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
@@ -95,7 +95,7 @@ class MACIDBase(BayesianModel):
         @lru_cache(maxsize=1000)
         def opt_policy(*pv: tuple) -> Any:
             nonlocal descendant_utility_nodes
-            context : Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
+            context: Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
             eu = []
             for d_idx in range(card):
                 context[d] = d_idx  # TODO should this be id2name[d_idx]?

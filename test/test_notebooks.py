@@ -34,11 +34,11 @@ class TestNotebooks(unittest.TestCase):
         _, errors = run_notebook('notebooks/fairness.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_CID_Basics_Tutorial_notebook(self) -> None:
+    def test_cid_basics_tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/CID_Basics_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_CID_Incentives_Tutorial_notebook(self) -> None:
+    def test_cid_incentives_tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/CID_Incentives_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
@@ -46,11 +46,11 @@ class TestNotebooks(unittest.TestCase):
         _, errors = run_notebook('notebooks/generate_cid.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_MACID_Basics_Tutorial_notebook(self) -> None:
+    def test_macid_basics_tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/MACID_Basics_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 
-    def test_Reasoning_Patterns_Tutorial_notebook(self) -> None:
+    def test_reasoning_patterns_tutorial_notebook(self) -> None:
         _, errors = run_notebook('notebooks/Reasoning_Patterns_Tutorial.ipynb')
         self.assertEqual(len(errors), 0)
 

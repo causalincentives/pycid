@@ -1,7 +1,7 @@
 from core.macid_base import MACIDBase
 from core.macid import MACID
 import networkx as nx
-from typing import Any, List, Dict, Union, Optional
+from typing import Any, List, Dict, Union
 from core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
     is_active_indirect_frontdoor_trail, is_active_path
 import copy
@@ -76,7 +76,7 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
     Returns the effective backdoor path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
     """
-    start_finish_paths : List[List[str]]= find_all_undir_paths(mb, start, finish)
+    start_finish_paths: List[List[str]] = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
         is_backdoor_path = path[1] in mb.get_parents(path[0])
         not_blocked_by_w = is_active_path(mb, path, w)
@@ -91,7 +91,7 @@ def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish
     Returns an effective undirected path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
     """
-    start_finish_paths : List[List[str]] = find_all_undir_paths(mb, start, finish)
+    start_finish_paths: List[List[str]] = find_all_undir_paths(mb, start, finish)
     for path in start_finish_paths:
         not_blocked_by_w = is_active_path(mb, path, w)
         if _path_is_effective(mb, path, effective_set) and not_blocked_by_w:

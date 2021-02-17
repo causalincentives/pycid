@@ -207,8 +207,10 @@ class MACID(MACIDBase):
                 else:    # if node is empty => update it by finding maximum children
                     queue_update = self._max_childen(tree, row, col, queue, bp)
                     return queue_update
+        return queue  # shouldn't ve called
 
-    def _max_childen(self, tree: defaultdict, row: int, col: int, queue: List[defaultdict], bp) -> List[defaultdict]:
+    def _max_childen(self, tree: defaultdict, row: int, col: int, queue: List[defaultdict],
+                     bp: BeliefPropagation) -> List[defaultdict]:
         """ Add to the queue the tree(s) filled with the node updated with whichever
         child(ren) yield the most utilty for the agent making the decision."""
         macid = self.copy_without_cpds()
@@ -228,7 +230,7 @@ class MACID(MACIDBase):
             queue.append(new_tree)
         return queue
 
-    def _get_ev(self, dec_instantiation: Tuple[int], row: int, bp) -> float:
+    def _get_ev(self, dec_instantiation: Tuple[int], row: int, bp: BeliefPropagation) -> float:
         """Return the expected value of a certain decision node instantiation
         for the agent making the decision"""
         macid = self.copy_without_cpds()
