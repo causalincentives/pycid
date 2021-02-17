@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
+from __future__ import annotations
 import numpy as np
 from typing import Any, List, Tuple, Dict, Union
 # import numpy.typing as npt
@@ -13,7 +14,6 @@ from collections import defaultdict
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
-from __future__ import annotations
 
 
 class MACID(MACIDBase):
