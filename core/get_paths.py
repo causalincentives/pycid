@@ -102,29 +102,26 @@ def get_motifs(mb: MACIDBase, path: List[str]) -> List[str]:
     return shapes
 
 
-def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
-                              all_paths: List[List[str]]) -> None:
+def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> List[List[str]]:
     """Find all directed paths beginning with 'path' as a prefix and ending at the end node"""
 
     if path[-1] == end_node:
-        all_paths.append(path)
-    else:
-        children = mb.get_children(path[-1])
-        for child in children:
-            _find_all_dirpath_recurse(mb, path + [child], end_node, all_paths)
+        return [path]
+    path_extensions = []
+    children = mb.get_children(path[-1])
+    for child in children:
+        path_extensions.extend(_find_all_dirpath_recurse(mb, path + [child], end_node))
+    return path_extensions
 
 
-def find_all_dir_paths(mb: MACIDBase, start: str, end_node: str) -> List[List[str]]:
+def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
     """
     Find all directed paths from start node to end node that exist in the (MA)CID.
     """
-    considered_nodes = {start}.union({end_node})
-    for node in considered_nodes:
+    for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
-    all_paths: List[List[str]] = []
-    _find_all_dirpath_recurse(mb, [start], end_node, all_paths)
-    return all_paths
+    return _find_all_dirpath_recurse(mb, [start_node], end_node)
 
 
 def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str,
