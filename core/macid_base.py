@@ -5,10 +5,10 @@ from __future__ import annotations
 from functools import lru_cache
 import matplotlib.pyplot as plt
 import numpy as np
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.models import BayesianModel
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
+from pgmpy.models import BayesianModel # type: ignore
 from typing import List, Tuple, Dict, Any, Callable, Union
-from pgmpy.inference.ExactInference import BeliefPropagation
+from pgmpy.inference.ExactInference import BeliefPropagation # type: ignore
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
@@ -124,7 +124,7 @@ class MACIDBase(BayesianModel):
             mg.add_edge(node + "mec", node)
         return mg
 
-    def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None):
+    def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).

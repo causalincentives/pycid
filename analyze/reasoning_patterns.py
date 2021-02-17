@@ -260,8 +260,8 @@ def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
     motivations: Dict[str, List[str]] = {'dir_effect': [], 'sig': [], 'manip': [], 'rev_den': []}
     effective_set = list(mb.all_decision_nodes)
     while True:
-        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set) or
-                   signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
+        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set)
+                   or signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
 
         if len(new_set) == len(effective_set):
             break
