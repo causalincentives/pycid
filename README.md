@@ -72,7 +72,7 @@ python3 -m unittest   # check that everything works
 
 Before committing to the master branch, please ensure that:
 * All tests pass: run `python3 -m unittest` from the root directory
-* Your code does not generate unnecessary `pylint` warnings 
+* Your code does not generate unnecessary `flake8` warnings 
   (some are okay, if fixing them would be hard)
 * Any added requirements are added to Requirements.txt
 * Your functions have docstrings and types, and a unit test verifying that they work
