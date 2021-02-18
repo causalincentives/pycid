@@ -69,7 +69,7 @@ python3 -m unittest   # check that everything works
 ## Contributing
 
 Before committing to the master branch, please ensure that:
-* The script [test/check-code.sh](test/check-code.sh) completes without error (if you want, you can add it as a pre-commit hook)
+* The script [test/check-code.sh](test/check-code.sh) completes without error (you can add it as a pre-commit hook)
 * Any new requirements are added to Requirements.txt
 * Your functions have docstrings and types, and a unit test verifying that they work
 * For notebooks, you have done "restart kernel and run all cells" before saving and committing 
