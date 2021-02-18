@@ -10,11 +10,10 @@ from examples.simple_cids import get_minimal_cid, get_trim_example_cid
 from examples.story_cids import get_fitness_tracker, get_introduced_bias, get_content_recommender, \
     get_modified_content_recommender, get_grade_predictor
 from analyze.requisite_graph import nonrequisite, requisite_graph
-from analyze.value_of_control import admits_voc, admits_voc_list
+from analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_voc, admits_indir_voc_list, \
+    admits_dir_voc, admits_dir_voc_list
 from analyze.response_incentive import admits_ri, admits_ri_list
 from analyze.instrumental_control_incentive import admits_ici, admits_ici_list
-from analyze.indirect_control_incentive import admits_indir_voc, admits_indir_voc_list
-from analyze.direct_control_incentive import admits_dir_voc, admits_dir_voc_list
 
 
 class TestAnalyze(unittest.TestCase):
