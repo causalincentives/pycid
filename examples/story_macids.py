@@ -5,7 +5,7 @@ from core.macid import MACID
 from core.cpd import DecisionDomain
 
 
-def tree_doctor():
+def tree_doctor() -> MACID:
     macid = MACID([
         ('PT', 'E'),
         ('PT', 'TS'),
@@ -17,14 +17,46 @@ def tree_doctor():
         ('TDoc', 'TDead'),
         ('TDoc', 'Cost'),
         ('TDoc', 'BP'),
-        ('BP', 'V'),
-        ],
-        {0: {'D': ['PT', 'BP'], 'U': ['E', 'V']}, 1: {'D': ['TDoc'], 'U': ['Tree', 'Cost']}, 'C': ['TS', 'TDead']})
+        ('BP', 'V')],
+        {0: {'D': ['PT', 'BP'], 'U': ['E', 'V']},
+         1: {'D': ['TDoc'], 'U': ['Tree', 'Cost']}})
 
     return macid
 
 
-def road_example():
+def forgetful_movie_star() -> MACID:
+    macid = MACID([
+        ('S', 'D11'),
+        ('S', 'D12'),
+        ('D2', 'U2'),
+        ('D2', 'U11'),
+        ('D11', 'U2'),
+        ('D11', 'U11'),
+        ('D11', 'U12'),
+        ('D12', 'U12')],
+        {1: {'D': ['D11', 'D12'], 'U': ['U11', 'U12']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+    return macid
+
+
+def subgame_difference() -> MACID:
+    macid = MACID([
+        ('N', 'D1'),
+        ('N', 'U1_A'),
+        ('N', 'U2_A'),
+        ('D1', 'U1_A'),
+        ('D1', 'U2_A'),
+        ('D1', 'U1_B'),
+        ('D1', 'U2_B'),
+        ('D1', 'D2'),
+        ('D2', 'U1_B'),
+        ('D2', 'U2_B')],
+        {1: {'D': ['D1'], 'U': ['U1_A', 'U1_B']},
+         2: {'D': ['D2'], 'U': ['U2_A', 'U2_B']}})
+    return macid
+
+
+def road_example() -> MACID:
     macid = MACID([
         ('S1W', 'B1W'),
         ('S1W', 'U1W'),
@@ -73,18 +105,18 @@ def road_example():
 
         ('B3E', 'U3E'),
         ('B3E', 'U3W'),
-        ('B3E', 'U2E'),
-
-        ],
-        {'1W': {'D': ['B1W'], 'U': ['U1W']}, '1E': {'D': ['B1E'], 'U': ['U1E']},
-         '2W': {'D': ['B2W'], 'U': ['U2W']}, '2E': {'D': ['B2E'], 'U': ['U2E']},
-         '3W': {'D': ['B3W'], 'U': ['U3W']}, '3E': {'D': ['B3E'], 'U': ['U3E']},
-         'C': ['S1W', 'S1E', 'S2W', 'S2E', 'S3W', 'S3E']})
+        ('B3E', 'U2E')],
+        {'1W': {'D': ['B1W'], 'U': ['U1W']},
+         '1E': {'D': ['B1E'], 'U': ['U1E']},
+         '2W': {'D': ['B2W'], 'U': ['U2W']},
+         '2E': {'D': ['B2E'], 'U': ['U2E']},
+         '3W': {'D': ['B3W'], 'U': ['U3W']},
+         '3E': {'D': ['B3E'], 'U': ['U3E']}})
 
     return macid
 
 
-def politician():
+def politician() -> MACID:
     macid = MACID([
         ('D1', 'I'),
         ('T', 'I'),
@@ -92,21 +124,19 @@ def politician():
         ('I', 'D2'),
         ('R', 'D2'),
         ('D2', 'U1'),
-        ('D2', 'U2'),
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 'C': ['R', 'I', 'T']})
+        ('D2', 'U2')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
     return macid
 
 
-def umbrella():
-    from pgmpy.factors.discrete.CPD import TabularCPD
+def umbrella() -> MACID:
     macid = MACID([
         ('W', 'F'),
         ('W', 'A'),
         ('F', 'UM'),
-        ('UM', 'A'),
-        ],
-        {1: {'D': ['UM'], 'U': ['A']}, 'C': ['W', 'F']})
+        ('UM', 'A')],
+        {1: {'D': ['UM'], 'U': ['A']}})
 
     cpd_w = TabularCPD('W', 2, np.array([[.6], [.4]]))
     cpd_f = TabularCPD('F', 2, np.array([[.8, .3], [.2, .7]]),
@@ -120,19 +150,19 @@ def umbrella():
     return macid
 
 
-def sequential():
+def sequential() -> MACID:
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
         ('D1', 'D2'),
         ('D2', 'U1'),
-        ('D2', 'U2'),
-        ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': []})
+        ('D2', 'U2')],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
     return macid
 
 
-def signal():
+def signal() -> MACID:
     macid = MACID([
         ('X', 'D1'),
         ('X', 'U2'),
@@ -141,9 +171,9 @@ def signal():
         ('D1', 'U1'),
         ('D1', 'D2'),
         ('D2', 'U1'),
-        ('D2', 'U2'),
-        ],
-        {0: {'D': ['D1'], 'U': ['U1']}, 1: {'D': ['D2'], 'U': ['U2']}, 'C': ['X']})
+        ('D2', 'U2')],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
     cpd_x = TabularCPD('X', 2, np.array([[.5], [.5]]))
     cpd_d1 = DecisionDomain('D1', [0, 1])
     cpd_d2 = DecisionDomain('D1', [0, 1])
@@ -170,7 +200,7 @@ def signal():
     return macid
 
 
-def triage():
+def triage() -> MACID:
     macid = MACID([
 
         ('H1', 'D1'),
@@ -247,13 +277,12 @@ def triage():
         ('D6', 'U1'),
         ('D6', 'U2'),
         ('D6', 'U5'),
-        ('D6', 'U6'),
-
-
-        ],
-        {1: {'D': ['D1'], 'U': ['U1']}, 2: {'D': ['D2'], 'U': ['U2']}, 3: {'D': ['D3'], 'U': ['U3']},
-         4: {'D': ['D4'], 'U': ['U4']}, 5: {'D': ['D5'], 'U': ['U5']}, 6: {'D': ['D6'], 'U': ['U6']},
-         'C': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']}
-        )
+        ('D6', 'U6')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']},
+         3: {'D': ['D3'], 'U': ['U3']},
+         4: {'D': ['D4'], 'U': ['U4']},
+         5: {'D': ['D5'], 'U': ['U5']},
+         6: {'D': ['D6'], 'U': ['U6']}})
 
     return macid

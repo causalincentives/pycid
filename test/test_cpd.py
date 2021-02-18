@@ -2,6 +2,7 @@ import numpy as np
 import unittest
 import sys, os
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 from core.cpd import UniformRandomCPD, FunctionCPD
 from examples.simple_cids import get_minimal_cid
 from examples.story_cids import get_introduced_bias
@@ -9,7 +10,7 @@ from examples.story_cids import get_introduced_bias
 
 class TestCPD(unittest.TestCase):
 
-    def test_initialize_uniform_random_cpd(self):
+    def test_initialize_uniform_random_cpd(self) -> None:
         cid = get_minimal_cid()
         cpd_a = UniformRandomCPD('A', [0, 2])
         cpd_a.initialize_tabular_cpd(cid)
@@ -19,7 +20,7 @@ class TestCPD(unittest.TestCase):
         cpd_b.initialize_tabular_cpd(cid)
         self.assertTrue((cpd_a.get_values() == np.array([[0.5, 0.5], [0.5, 0.5]])).all())
 
-    def test_initialize_function_cpd(self):
+    def test_initialize_function_cpd(self) -> None:
         cid = get_minimal_cid()
         cpd_a = FunctionCPD('A', lambda: 2, evidence=[])
         cpd_a.initialize_tabular_cpd(cid)
@@ -32,7 +33,7 @@ class TestCPD(unittest.TestCase):
         self.assertEqual(cpd_a.get_cardinality(['A'])['A'], 1)
         self.assertEqual(cpd_a.get_state_names('A', 0), 2)
 
-    def test_updated_decision_names(self):
+    def test_updated_decision_names(self) -> None:
         cid = get_introduced_bias()
         self.assertEqual(cid.get_cpds('D').state_names['D'], [0, 1])
         cid.impute_conditional_expectation_decision('D', 'Y')

@@ -5,9 +5,10 @@ from __future__ import annotations
 import itertools
 from inspect import getsourcelines
 from logging import warning
-from typing import List, Callable, Dict, Union
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.models import BayesianModel
+import random
+from typing import List, Callable, Dict
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
+from pgmpy.models import BayesianModel  # type: ignore
 import numpy as np
 
 
@@ -37,6 +38,10 @@ class UniformRandomCPD(TabularCPD):
     def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
         """initialize the TabularCPD with a matrix representing a uniform random distribution"""
         parents = cid.get_parents(self.variable)
+        # check that parents are initialized
+        for parent in parents:
+            if not cid.get_cpds(parent):
+                return False
         parents_card = [cid.get_cardinality(p) for p in parents]
         transition_matrix = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
         super().__init__(self.variable, self.variable_card, transition_matrix,
@@ -78,7 +83,7 @@ class FunctionCPD(TabularCPD):
             if lambda_pos > -1:  # can't infer label if not defined by lambda expression
                 colon = sl.find(':', lambda_pos, len(sl))
                 end = sl.find(',', colon, len(sl))  # TODO this only works for simple expressions with no commas
-                self.label = sl[colon+2: end]
+                self.label = sl[colon + 2: end]
             elif hasattr(self.f, "__name__"):
                 self.label = self.f.__name__
             else:
@@ -98,34 +103,39 @@ class FunctionCPD(TabularCPD):
     def __str__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
-    def parent_values(self, cid: BayesianModel) -> Union[List[List], None]:
+    def parents_instantiated(self, cid: BayesianModel) -> bool:
+        """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
+        for p in self.evidence:
+            p_cpd = cid.get_cpds(p)
+            if not (p_cpd and hasattr(p_cpd, 'state_names')):
+                return False
+        return True
+
+    def parent_values(self, cid: BayesianModel) -> List[List]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
+        assert self.parents_instantiated(cid)
         parent_values = []
         for p in self.evidence:
             p_cpd = cid.get_cpds(p)
             if p_cpd and hasattr(p_cpd, 'state_names'):
                 parent_values.append(p_cpd.state_names[p])
-            else:
-                return None
         return parent_values
 
-    def possible_values(self, cid: BayesianModel) -> Union[List[List], None]:
+    def possible_values(self, cid: BayesianModel) -> List[List]:
         """The possible values this variable can take, given the values the parents can take"""
+        assert self.parents_instantiated(cid)
         parent_values = self.parent_values(cid)
-        if parent_values is None:
-            return None
-        else:
-            return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
+        return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
 
     def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
         """Initialize the probability table for the inherited TabularCPD
 
         Returns True if successful, False otherwise
         """
-        poss_values = self.possible_values(cid)
-        if not poss_values:
+        if not self.parents_instantiated(cid):
             warning("won't initialize {} at this point".format(self.variable))
             return False
+        poss_values = self.possible_values(cid)
         if self.force_state_names:
             state_names_list = self.force_state_names
             if not set(poss_values).issubset(state_names_list):
@@ -144,6 +154,22 @@ class FunctionCPD(TabularCPD):
         super().__init__(self.variable, card,
                          matrix, evidence, evidence_card,
                          state_names=state_names)
+        return True
+
+
+class RandomlySampledFunctionCPD(FunctionCPD):
+    """
+    Instantiates a randomly chosen FunctionCPD for the variable
+    """
+
+    def __init__(self, variable: str, evidence: List[str]) -> None:
+        possible_functions = [
+            lambda *pv: np.prod(pv),
+            lambda *pv: np.sum(pv),
+            lambda *pv: 1 - np.prod(pv),
+            lambda *pv: 1 - np.sum(pv),
+        ]
+        super().__init__(variable, random.choice(possible_functions), evidence)
 
 
 class DecisionDomain(UniformRandomCPD):

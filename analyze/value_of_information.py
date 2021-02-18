@@ -1,68 +1,48 @@
-"""Value of Information
-
-Criterion for Information incentive on X:
-    (i) X is not a descendent of the decison node, D.
-    (ii) U∈Desc(D) (U must be a descendent of D)
-    (iii) X is d-connected to U | Fa_D\{X}"""
 from typing import List
-
 import networkx as nx
-
 from core.cid import CID
-from core.macid import MACID
 
 
-def admits_voi(cid: CID, decision: str, node: str, agent=None) -> bool:
-    """Return True if cid admits value of information for node and decision"""
+def admits_voi(cid: CID, decision: str, node: str) -> bool:
+    """Return True if cid admits value of information for node.
+    - A CID admits value of information for a node X if:
+    i) X is not a descendant of the decision node, D.
+    ii) X is d-connected to U given Fa_D \ {X}, where U ∈ U ∩ Desc(D)
+    ("Agent Incentives: a Causal Perspective" by Everitt, Carey, Langlois, Ortega, and Legg, 2020)
+    """
+    agent_utilities = cid.all_utility_nodes
 
-    if agent:
-        assert isinstance(cid, MACID)
-        agent_utils = cid.utility_nodes[agent]  # this agent's utility nodes
-    else:
-        agent_utils = cid.utility_nodes  # this agent's utility nodes
-
-    if not agent_utils:  # if the agent has no decision or no utility nodes, no node will have VoI
-        return False
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise Exception(f"{node} is not present in the cid")
+    if decision not in cid.nodes:
+        raise Exception(f"{decision} is not present in the cid")
 
     # condition (i)
     elif node == decision or node in nx.descendants(cid, decision):
         return False
-
-    for util in agent_utils:
-        if util in nx.descendants(cid, decision):  # condition (ii)
-            con_nodes = [decision] + cid.get_parents(decision)  # nodes to be conditioned on
-            if node in con_nodes:  # remove node from condition nodes
-                con_nodes.remove(node)
-            if cid.is_active_trail(node, util, con_nodes):  # condition (iv)
-                return True
-    else:
-        return False
+    # condition (ii)
+    descended_agent_utilities = [util for util in agent_utilities if util in nx.descendants(cid, decision)]
+    d_family = [decision] + cid.get_parents(decision)
+    con_nodes = [i for i in d_family if i != node]
+    voi = any([cid.is_active_trail(node, u_node, con_nodes) for u_node in descended_agent_utilities])
+    return voi
 
 
-def admits_voi_list(cid: CID, decision: str, agent=None) -> List[str]:
-    """Return list of nodes with possible value of information for decision"""
-    if agent:
-        assert isinstance(cid, MACID)
-        agent_utils = cid.utility_nodes[agent]  # this agent's utility nodes
-    else:
-        agent_utils = cid.utility_nodes  # this agent's utility nodes
-
-    if not agent_utils:  # if the agent has no utility nodes, there's no VoI
-        return []
-    else:
-        return [x for x in list(cid.nodes) if admits_voi(cid, decision, x, agent=agent)]
+def admits_voi_list(cid: CID, decision: str) -> List[str]:
+    """
+    Return the list of nodes with possible value of information for decision.
+    """
+    return [x for x in list(cid.nodes) if admits_voi(cid, decision, x)]
 
 
-def voi(cid: CID, decision: str, variable: str):
+def voi(cid: CID, decision: str, variable: str) -> float:
     # TODO test this method
     new = cid.copy()
     new.add_edge(variable, decision)
     new.impute_optimal_policy()
-    ev1 = new.expected_utility({})
+    ev1: float = new.expected_utility({})
     new = cid.copy()
     new.remove_edge(variable, decision)
     new.impute_optimal_policy()
-    ev2 = new.expected_utility({})
+    ev2: float = new.expected_utility({})
     return ev1 - ev2
