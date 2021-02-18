@@ -39,12 +39,21 @@ The [notebooks](./notebooks) provide many more examples.
 
 The code is structured into 5 folders:
 * [core](./core) contains methods and classes for specifying CID and MACID models, 
-  as well as for computing optimal policies and Nash equilibria
+  for finding and characterising types of paths in these models' graphs, and for 
+  computing optimal policies and Nash equilibria.
 * [examples](./examples) has a range of pre-specified CIDs and MACIDs, 
-  as well as methods for generating random ones
+  as well as methods for generating random ones.
 * [analyze](./analyze) has methods for analyzing different types of effects and interventions
-* [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods
-* [test](./test) has unit tests
+as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
+* [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods:
+  * [CID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial) introduces how to instantiate, plot,
+  and perform basic methods on CIDs.
+  * [MACID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial) introduces how to instantiate, plot,
+  and perform basic methods on CIDs.
+  * [CID_Incentives_Tutorial](./notebooks/CID_Incentives_Tutorial) shows how to find which nodes
+  in a single decision CID amits incentives: value of control (direct and indirect), value of information, response incentive, and instrumental control incentives.
+  incentive, instrumental 
+* [test](./test) has unit tests for all public methods.
 
 ## Installation and setup
 
