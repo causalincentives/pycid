@@ -26,13 +26,13 @@ class MACID(MACIDBase):
                               'U': self.utility_nodes_agent[agent]}
                      for agent in self.agents})
 
-    def _get_color(self, node: str) -> np.ndarray:
+    def _get_color(self, node: str) -> Union[str, np.ndarray]:
         """
         Assign a unique colour with each new agent's decision and utility nodes
         """
         colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]
+            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
         else:
             return 'lightgray'  # chance node
 
@@ -48,11 +48,12 @@ class MACID(MACIDBase):
     def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
         "Assign a unique color to the set of nodes in each SCC."
         colors = cm.rainbow(np.linspace(0, 1, len(sccs)))
-        for scc in sccs:
-            idx = sccs.index(scc)
+        scc_index = 0
+        for idx, scc in enumerate(sccs):
             if node in scc:
-                col = colors[idx]
-                return col
+                scc_index = idx
+                break
+        return colors[scc_index]  # type: ignore
 
     def draw_sccs(self) -> None:
         """
