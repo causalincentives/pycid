@@ -52,7 +52,8 @@ as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
   and perform basic methods on CIDs.
   * [CID_Incentives_Tutorial](./notebooks/CID_Incentives_Tutorial) shows how to find which nodes
   in a single decision CID amits incentives: value of control (direct and indirect), value of information, response incentive, and instrumental control incentives.
-  incentive, instrumental 
+  * [Reasoning_Patterns_Tutorial](./notebooks/CID_Incentives_Tutorial) shows how to find which decison nodes
+  reasoning patterns in a MACID.
 * [test](./test) has unit tests for all public methods.
 
 ## Installation and setup
