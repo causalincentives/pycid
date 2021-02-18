@@ -17,9 +17,9 @@ from core.cid import CID
 from core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
 
 # Specify the nodes and edges of a simple CID
-cid = CID([('S', 'D'),   # add nodes S and D, and a link S->D
-           ('S', 'U'),   # add node U, and a link S->U
-           ('D', 'U')],  # add a link D->U
+cid = CID([('S', 'D'),   # add nodes S and D, and a link S -> D
+           ('S', 'U'),   # add node U, and a link S -> U
+           ('D', 'U')],  # add a link D -> U
           decision_nodes=['D'],  # D is a decision node
           utility_nodes=['U'])   # U is a utility node
 
