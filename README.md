@@ -38,7 +38,7 @@ cid.draw()
 
 The [notebooks](./notebooks) provide many more examples, including
 a [CID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), 
-a [MACID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), and
+a [MACID Basics Tutorial](./notebooks/MACID_Basics_Tutorial.ipynb), and
 a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
 ## Code overview
