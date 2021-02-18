@@ -138,3 +138,5 @@ class TestAnalyze(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze)
     unittest.TextTestRunner().run(suite)
+
+# %%
