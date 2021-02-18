@@ -17,15 +17,18 @@ from core.cid import CID
 from core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
 
 # Specify the nodes and edges of a simple CID
-cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
-          decision_nodes=['D'],
-          utility_nodes=['U'])
+cid = CID([('S', 'D'),   # add nodes S and D, and a link S->D
+           ('S', 'U'),   # add node U, and a link S->U
+           ('D', 'U')],  # add a link D->U
+          decision_nodes=['D'],  # D is a decision node
+          utility_nodes=['U'])   # U is a utility node
 
 # specify the causal relationships
-cpd_s = UniformRandomCPD('S', [-1, 1])
-cpd_d = DecisionDomain('D', [-1, 1])
-cpd_u = FunctionCPD('U', lambda s, d: s*d, evidence=['S', 'D'])
-cid.add_cpds(cpd_d, cpd_s, cpd_u)
+cid.add_cpds(
+    UniformRandomCPD('S', [-1, 1]),  # S is Bern(0.5)
+    DecisionDomain('D', [-1, 1]),  # the possible choices for D are -1 and 1
+    FunctionCPD('U', lambda s, d: s*d, evidence=['S', 'D']) # U is the product of S and D
+)
 
 # Draw the result
 cid.draw()
@@ -33,7 +36,10 @@ cid.draw()
 
 ![image](./image.png "")
 
-The [notebooks](./notebooks) provide many more examples.
+The [notebooks](./notebooks) provide many more examples, including
+a [CID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), 
+a [MACID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), and
+a [CID_Incentives_Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
 ## Code overview
 
@@ -45,15 +51,7 @@ The code is structured into 5 folders:
   as well as methods for generating random ones.
 * [analyze](./analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
-* [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods:
-  * [CID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial) introduces how to instantiate, plot,
-  and perform basic methods on CIDs.
-  * [MACID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial) introduces how to instantiate, plot,
-  and perform basic methods on CIDs.
-  * [CID_Incentives_Tutorial](./notebooks/CID_Incentives_Tutorial) shows how to find which nodes
-  in a single decision CID amits incentives: value of control (direct and indirect), value of information, response incentive, and instrumental control incentives.
-  * [Reasoning_Patterns_Tutorial](./notebooks/CID_Incentives_Tutorial) shows how to find which decison nodes
-  reasoning patterns in a MACID.
+* [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [test](./test) has unit tests for all public methods.
 
 ## Installation and setup
@@ -71,10 +69,8 @@ python3 -m unittest   # check that everything works
 ## Contributing
 
 Before committing to the master branch, please ensure that:
-* All tests pass: run `python3 -m unittest` from the root directory
-* Your code does not generate unnecessary `flake8` warnings 
-  (some are okay, if fixing them would be hard)
-* Any added requirements are added to Requirements.txt
+* The script [test/check-code.sh](test/check-code.sh) completes without error (if you want, you can add it as a pre-commit hook)
+* Any new requirements are added to Requirements.txt
 * Your functions have docstrings and types, and a unit test verifying that they work
-* You have chosen "restart kernel and run all cells" before saving and committing a notebook
+* For notebooks, you have done "restart kernel and run all cells" before saving and committing 
 * Any documentation (such as this file) is up-to-date
