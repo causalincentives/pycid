@@ -37,9 +37,9 @@ cid.draw()
 ![image](./image.png "")
 
 The [notebooks](./notebooks) provide many more examples, including
-a [CID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), 
-a [MACID_Basics_Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), and
-a [CID_Incentives_Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
+a [CID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), 
+a [MACID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), and
+a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
 ## Code overview
 
