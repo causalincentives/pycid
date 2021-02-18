@@ -26,7 +26,7 @@ cid = CID([('S', 'D'),   # add nodes S and D, and a link S->D
 # specify the causal relationships
 cid.add_cpds(
     UniformRandomCPD('S', [-1, 1]),  # S is -1 or 1 with equal probability
-    DecisionDomain('D', [-1, 1]),  # the possible choices for D are -1 and 1
+    DecisionDomain('D', [-1, 1]),  # the permitted choices for D are -1 and 1
     FunctionCPD('U', lambda s, d: s*d, evidence=['S', 'D']) # U is the product of S and D
 )
 
