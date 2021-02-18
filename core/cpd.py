@@ -6,7 +6,7 @@ import itertools
 from inspect import getsourcelines
 from logging import warning
 import random
-from typing import List, Callable, Dict, Union
+from typing import List, Callable, Dict
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pgmpy.models import BayesianModel  # type: ignore
 import numpy as np
@@ -103,34 +103,39 @@ class FunctionCPD(TabularCPD):
     def __str__(self) -> str:
         return "<FunctionCPD {}:{}>".format(self.variable, self.f)
 
+    def parents_instantiated(self, cid: BayesianModel) -> bool:
+        """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
+        for p in self.evidence:
+            p_cpd = cid.get_cpds(p)
+            if not (p_cpd and hasattr(p_cpd, 'state_names')):
+                return False
+        return True
+
     def parent_values(self, cid: BayesianModel) -> List[List]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
+        assert self.parents_instantiated(cid)
         parent_values = []
         for p in self.evidence:
             p_cpd = cid.get_cpds(p)
             if p_cpd and hasattr(p_cpd, 'state_names'):
                 parent_values.append(p_cpd.state_names[p])
-            else:
-                return []
         return parent_values
 
-    def possible_values(self, cid: BayesianModel) -> Union[List[List], None]:
+    def possible_values(self, cid: BayesianModel) -> List[List]:
         """The possible values this variable can take, given the values the parents can take"""
+        assert self.parents_instantiated(cid)
         parent_values = self.parent_values(cid)
-        if parent_values is None:
-            return None
-        else:
-            return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
+        return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
 
-    def initialize_tabular_cpd(self, cid: BayesianModel) -> Union[bool, None]:
+    def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
         """Initialize the probability table for the inherited TabularCPD
 
         Returns True if successful, False otherwise
         """
-        poss_values = self.possible_values(cid)
-        if not poss_values:
+        if not self.parents_instantiated(cid):
             warning("won't initialize {} at this point".format(self.variable))
             return False
+        poss_values = self.possible_values(cid)
         if self.force_state_names:
             state_names_list = self.force_state_names
             if not set(poss_values).issubset(state_names_list):
@@ -149,7 +154,7 @@ class FunctionCPD(TabularCPD):
         super().__init__(self.variable, card,
                          matrix, evidence, evidence_card,
                          state_names=state_names)
-        return None
+        return True
 
 
 class RandomlySampledFunctionCPD(FunctionCPD):
