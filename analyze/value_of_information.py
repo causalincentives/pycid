@@ -1,7 +1,7 @@
 from typing import List
 import networkx as nx
 
-from analyze.requisite_graph import requisite
+from analyze.requisite_graph import requisite_graph
 from core.cid import CID
 
 
@@ -17,12 +17,15 @@ def admits_voi(cid: CID, decision: str, node: str) -> bool:
         raise Exception(f"{node} is not present in the cid")
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
+    if not cid.sufficient_recall():
+        raise Exception("Voi only implemented graphs with sufficient recall")
     if node in nx.descendants(cid, decision) or node == decision:
         return False
 
     cid2 = cid.copy_without_cpds()
     cid2.add_edge(node, decision)
-    return requisite(cid2, decision, node)
+    req_graph = requisite_graph(cid2)
+    return node in req_graph.get_parents(decision)
 
 
 def admits_voi_list(cid: CID, decision: str) -> List[str]:

@@ -11,16 +11,18 @@ def admits_voc(cid: CID, decision: str, node: str) -> bool:
     - A single-decision CID G admits positive value of control for a node X ∈ V \ {D}
     if and only if there is a directed path X --> U in the reduced graph G∗.
     """
-    req_graph = requisite_graph(cid)
-    agent_utilities = cid.all_utility_nodes
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
-
+    if not cid.sufficient_recall():
+        raise Exception("Voi only implemented graphs with sufficient recall")
     if node == decision:
         return False
+
+    req_graph = requisite_graph(cid)
+    agent_utilities = cid.utility_nodes_agent[cid.whose_node[decision]]
 
     for util in agent_utilities:
         if node == util or util in nx.descendants(req_graph, node):
