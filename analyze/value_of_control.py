@@ -5,24 +5,23 @@ from typing import List
 from core.get_paths import is_active_backdoor_trail, find_all_dir_paths
 
 
-def admits_voc(cid: CID, decision: str, node: str) -> bool:
+def admits_voc(cid: CID, node: str, agent: int = 0) -> bool:
     """
-    Return True if a single-decision cid admits positive value of control for node.
-    - A single-decision CID G admits positive value of control for a node X ∈ V \ {D}
-    if and only if there is a directed path X --> U in the reduced graph G∗.
+    Return True if cid admits positive value of control for a node.
+    - A  CID G admits positive value of control for a node X ∈ V
+    if and only if X is not a decision and there is a directed path X --> U
+    in the reduced graph G∗.
     """
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
-    if decision not in cid.nodes:
-        raise Exception(f"{decision} is not present in the cid")
     if not cid.sufficient_recall():
-        raise Exception("Voi only implemented graphs with sufficient recall")
-    if node == decision:
+        raise Exception("VoC only implemented graphs with sufficient recall")
+    if node in cid.decision_nodes_agent[agent]:
         return False
 
     req_graph = requisite_graph(cid)
-    agent_utilities = cid.utility_nodes_agent[cid.whose_node[decision]]
+    agent_utilities = cid.utility_nodes_agent[agent]
 
     for util in agent_utilities:
         if node == util or util in nx.descendants(req_graph, node):
@@ -31,11 +30,11 @@ def admits_voc(cid: CID, decision: str, node: str) -> bool:
     return False
 
 
-def admits_voc_list(cid: CID, decision: str) -> List[str]:
+def admits_voc_list(cid: CID, agent: int = 0) -> List[str]:
     """
-    Return list of nodes in single-decision cid with positive value of control.
+    Return list of nodes in cid with positive value of control.
     """
-    return [x for x in list(cid.nodes) if admits_voc(cid, decision, x)]
+    return [x for x in list(cid.nodes) if admits_voc(cid, x, agent=agent)]
 
 
 def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
@@ -53,12 +52,14 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
         raise Exception(f"{node} is not present in the cid")
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
+    if not cid.sufficient_recall():
+        raise Exception("VoC only implemented graphs with sufficient recall")
 
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utility_nodes_agent[cid.whose_node[decision]]
     req_graph = requisite_graph(cid)
     d_family = [decision] + cid.get_parents(decision)
     con_nodes = [i for i in d_family if i != node]
-    if not admits_voc(cid, decision, node):
+    if not admits_voc(cid, node, agent=cid.whose_node[decision]):
         return False
 
     for util in agent_utilities:
@@ -73,44 +74,43 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
 
 def admits_indir_voc_list(cid: CID, decision: str) -> List[str]:
     """
-    Return list of nodes in single-decision cid with indirect positive value of control.
+    Return list of nodes in cid with indirect positive value of control.
     """
     return [x for x in list(cid.nodes) if admits_indir_voc(cid, decision, x)]
 
 
-def admits_dir_voc(cid: CID, decision: str, node: str) -> bool:
+def admits_dir_voc(cid: CID, node: str, agent: int = 0) -> bool:
     """
-    Return True if a single-decision cid admits direct positive value of control for node.
-    - A single-decision CID G admits positive value of control for a node X ∈ V \ {D} if and
-    only if there is a directed path X --> U in the reduced graph G∗.
-    - The path X --> U may or may not pass through D.
-    - The agent has a direct value of control incentive on D if the path does not pass through D.
-    - The agent has an indirect value of control incentive on D if the path does pass through D
+    Return True if cid admits direct positive value of control for node.
+    - A CID G admits positive value of control for a node X ∈ V \ {D} if and
+    only if there is a directed path X --> U in the requisite graph G∗.
+    - The path X --> U may or may not pass through decisions.
+    - The agent has a direct value of control incentive on D if the path does not pass through a decision.
+    - The agent has an indirect value of control incentive on D if the path does pass through any decision
     and there is also a backdoor path X--U that begins backwards from X (...<- X) and is
     active when conditioning on Fa_D \ {X}
     """
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
-    if decision not in cid.nodes:
-        raise Exception(f"{decision} is not present in the cid")
 
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utility_nodes_agent[agent]
     req_graph = requisite_graph(cid)
 
-    if not admits_voc(cid, decision, node):
+    if not admits_voc(cid, node, agent=agent):
         return False
 
     for util in agent_utilities:
         if node == util or util in nx.descendants(req_graph, node):
             x_u_paths = find_all_dir_paths(req_graph, node, util)
-            if any([decision not in path for path in x_u_paths]):
-                return True
+            for path in x_u_paths:
+                if not set(path).intersection(cid.all_decision_nodes):
+                    return True
 
     return False
 
 
-def admits_dir_voc_list(cid: CID, decision: str) -> List[str]:
+def admits_dir_voc_list(cid: CID, agent: int = 0) -> List[str]:
     """
-    Return list of nodes in single-decision cid with indirect positive value of control.
+    Return list of nodes in cid with indirect positive value of control.
     """
-    return [x for x in list(cid.nodes) if admits_dir_voc(cid, decision, x)]
+    return [x for x in list(cid.nodes) if admits_dir_voc(cid, x, agent=agent)]

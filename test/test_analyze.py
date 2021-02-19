@@ -82,15 +82,15 @@ class TestAnalyze(unittest.TestCase):
 
     def test_value_of_control(self) -> None:
         cid = get_content_recommender()
-        self.assertCountEqual(admits_voc_list(cid, 'P'), ['O', 'I', 'M', 'C'])
+        self.assertCountEqual(admits_voc_list(cid), ['O', 'I', 'M', 'C'])
         cid2 = get_modified_content_recommender()
-        self.assertCountEqual(admits_voc_list(cid2, 'P'), ['O', 'M', 'C'])
-        self.assertTrue(admits_voc(cid2, 'P', 'M'))
-        self.assertFalse(admits_voc(cid2, 'P', 'I'))
+        self.assertCountEqual(admits_voc_list(cid2), ['O', 'M', 'C'])
+        self.assertTrue(admits_voc(cid2, 'M'))
+        self.assertFalse(admits_voc(cid2, 'I'))
         with self.assertRaises(Exception):
-            admits_voc(cid2, 'P', 'A')
+            admits_voc(cid2, 'A')
         with self.assertRaises(Exception):
-            admits_voc(cid2, 'B', 'I')
+            admits_voc(cid2, 'J')
 
     def test_instrumental_control_incentive(self) -> None:
         cid = get_content_recommender()
@@ -126,9 +126,9 @@ class TestAnalyze(unittest.TestCase):
 
     def test_direct_value_of_control(self) -> None:
         cid = get_fitness_tracker()
-        self.assertFalse(admits_dir_voc(cid, 'C', 'TF'))
-        self.assertTrue(admits_dir_voc(cid, 'C', 'F'))
-        self.assertCountEqual(admits_dir_voc_list(cid, 'C'), ['F', 'P'])
+        self.assertFalse(admits_dir_voc(cid, 'TF'))
+        self.assertTrue(admits_dir_voc(cid, 'F'))
+        self.assertCountEqual(admits_dir_voc_list(cid), ['F', 'P'])
         with self.assertRaises(Exception):
             admits_voi(cid, 'C', 'A')
         with self.assertRaises(Exception):
