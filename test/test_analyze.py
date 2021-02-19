@@ -9,7 +9,7 @@ from core.cpd import FunctionCPD
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
 from examples.story_cids import get_fitness_tracker, get_introduced_bias, get_content_recommender, \
     get_modified_content_recommender, get_grade_predictor
-from analyze.requisite_graph import nonrequisite, requisite_graph
+from analyze.requisite_graph import requisite, requisite_graph
 from analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_voc, admits_indir_voc_list, \
     admits_dir_voc, admits_dir_voc_list
 from analyze.response_incentive import admits_ri, admits_ri_list
@@ -72,8 +72,8 @@ class TestAnalyze(unittest.TestCase):
 
     def test_requisite_graph(self) -> None:
         cid = get_trim_example_cid()
-        self.assertTrue(nonrequisite(cid, 'D2', 'D1'))
-        self.assertFalse(nonrequisite(cid, 'D2', 'Y2'))
+        self.assertFalse(requisite(cid, 'D2', 'D1'))
+        self.assertTrue(requisite(cid, 'D2', 'Y2'))
         self.assertCountEqual(cid.get_parents('D2'), ['Y1', 'Y2', 'D1', 'Z1', 'Z2'])
         self.assertEqual(len(cid.edges), 12)
         req_graph = requisite_graph(cid)

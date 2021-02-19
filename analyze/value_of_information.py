@@ -1,5 +1,7 @@
 from typing import List
 import networkx as nx
+
+from analyze.requisite_graph import requisite
 from core.cid import CID
 
 
@@ -10,29 +12,25 @@ def admits_voi(cid: CID, decision: str, node: str) -> bool:
     ii) X is d-connected to U given Fa_D \ {X}, where U ∈ U ∩ Desc(D)
     ("Agent Incentives: a Causal Perspective" by Everitt, Carey, Langlois, Ortega, and Legg, 2020)
     """
-    agent_utilities = cid.all_utility_nodes
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
-
-    # condition (i)
-    elif node == decision or node in nx.descendants(cid, decision):
+    if node in nx.descendants(cid, decision) or node == decision:
         return False
-    # condition (ii)
-    descended_agent_utilities = [util for util in agent_utilities if util in nx.descendants(cid, decision)]
-    d_family = [decision] + cid.get_parents(decision)
-    con_nodes = [i for i in d_family if i != node]
-    voi = any([cid.is_active_trail(node, u_node, con_nodes) for u_node in descended_agent_utilities])
-    return voi
+
+    cid2 = cid.copy_without_cpds()
+    cid2.add_edge(node, decision)
+    return requisite(cid2, decision, node)
 
 
 def admits_voi_list(cid: CID, decision: str) -> List[str]:
     """
     Return the list of nodes with possible value of information for decision.
     """
-    return [x for x in list(cid.nodes) if admits_voi(cid, decision, x)]
+    non_descendants = set(cid.nodes) - set(nx.descendants(cid, decision)) - {decision}
+    return [x for x in non_descendants if admits_voi(cid, decision, x)]
 
 
 def voi(cid: CID, decision: str, variable: str) -> float:

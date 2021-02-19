@@ -370,7 +370,7 @@ class MACIDBase(BayesianModel):
         """
         rg = self.relevance_graph()
         if not self.is_full_relevance_graph_acyclic():
-            raise Exception('The relevance graph for this MACID is not acyclic and so \
+            raise Exception('The relevance graph for this (MA)CID is not acyclic and so \
                         no topological ordering can be immediately given.')
         else:
             return list(nx.topological_sort(rg))
