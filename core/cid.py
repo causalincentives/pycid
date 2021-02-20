@@ -12,20 +12,19 @@ class CID(MACIDBase):
                  decision_nodes: List[str],
                  utility_nodes: List[str]):
         super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
-
-    def copy_without_cpds(self) -> CID:
-        return CID(self.edges(), self.all_decision_nodes, self.all_utility_nodes)
+        self.decision_nodes = self.decision_nodes_agent[0]
+        self.utility_nodes = self.utility_nodes_agent[0]
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes"""
-        for d in self.all_decision_nodes:
+        for d in self.decision_nodes:
             self.impute_random_decision(d)
 
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
         if not self.sufficient_recall():
             raise Exception("CID lacks sufficient recall, so cannot be solved by backwards induction")
-        decisions = reversed(self._get_valid_order(self.all_decision_nodes))
+        decisions = reversed(self._get_valid_order(self.decision_nodes))
         for d in decisions:
             self.impute_optimal_decision(d)
 
@@ -37,20 +36,15 @@ class CID(MACIDBase):
         """
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
-        return {d: new_cid.get_cpds(d) for d in new_cid.all_decision_nodes}
+        return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
-    def copy(self) -> CID:
-        model_copy = CID(self.edges(),
-                         decision_nodes=self.all_decision_nodes,
-                         utility_nodes=self.all_utility_nodes)
-        if self.cpds:
-            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
-        return model_copy
+    def copy_without_cpds(self) -> CID:
+        return CID(self.edges(), list(self.decision_nodes), list(self.utility_nodes))
 
     def _get_color(self, node: str) -> str:
-        if node in self.all_decision_nodes:
+        if node in self.decision_nodes:
             return 'lightblue'
-        elif node in self.all_utility_nodes:
+        elif node in self.utility_nodes:
             return 'yellow'
         else:
             return 'lightgray'

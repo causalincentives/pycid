@@ -21,9 +21,10 @@ class MACID(MACIDBase):
         super().__init__(edges, node_types)
 
     def copy_without_cpds(self) -> MACID:
+        """copy the MACID structure"""
         return MACID(self.edges(),
-                     {agent: {'D': self.decision_nodes_agent[agent],
-                              'U': self.utility_nodes_agent[agent]}
+                     {agent: {'D': list(self.decision_nodes_agent[agent]),
+                              'U': list(self.utility_nodes_agent[agent])}
                      for agent in self.agents})
 
     def _get_color(self, node: str) -> Union[str, np.ndarray]:

@@ -210,8 +210,8 @@ class MACIDBase(BayesianModel):
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
         return MACIDBase(self.edges(),
-                         {agent: {'D': self.decision_nodes_agent[agent],
-                                  'U': self.utility_nodes_agent[agent]}
+                         {agent: {'D': list(self.decision_nodes_agent[agent]),
+                                  'U': list(self.utility_nodes_agent[agent])}
                           for agent in self.agents})
 
     def copy(self) -> MACIDBase:
