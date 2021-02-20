@@ -4,7 +4,6 @@
 from __future__ import annotations
 import itertools
 from inspect import getsourcelines
-from logging import warning
 import random
 from typing import List, Callable, Dict
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -133,7 +132,6 @@ class FunctionCPD(TabularCPD):
         Returns True if successful, False otherwise
         """
         if not self.parents_instantiated(cid):
-            warning("won't initialize {} at this point".format(self.variable))
             return False
         poss_values = self.possible_values(cid)
         if self.force_state_names:

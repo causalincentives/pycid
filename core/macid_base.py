@@ -42,6 +42,8 @@ class MACIDBase(BayesianModel):
         """
         Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
         """
+
+        # Add each cpd to self.cpds_to_add after doing some checks
         for cpd in cpds:
             assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
@@ -52,6 +54,8 @@ class MACIDBase(BayesianModel):
                                 {self.get_parents(cpd.variable)}")
             self.cpds_to_add[cpd.variable] = cpd
 
+        # Initialize CPDs in topological order. Call super().add_cpds if initialized
+        # successfully. Otherwise leave in self.cpds_to_add.
         for var in nx.topological_sort(self):
             if var in self.cpds_to_add:
                 cpd_to_add = self.cpds_to_add[var]
@@ -84,25 +88,24 @@ class MACIDBase(BayesianModel):
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
         self.impute_random_decision(d)
-        card = self.get_cardinality(d)
-        parents = self.get_parents(d)
-        idx2name = self.get_cpds(d).no_to_name[d]
-        state_names = self.get_cpds(d).state_names
+        cpd = self.get_cpds(d)
+        parents = cpd.variables[1:]
+        idx2name = cpd.no_to_name[d]
         utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
         descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
-        new = self.copy()  # this "freezes" the policy so it doesn't adapt to future interventions
+        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
 
         @lru_cache(maxsize=1000)
-        def opt_policy(*pv: tuple) -> Any:
+        def opt_policy(*parent_values: tuple) -> Any:
             nonlocal descendant_utility_nodes
-            context: Dict[str, Any] = {p: pv[i] for i, p in enumerate(parents)}
+            context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
             eu = []
-            for d_idx in range(card):
+            for d_idx in range(new.get_cardinality(d)):
                 context[d] = d_idx  # TODO should this be id2name[d_idx]?
                 eu.append(new.expected_value(descendant_utility_nodes, context))
             return idx2name[np.argmax(eu)]
 
-        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=state_names, label="opt"))
+        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
