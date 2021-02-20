@@ -1,6 +1,5 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-# %%
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -113,3 +112,5 @@ class TestBASE(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestBASE)
     unittest.TextTestRunner().run(suite)
+
+# %%

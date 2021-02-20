@@ -1,6 +1,5 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
 from __future__ import annotations
 from functools import lru_cache
 import matplotlib.pyplot as plt
@@ -25,8 +24,8 @@ class MACIDBase(BayesianModel):
         # dictionary matching each agent with their decision and utility nodes eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}
         self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}
-        self.all_decision_nodes: List[str] = list(set().union(*list(self.decision_nodes_agent.values())))
-        self.all_utility_nodes: List[str] = list(set().union(*list(self.utility_nodes_agent.values())))
+        self._all_decision_nodes: List[str] = []
+        self._all_utility_nodes: List[str] = []
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
         self.whose_node = {}
         for agent in self.agents:
@@ -34,9 +33,23 @@ class MACIDBase(BayesianModel):
                 self.whose_node[node] = agent
             for node in self.utility_nodes_agent[agent]:
                 self.whose_node[node] = agent
-        assert set(self.nodes).issuperset(self.all_decision_nodes)
-        assert set(self.nodes).issuperset(self.all_utility_nodes)
         self.cpds_to_add: Dict[str, TabularCPD] = {}
+
+    @property
+    def all_decision_nodes(self) -> List[str]:
+        self._all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
+        for node in self._all_decision_nodes:
+            if node not in self.nodes:
+                raise Exception(f"Node {node} is not in the (MA)CID.")
+        return self._all_decision_nodes
+
+    @property
+    def all_utility_nodes(self) -> List[str]:
+        self._all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
+        for node in self._all_utility_nodes:
+            if node not in self.nodes:
+                raise Exception(f"Node {node} is not in the (MA)CID.")
+        return self._all_utility_nodes
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
