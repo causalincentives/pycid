@@ -10,6 +10,10 @@ def admits_ici(cid: CID, decision: str, node: str) -> bool:
         if and only if G has a directed path from the decision D to a utility node U ∈ U that passes through X,
         i.e. a directed path D --> X --> U.
     """
+    if len(cid.agents) > 1:
+        raise Exception(f"This CID has {len(cid.agents)} agents. This incentive is currently only \
+                        valid for CIDs with one agent.")
+
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
     if decision not in cid.nodes:
