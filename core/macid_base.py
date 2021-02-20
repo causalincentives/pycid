@@ -101,7 +101,7 @@ class MACIDBase(BayesianModel):
             context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
             eu = []
             for d_idx in range(new.get_cardinality(d)):
-                context[d] = d_idx  # TODO should this be id2name[d_idx]?
+                context[d] = idx2name[d_idx]
                 eu.append(new.expected_value(descendant_utility_nodes, context))
             return idx2name[np.argmax(eu)]
 
@@ -133,7 +133,7 @@ class MACIDBase(BayesianModel):
         Use factor.normalize to get p(query|context, do(intervention)).
         Use context={} to get P(query). """
 
-        # check that graph is sufficiently instantiated to determine query,
+        # Check that self is sufficiently instantiated to determine query,
         # in particular that strategically relevant decisions have a policy specified
         mech_graph = self.mechanism_graph()
         for decision in self.all_decision_nodes:
@@ -144,6 +144,10 @@ class MACIDBase(BayesianModel):
                         raise Exception(f"no DecisionDomain specified for {decision}")
                     elif isinstance(cpd, DecisionDomain):
                         raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed for it")
+
+        for variable, value in context.items():
+            if value not in self.get_cpds(variable).state_names[variable]:
+                raise Exception(f"The value {value} is not in the state_names of {variable}")
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()

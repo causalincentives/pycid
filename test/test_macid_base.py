@@ -30,15 +30,18 @@ class TestBASE(unittest.TestCase):
             three_node._query(['U'], {})
         with self.assertRaises(Exception):
             three_node._query(['U'], {'D': 0})
+        three_node.impute_random_policy()
+        with self.assertRaises(Exception):
+            three_node._query(['U'], {'S': 0})
 
     # @unittest.skip("")
     def test_expected_utility(self) -> None:
         three_node = get_3node_cid()
         five_node = get_5node_cid()
-        eu00 = three_node.expected_utility({'D': 0, 'S': 0})
+        eu00 = three_node.expected_utility({'D': -1, 'S': -1})
         self.assertEqual(eu00, 1)
-        eu10 = three_node.expected_utility({'D': 1, 'S': 0})
-        self.assertEqual(eu10, 0)
+        eu10 = three_node.expected_utility({'D': 1, 'S': -1})
+        self.assertEqual(eu10, -1)
         eu000 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 0})
         self.assertEqual(eu000, 2)
         eu001 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 1})

@@ -21,9 +21,9 @@ def get_3node_cid() -> CID:
     cid = CID([('S', 'D'), ('S', 'U'), ('D', 'U')],
               decision_nodes=['D'],
               utility_nodes=['U'])
-    cpd_s = UniformRandomCPD('S', [0, 1])
-    cpd_u = FunctionCPD('U', lambda s, d: int(s == d), evidence=['S', 'D'])
-    cpd_d = DecisionDomain('D', [0, 1])
+    cpd_s = UniformRandomCPD('S', [-1, 1])
+    cpd_u = FunctionCPD('U', lambda s, d: s * d, evidence=['S', 'D'])
+    cpd_d = DecisionDomain('D', [-1, 1])
     cid.add_cpds(cpd_d, cpd_s, cpd_u)
     return cid
 
