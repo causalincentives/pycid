@@ -14,6 +14,7 @@ from analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_v
     admits_dir_voc, admits_dir_voc_list
 from analyze.response_incentive import admits_ri, admits_ri_list
 from analyze.instrumental_control_incentive import admits_ici, admits_ici_list
+from core.macid import MACID
 
 
 class TestAnalyze(unittest.TestCase):
@@ -91,6 +92,17 @@ class TestAnalyze(unittest.TestCase):
             admits_voc(cid2, 'A')
         with self.assertRaises(Exception):
             admits_voc(cid2, 'J')
+        macid = MACID([('D1', 'D2'),
+                       ('D1', 'U1'),
+                       ('D1', 'U2'),
+                       ('D2', 'U2'),
+                       ('D2', 'U1')],
+                      {0: {'D': ['D1'], 'U': ['U1']},
+                      1: {'D': ['D2'], 'U': ['U2']}})
+        with self.assertRaises(Exception):
+            admits_voc(macid, 'D2')
+        with self.assertRaises(Exception):
+            admits_voc_list(macid)
 
     def test_instrumental_control_incentive(self) -> None:
         cid = get_content_recommender()
@@ -98,9 +110,20 @@ class TestAnalyze(unittest.TestCase):
         self.assertFalse(admits_ici(cid, 'P', 'O'))
         self.assertCountEqual(admits_ici_list(cid, 'P'), ['I', 'P', 'C'])
         with self.assertRaises(Exception):
-            admits_voi(cid, 'P', 'A')
+            admits_ici(cid, 'P', 'A')
         with self.assertRaises(Exception):
-            admits_voi(cid, 'B', 'O')
+            admits_ici(cid, 'B', 'O')
+        macid = MACID([('D1', 'D2'),
+                       ('D1', 'U1'),
+                       ('D1', 'U2'),
+                       ('D2', 'U2'),
+                       ('D2', 'U1')],
+                      {0: {'D': ['D1'], 'U': ['U1']},
+                      1: {'D': ['D2'], 'U': ['U2']}})
+        with self.assertRaises(Exception):
+            admits_ici(macid, 'D2', 'D1')
+        with self.assertRaises(Exception):
+            admits_ici_list(macid, 'D2')
 
     def test_response_incentive(self) -> None:
         cid = get_grade_predictor()
@@ -113,6 +136,17 @@ class TestAnalyze(unittest.TestCase):
             admits_ri(cid, 'P', 'A')
         with self.assertRaises(Exception):
             admits_ri(cid, 'B', 'E')
+        macid = MACID([('D1', 'D2'),
+                       ('D1', 'U1'),
+                       ('D1', 'U2'),
+                       ('D2', 'U2'),
+                       ('D2', 'U1')],
+                      {0: {'D': ['D1'], 'U': ['U1']},
+                      1: {'D': ['D2'], 'U': ['U2']}})
+        with self.assertRaises(Exception):
+            admits_ri(macid, 'D2', 'D1')
+        with self.assertRaises(Exception):
+            admits_ri_list(macid, 'D2')
 
     def test_indirect_value_of_control(self) -> None:
         cid = get_fitness_tracker()
@@ -120,9 +154,20 @@ class TestAnalyze(unittest.TestCase):
         self.assertTrue(admits_indir_voc(cid, 'C', 'SC'))
         self.assertCountEqual(admits_indir_voc_list(cid, 'C'), ['SC'])
         with self.assertRaises(Exception):
-            admits_voi(cid, 'C', 'A')
+            admits_indir_voc(cid, 'C', 'A')
         with self.assertRaises(Exception):
-            admits_voi(cid, 'B', 'TF')
+            admits_indir_voc(cid, 'B', 'TF')
+        macid = MACID([('D1', 'D2'),
+                       ('D1', 'U1'),
+                       ('D1', 'U2'),
+                       ('D2', 'U2'),
+                       ('D2', 'U1')],
+                      {0: {'D': ['D1'], 'U': ['U1']},
+                      1: {'D': ['D2'], 'U': ['U2']}})
+        with self.assertRaises(Exception):
+            admits_indir_voc(macid, 'D2', 'D1')
+        with self.assertRaises(Exception):
+            admits_indir_voc_list(macid, 'D2')
 
     def test_direct_value_of_control(self) -> None:
         cid = get_fitness_tracker()
@@ -130,9 +175,18 @@ class TestAnalyze(unittest.TestCase):
         self.assertTrue(admits_dir_voc(cid, 'F'))
         self.assertCountEqual(admits_dir_voc_list(cid), ['F', 'P'])
         with self.assertRaises(Exception):
-            admits_voi(cid, 'C', 'A')
+            admits_dir_voc(cid, 'B')
+        macid = MACID([('D1', 'D2'),
+                       ('D1', 'U1'),
+                       ('D1', 'U2'),
+                       ('D2', 'U2'),
+                       ('D2', 'U1')],
+                      {0: {'D': ['D1'], 'U': ['U1']},
+                      1: {'D': ['D2'], 'U': ['U2']}})
         with self.assertRaises(Exception):
-            admits_voi(cid, 'B', 'TF')
+            admits_dir_voc(macid, 'D2')
+        with self.assertRaises(Exception):
+            admits_dir_voc_list(macid)
 
 
 if __name__ == "__main__":
