@@ -318,7 +318,7 @@ class MACIDBase(BayesianModel):
 
     def relevance_graph(self, decisions: List[str] = None) -> nx.DiGraph:
         """
-        Find the relevance graph for a set of decision nodes in the MACID
+        Find the relevance graph for a set of decision nodes in the (MA)CID
         see: Hammond, L., Fox, J., Everitt, T., Abate, A., & Wooldridge, M. (2021).
         Equilibrium Refinements for Multi-Agent Influence Diagrams: Theory and Practice.
         Default: the set of decision nodes is all decision nodes in the MAID.
@@ -364,15 +364,3 @@ class MACIDBase(BayesianModel):
 
         rg = self.relevance_graph(self.decision_nodes_agent[agent])
         return nx.is_directed_acyclic_graph(rg)  # type: ignore
-
-    def get_valid_acyclic_dec_node_ordering(self) -> List[str]:
-        """
-        Return a topological ordering (which might not be unique) of the decision nodes.
-        if the relevance graph is acyclic
-        """
-        rg = self.relevance_graph()
-        if not self.is_full_relevance_graph_acyclic():
-            raise Exception('The relevance graph for this (MA)CID is not acyclic and so \
-                        no topological ordering can be immediately given.')
-        else:
-            return list(nx.topological_sort(rg))

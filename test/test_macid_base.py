@@ -84,15 +84,6 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example2.is_full_relevance_graph_acyclic())
 
     # @unittest.skip("")
-    def test_get_valid_acyclic_dec_node_ordering(self) -> None:
-        example = get_basic2agent_acyclic()
-        self.assertEqual(example.get_valid_acyclic_dec_node_ordering(), ['D1', 'D2'])
-
-        example2 = get_basic2agent_cyclic()
-        with self.assertRaises(Exception):
-            example2.get_valid_acyclic_dec_node_ordering()
-
-    # @unittest.skip("")
     def test_mechanism_graph(self) -> None:
         example = get_basic2agent_acyclic()
         mg = example.mechanism_graph()

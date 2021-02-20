@@ -117,6 +117,10 @@ class MACID(MACIDBase):
 
     def get_all_pure_spe(self) -> List[List[Tuple[Any, List[Tuple[Any, Any]], Any]]]:
         """Return all pure policy subgame perfect NE in the MAID when the relevance graph is acyclic"""
+        if not self.is_full_relevance_graph_acyclic():
+            raise Exception('The relevance graph for this (MA)CID is not acyclic and so \
+                        this method cannot be used.')
+
         solutions = self._pure_spe_finder()
         spe_arrays = [self._create_spe_array(tree) for tree in solutions]
         return spe_arrays
@@ -152,7 +156,7 @@ class MACID(MACIDBase):
         by the pure SPE.
         """
         macid = self.copy_without_cpds()
-        dec_list = macid.get_valid_acyclic_dec_node_ordering()
+        dec_list = list(nx.topological_sort(macid.relevance_graph()))
         decision_cardinalities = [self.get_cardinality(dec) for dec in dec_list]
 
         spe_array = []
@@ -173,7 +177,7 @@ class MACID(MACIDBase):
     def _instantiate_initial_tree(self) -> List[defaultdict]:
         """Create a tree (a nested dictionary) used for SPE backward induction."""
         macid = self.copy_without_cpds()
-        dec_list = macid.get_valid_acyclic_dec_node_ordering()
+        dec_list = list(nx.topological_sort(macid.relevance_graph()))
         decision_cardinalities = [self.get_cardinality(dec) for dec in dec_list]
         # find number of pure strategies for each decision node (taking into account prev decisions)
         action_space_list = list(itertools.accumulate(decision_cardinalities, operator.mul))
@@ -216,7 +220,7 @@ class MACID(MACIDBase):
         """ Add to the queue the tree(s) filled with the node updated with whichever
         child(ren) yield the most utilty for the agent making the decision."""
         macid = self.copy_without_cpds()
-        dec_list = macid.get_valid_acyclic_dec_node_ordering()
+        dec_list = list(nx.topological_sort(macid.relevance_graph()))
         children_ev = []
         dec_num_act = self.get_cardinality(dec_list[row])  # num actions (children in the tree) of this decision
 
@@ -236,7 +240,7 @@ class MACID(MACIDBase):
         """Return the expected value of a certain decision node instantiation
         for the agent making the decision"""
         macid = self.copy_without_cpds()
-        dec_list = macid.get_valid_acyclic_dec_node_ordering()
+        dec_list = list(nx.topological_sort(macid.relevance_graph()))
         dec = dec_list[row]
 
         agent = self.whose_node[dec]      # gets the agent making that decision
