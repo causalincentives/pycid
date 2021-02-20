@@ -42,6 +42,8 @@ class MACIDBase(BayesianModel):
         """
         Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
         """
+
+        # Add each cpd to self.cpds_to_add after doing some checks
         for cpd in cpds:
             assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
@@ -52,6 +54,8 @@ class MACIDBase(BayesianModel):
                                 {self.get_parents(cpd.variable)}")
             self.cpds_to_add[cpd.variable] = cpd
 
+        # Initialize CPDs in topological order. Call super().add_cpds if initialized
+        # successfully. Otherwise leave in self.cpds_to_add.
         for var in nx.topological_sort(self):
             if var in self.cpds_to_add:
                 cpd_to_add = self.cpds_to_add[var]
