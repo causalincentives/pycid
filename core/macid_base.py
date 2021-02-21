@@ -23,9 +23,15 @@ class MACIDBase(BayesianModel):
         self.node_types = node_types
         # dictionary matching each agent with their decision and utility nodes eg {'A': ['U1', 'U2'], 'B': ['U3', 'U4']}
         self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}
+        for node in self.all_utility_nodes:
+            if node not in self.nodes:
+                raise Exception(f"Node {node} is not in the (MA)CID.")
+
         self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}
-        self._all_decision_nodes: List[str] = []
-        self._all_utility_nodes: List[str] = []
+        for node in self.all_decision_nodes:
+            if node not in self.nodes:
+                raise Exception(f"Node {node} is not in the (MA)CID.")
+
         self.agents = list(node_types.keys())   # gives a list of the MAID's agents
         self.whose_node = {}
         for agent in self.agents:
@@ -37,19 +43,11 @@ class MACIDBase(BayesianModel):
 
     @property
     def all_decision_nodes(self) -> List[str]:
-        self._all_decision_nodes = list(set().union(*list(self.decision_nodes_agent.values())))
-        for node in self._all_decision_nodes:
-            if node not in self.nodes:
-                raise Exception(f"Node {node} is not in the (MA)CID.")
-        return self._all_decision_nodes
+        return list(set().union(*list(self.decision_nodes_agent.values())))
 
     @property
     def all_utility_nodes(self) -> List[str]:
-        self._all_utility_nodes = list(set().union(*list(self.utility_nodes_agent.values())))
-        for node in self._all_utility_nodes:
-            if node not in self.nodes:
-                raise Exception(f"Node {node} is not in the (MA)CID.")
-        return self._all_utility_nodes
+        return list(set().union(*list(self.utility_nodes_agent.values())))
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
