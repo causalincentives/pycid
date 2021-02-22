@@ -3,6 +3,7 @@
 import sys
 import os
 
+from core.relevance_graph import RelevanceGraph
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
@@ -98,12 +99,13 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(example.is_r_reachable('D1', 'D2'))
 
     # @unittest.skip("")
-    def test_is_full_relevance_graph_acyclic(self) -> None:
+    def test_relevance_graph(self) -> None:
         example = get_basic2agent_acyclic()
-        self.assertTrue(example.is_full_relevance_graph_acyclic())
-
+        rg = RelevanceGraph(example)
+        self.assertTrue(rg.is_acyclic())
         example2 = get_basic2agent_cyclic()
-        self.assertFalse(example2.is_full_relevance_graph_acyclic())
+        rg2 = RelevanceGraph(example2)
+        self.assertFalse(rg2.is_acyclic())
 
     # @unittest.skip("")
     def test_mechanism_graph(self) -> None:

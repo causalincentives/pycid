@@ -24,7 +24,7 @@ class CID(MACIDBase):
         """Impute a subgame perfect optimal policy to all decision nodes"""
         if not self.sufficient_recall():
             raise Exception("CID lacks sufficient recall, so cannot be solved by backwards induction")
-        decisions = reversed(self._get_valid_order(self.decision_nodes))
+        decisions = reversed(self.get_valid_order(self.decision_nodes))
         for d in decisions:
             self.impute_optimal_decision(d)
 

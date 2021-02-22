@@ -13,29 +13,14 @@ from collections import defaultdict
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
+from core.relevance_graph import RelevanceGraph, CondensedRelevanceGraph
 
 
 class MACID(MACIDBase):
+
     def __init__(self, edges: List[Tuple[Union[str, int], str]],
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
-
-    def copy_without_cpds(self) -> MACID:
-        """copy the MACID structure"""
-        return MACID(self.edges(),
-                     {agent: {'D': list(self.decision_nodes_agent[agent]),
-                              'U': list(self.utility_nodes_agent[agent])}
-                     for agent in self.agents})
-
-    def _get_color(self, node: str) -> Union[str, np.ndarray]:
-        """
-        Assign a unique colour with each new agent's decision and utility nodes
-        """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
-        else:
-            return 'lightgray'  # chance node
 
     def get_sccs(self) -> List[set]:
         """
@@ -43,7 +28,7 @@ class MACID(MACIDBase):
         full strategic relevance graph.
         Uses Tarjan’s algorithm with Nuutila’s modifications
         - complexity is linear in the number of edges and nodes """
-        rg = self.relevance_graph()
+        rg = RelevanceGraph(self)
         return list(nx.strongly_connected_components(rg))
 
     def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
@@ -60,33 +45,18 @@ class MACID(MACIDBase):
         """
         Show the SCCs for the MACID's full strategic relevance graph
         """
-        rg = self.relevance_graph()
+        rg = RelevanceGraph(self)
         sccs = list(nx.strongly_connected_components(rg))
         layout = nx.kamada_kawai_layout(rg)
         colors = [self._set_color_scc(node, sccs) for node in rg.nodes]
         nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
         plt.show()
 
-    def condensed_relevance_graph(self) -> nx.DiGraph:
-        """
-        Return the condensed_relevance graph whose nodes are the maximal sccs of the full relevance graph
-        of the original MAID.
-        - The condensed_relevance graph will always be acyclic. Therefore, we can return a topological ordering.
-        """
-        rg = self.relevance_graph()
-        con_rel = nx.condensation(rg)
-        return con_rel
-
-    def draw_condensed_relevance_graph(self) -> None:
-        con_rel = self.condensed_relevance_graph()
-        nx.draw_networkx(con_rel, with_labels=True)
-        plt.show()
-
     def all_maid_subgames(self) -> List[set]:
         """
         Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
         """
-        con_rel = self.condensed_relevance_graph()
+        con_rel = CondensedRelevanceGraph(self)
         # con_rel.graph['mapping'] returns a dictionary matching the original relevance graph's
         # decision nodes with the sccs they are in in the condensed relevance graph
         dec_scc_mapping = con_rel.graph['mapping']
@@ -112,12 +82,12 @@ class MACID(MACIDBase):
         """
         Returns a topological ordering (which might not be unique) of the SCCs
         """
-        con_rel_graph = self.condensed_relevance_graph()
-        return list(nx.topological_sort(con_rel_graph))
+        con_rel = CondensedRelevanceGraph(self)
+        return list(nx.topological_sort(con_rel))
 
     def get_all_pure_spe(self) -> List[List[Tuple[Any, List[Tuple[Any, Any]], Any]]]:
         """Return all pure policy subgame perfect NE in the MAID when the relevance graph is acyclic"""
-        if not self.is_full_relevance_graph_acyclic():
+        if not RelevanceGraph(self).is_acyclic():
             raise Exception('The relevance graph for this (MA)CID is not acyclic and so \
                         this method cannot be used.')
 
@@ -155,8 +125,7 @@ class MACID(MACIDBase):
         decision context being conditioned on, and the third gives the decision node's action prescribed
         by the pure SPE.
         """
-        macid = self.copy_without_cpds()
-        dec_list = list(nx.topological_sort(macid.relevance_graph()))
+        dec_list = self.get_valid_order()
         decision_cardinalities = [self.get_cardinality(dec) for dec in dec_list]
 
         spe_array = []
@@ -176,8 +145,7 @@ class MACID(MACIDBase):
 
     def _instantiate_initial_tree(self) -> List[defaultdict]:
         """Create a tree (a nested dictionary) used for SPE backward induction."""
-        macid = self.copy_without_cpds()
-        dec_list = list(nx.topological_sort(macid.relevance_graph()))
+        dec_list = self.get_valid_order()
         decision_cardinalities = [self.get_cardinality(dec) for dec in dec_list]
         # find number of pure strategies for each decision node (taking into account prev decisions)
         action_space_list = list(itertools.accumulate(decision_cardinalities, operator.mul))
@@ -219,8 +187,7 @@ class MACID(MACIDBase):
                      bp: BeliefPropagation) -> List[defaultdict]:
         """ Add to the queue the tree(s) filled with the node updated with whichever
         child(ren) yield the most utilty for the agent making the decision."""
-        macid = self.copy_without_cpds()
-        dec_list = list(nx.topological_sort(macid.relevance_graph()))
+        dec_list = self.get_valid_order()
         children_ev = []
         dec_num_act = self.get_cardinality(dec_list[row])  # num actions (children in the tree) of this decision
 
@@ -239,8 +206,7 @@ class MACID(MACIDBase):
     def _get_ev(self, dec_instantiation: Tuple[int], row: int, bp: BeliefPropagation) -> float:
         """Return the expected value of a certain decision node instantiation
         for the agent making the decision"""
-        macid = self.copy_without_cpds()
-        dec_list = list(nx.topological_sort(macid.relevance_graph()))
+        dec_list = self.get_valid_order()
         dec = dec_list[row]
 
         agent = self.whose_node[dec]      # gets the agent making that decision
@@ -253,3 +219,20 @@ class MACID(MACIDBase):
                 if prob != 0:
                     ev += prob * idx[i]
         return ev
+
+    def copy_without_cpds(self) -> MACID:
+        """copy the MACID structure"""
+        return MACID(self.edges(),
+                     {agent: {'D': list(self.decision_nodes_agent[agent]),
+                              'U': list(self.utility_nodes_agent[agent])}
+                     for agent in self.agents})
+
+    def _get_color(self, node: str) -> Union[str, np.ndarray]:
+        """
+        Assign a unique colour with each new agent's decision and utility nodes
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
+        if node in self.all_decision_nodes or node in self.all_utility_nodes:
+            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
+        else:
+            return 'lightgray'  # chance node

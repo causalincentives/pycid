@@ -12,6 +12,7 @@ import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
 import matplotlib.cm as cm
+from core.relevance_graph import RelevanceGraph
 
 
 class MACIDBase(BayesianModel):
@@ -174,7 +175,10 @@ class MACIDBase(BayesianModel):
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
-    def _get_valid_order(self, nodes: List[str]) -> List[str]:
+    def get_valid_order(self, nodes: List[str] = None) -> List[str]:
+        # TODO: should this method check for sufficient recall?
+        if not nodes:
+            nodes = self.all_decision_nodes
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
 
@@ -202,57 +206,30 @@ class MACIDBase(BayesianModel):
         agent_utilities = mg.utility_nodes_agent[agent]
         rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, decision)]
         con_nodes = [decision] + mg.get_parents(decision)
-        r_reachable = any([mg.is_active_trail(node + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
-        return r_reachable
+        return any([mg.is_active_trail(node + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
 
-    def relevance_graph(self, decisions: List[str] = None) -> nx.DiGraph:
+    def sufficient_recall(self, agent: Union[str, int] = None) -> bool:
         """
-        Find the relevance graph for a set of decision nodes in the (MA)CID
-        see: Hammond, L., Fox, J., Everitt, T., Abate, A., & Wooldridge, M. (2021).
-        Equilibrium Refinements for Multi-Agent Influence Diagrams: Theory and Practice.
-        Default: the set of decision nodes is all decision nodes in the MAID.
-        - an edge D -> D' exists iff D' is r-reachable from D (ie D strategically or probabilistically relies on D')
-        """
-        if decisions is None:
-            decisions = self.all_decision_nodes
-        rel_graph = nx.DiGraph()
-        rel_graph.add_nodes_from(decisions)
-        dec_pair_perms = list(itertools.permutations(decisions, 2))
-        for dec_pair in dec_pair_perms:
-            if self.is_s_reachable(dec_pair[0], dec_pair[1]):
-                rel_graph.add_edge(dec_pair[0], dec_pair[1])
-        return rel_graph
+        Finds whether a (MA)CID has sufficient recall.
 
-    def draw_relevance_graph(self, decisions: List[str] = None) -> None:
-        """
-        Draw the MACID's relevance graph for the given set of decision nodes.
-        Default: draw the relevance graph for all decision nodes in the MACID.
-        """
-        if decisions is None:
-            decisions = self.all_decision_nodes
-        rg = self.relevance_graph(decisions)
-        nx.draw_networkx(rg, node_size=400, arrowsize=20, node_color='k', font_color='w',
-                         edge_color='k', with_labels=True)
-        plt.show()
-
-    def is_full_relevance_graph_acyclic(self) -> bool:
-        """
-        Finds whether the relevance graph for all of the decision nodes in the MACID is acyclic.
-        """
-        rg = self.relevance_graph()
-        return nx.is_directed_acyclic_graph(rg)  # type: ignore
-
-    def sufficient_recall(self, agent: Union[str, int] = 0) -> bool:
-        """
-        Finds whether an agent has sufficient recall in a (MA)CID.
         Agent i in the MAID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
-        """
-        if agent not in self.agents:
-            raise Exception(f"There is no agent {agent}, in this (MA)CID")
 
-        rg = self.relevance_graph(self.decision_nodes_agent[agent])
-        return nx.is_directed_acyclic_graph(rg)  # type: ignore
+        f an agent is specified, sufficient recall is checked only for that agent.
+        Otherwise, the check is done for all agents.
+        """
+        if not agent:
+            agents = self.agents
+        elif agent not in self.agents:
+            raise Exception(f"There is no agent {agent}, in this (MA)CID")
+        else:
+            agents = [agent]
+
+        for a in agents:
+            rg = RelevanceGraph(self, self.decision_nodes_agent[a])
+            if not rg.is_acyclic():
+                return False
+        return True
 
     def possible_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
