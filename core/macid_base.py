@@ -176,6 +176,9 @@ class MACIDBase(BayesianModel):
                                        context, intervene=intervene))
 
     def get_valid_order(self, nodes: List[str] = None) -> List[str]:
+        """Get a topological order of the specified set of nodes.
+
+        By default, a topological ordering of the decision nodes is given"""
         # TODO: should this method check for sufficient recall?
         if not nodes:
             nodes = self.all_decision_nodes
@@ -247,11 +250,21 @@ class MACIDBase(BayesianModel):
             return sum([pv * np.product(evidence_card[:i]) for i, pv in enumerate(parent_values)])
 
         function_cpds: List[FunctionCPD] = []
-        for f in functions_as_lists:
-            function_cpds.append(
-                FunctionCPD(decision, lambda *pv: f[arg2idx(pv)], cpd.variables[1:], state_names=cpd.state_names)
-            )
+        for func_list in functions_as_lists:
+            def function(*parent_values: tuple, early_eval_func_list: tuple = func_list) -> Any:
+                return early_eval_func_list[arg2idx(parent_values)]
+            function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
         return function_cpds
+
+    def optimal_decision_rules(self, decision: str) -> List[FunctionCPD]:
+        """Return a list of all optimal decision rules for given decision"""
+        cid = self.copy()
+        expected_utility: List[float] = []
+        for decision_rule in self.possible_decision_rules(decision):
+            cid.add_cpds(decision_rule)
+            expected_utility.append(cid.expected_utility({}, agent=self.whose_node[decision]))
+        return [decision_rule for i, decision_rule in enumerate(self.possible_decision_rules(decision))
+                if expected_utility[i] == max(expected_utility)]
 
     def impute_random_decision(self, d: str) -> None:
         """Impute a random policy to the given decision node"""
@@ -279,7 +292,7 @@ class MACIDBase(BayesianModel):
             eu = []
             for d_idx in range(new.get_cardinality(d)):
                 context[d] = idx2name[d_idx]
-                eu.append(new.expected_value(descendant_utility_nodes, context))
+                eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
             return idx2name[np.argmax(eu)]
 
         self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
