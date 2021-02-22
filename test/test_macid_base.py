@@ -59,6 +59,26 @@ class TestBASE(unittest.TestCase):
             self.assertEqual(cid.expected_value(['B'], {})[0], a)
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
 
+    def test_possible_decision_rules(self) -> None:
+        cid = get_minimal_cid()
+        possible_decision_rules = cid.possible_decision_rules('A')
+        self.assertEqual(len(possible_decision_rules), 2)
+        for decision_rule in possible_decision_rules:
+            cid.add_cpds(decision_rule)
+            cid.check_model()
+        three_node = get_3node_cid()
+        possible_decision_rules = three_node.possible_decision_rules('D')
+        self.assertEqual(len(possible_decision_rules), 4)
+        for decision_rule in possible_decision_rules:
+            three_node.add_cpds(decision_rule)
+            three_node.check_model()
+        five_node = get_5node_cid()
+        possible_decision_rules = five_node.possible_decision_rules('D')
+        self.assertEqual(len(possible_decision_rules), 16)
+        for decision_rule in possible_decision_rules:
+            five_node.add_cpds(decision_rule)
+            five_node.check_model()
+
     # @unittest.skip("")
     def test_is_s_reachable(self) -> None:
         example = get_basic2agent_acyclic()

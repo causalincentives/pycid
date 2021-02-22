@@ -254,6 +254,28 @@ class MACIDBase(BayesianModel):
         rg = self.relevance_graph(self.decision_nodes_agent[agent])
         return nx.is_directed_acyclic_graph(rg)  # type: ignore
 
+    def possible_decision_rules(self, decision: str) -> List[FunctionCPD]:
+        """Return a list of the decision rules available at the given decision"""
+
+        cpd: TabularCPD = self.get_cpds(decision)
+        evidence_card = cpd.cardinality[1:]
+        state_names = cpd.state_names[decision]
+
+        # We begin by representing each possible decision as a list values, with length
+        # equal the number of decision contexts
+        functions_as_lists = itertools.product(state_names, repeat=np.product(evidence_card))
+
+        def arg2idx(parent_values: tuple) -> int:
+            """Convert a decision context into an index for the function list"""
+            return sum([pv * np.product(evidence_card[:i]) for i, pv in enumerate(parent_values)])
+
+        function_cpds: List[FunctionCPD] = []
+        for f in functions_as_lists:
+            function_cpds.append(
+                FunctionCPD(decision, lambda *pv: f[arg2idx(pv)], cpd.variables[1:], state_names=cpd.state_names)
+            )
+        return function_cpds
+
     def impute_random_decision(self, d: str) -> None:
         """Impute a random policy to the given decision node"""
         current_cpd = self.get_cpds(d)
@@ -287,6 +309,7 @@ class MACIDBase(BayesianModel):
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
+        # TODO: Move to analyze, as this is not really a core feature?
         parents = self.get_parents(d)
         new = self.copy()
 
