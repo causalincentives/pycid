@@ -2,6 +2,8 @@
 # agreements; and to You under the Apache License, Version 2.0.
 import sys
 import os
+
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
@@ -10,6 +12,7 @@ from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
 from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic
 from pgmpy.factors.discrete import TabularCPD
 from examples.story_macids import forgetful_movie_star, subgame_difference
+from core.macid_base import MechanismGraph
 
 
 class TestBASE(unittest.TestCase):
@@ -85,7 +88,7 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_mechanism_graph(self) -> None:
         example = get_basic2agent_acyclic()
-        mg = example.mechanism_graph()
+        mg = MechanismGraph(example)
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)

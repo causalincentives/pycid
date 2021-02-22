@@ -86,14 +86,6 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def mechanism_graph(self) -> MACIDBase:
-        """Returns a mechanism graph with an extra parent node+"mec" for each node"""
-        mg = self.copy_without_cpds()
-        for node in self.nodes:
-            mg.add_node(node + "mec")
-            mg.add_edge(node + "mec", node)
-        return mg
-
     def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -102,7 +94,7 @@ class MACIDBase(BayesianModel):
 
         # Check that self is sufficiently instantiated to determine query,
         # in particular that strategically relevant decisions have a policy specified
-        mech_graph = MechanismGraph(self)  # self.mechanism_graph()
+        mech_graph = MechanismGraph(self)
         for decision in self.all_decision_nodes:
             for query_node in query:
                 if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
@@ -204,7 +196,7 @@ class MACIDBase(BayesianModel):
         if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
         - If a node V is r-reachable from a decision D that means D strategically or probabilisticaly relies on V.
         """
-        mg = self.mechanism_graph()
+        mg = MechanismGraph(self)
         agent = mg.whose_node[decision]
         agent_utilities = mg.utility_nodes_agent[agent]
         rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, decision)]
