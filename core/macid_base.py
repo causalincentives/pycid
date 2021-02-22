@@ -127,6 +127,7 @@ class MACIDBase(BayesianModel):
             updated_state_names[v] = cpd.state_names[v]
 
         bp = BeliefPropagation(cid)
+        # TODO: check for probability 0 queries
         # factor = bp.query(query, filtered_context)
         factor = bp.query(query, context)
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
