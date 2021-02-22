@@ -86,53 +86,6 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def _get_valid_order(self, nodes: List[str]) -> List[str]:
-        srt = [i for i in nx.topological_sort(self) if i in nodes]
-        return srt
-
-    def impute_random_decision(self, d: str) -> None:
-        """Impute a random policy to the given decision node"""
-        current_cpd = self.get_cpds(d)
-        if current_cpd:
-            sn = current_cpd.state_names[d]
-        else:
-            raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
-        self.add_cpds(UniformRandomCPD(d, sn))
-
-    def impute_optimal_decision(self, d: str) -> None:
-        """Impute an optimal policy to the given decision node"""
-        self.impute_random_decision(d)
-        cpd = self.get_cpds(d)
-        parents = cpd.variables[1:]
-        idx2name = cpd.no_to_name[d]
-        utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
-        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
-        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
-
-        @lru_cache(maxsize=1000)
-        def opt_policy(*parent_values: tuple) -> Any:
-            nonlocal descendant_utility_nodes
-            context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
-            eu = []
-            for d_idx in range(new.get_cardinality(d)):
-                context[d] = idx2name[d_idx]
-                eu.append(new.expected_value(descendant_utility_nodes, context))
-            return idx2name[np.argmax(eu)]
-
-        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
-
-    def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
-        """Imputes a policy for d = the expectation of y conditioning on d's parents"""
-        parents = self.get_parents(d)
-        new = self.copy()
-
-        @lru_cache(maxsize=1000)
-        def cond_exp_policy(*pv: tuple) -> float:
-            context = {p: pv[i] for i, p in enumerate(parents)}
-            return new.expected_value([y], context)[0]
-
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
-
     def mechanism_graph(self) -> MACIDBase:
         """Returns a mechanism graph with an extra parent node+"mec" for each node"""
         mg = self.copy_without_cpds()
@@ -149,7 +102,7 @@ class MACIDBase(BayesianModel):
 
         # Check that self is sufficiently instantiated to determine query,
         # in particular that strategically relevant decisions have a policy specified
-        mech_graph = self.mechanism_graph()
+        mech_graph = MechanismGraph(self)  # self.mechanism_graph()
         for decision in self.all_decision_nodes:
             for query_node in query:
                 if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
@@ -228,80 +181,9 @@ class MACIDBase(BayesianModel):
         return sum(self.expected_value(self.utility_nodes_agent[agent],
                                        context, intervene=intervene))
 
-    def copy_without_cpds(self) -> MACIDBase:
-        """copy the MACIDBase object without its CPDs"""
-        return MACIDBase(self.edges(),
-                         {agent: {'D': list(self.decision_nodes_agent[agent]),
-                                  'U': list(self.utility_nodes_agent[agent])}
-                          for agent in self.agents})
-
-    def copy(self) -> MACIDBase:
-        """copy the MACIDBase object"""
-        model_copy = self.copy_without_cpds()
-        if self.cpds:
-            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
-        return model_copy
-
-    def _get_color(self, node: str) -> Union[np.ndarray, str]:
-        """
-        Assign a unique colour to each new agent's decision and utility nodes
-        """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
-        else:
-            return 'lightgray'  # chance node
-
-    def _get_shape(self, node: str) -> str:
-        if node in self.all_decision_nodes:
-            return 's'
-        elif node in self.all_utility_nodes:
-            return 'D'
-        else:
-            return 'o'
-
-    def _get_label(self, node: str) -> Any:
-        cpd = self.get_cpds(node)
-        if hasattr(cpd, "label"):
-            return cpd.label
-        elif hasattr(cpd, "__name__"):
-            return cpd.__name__
-        else:
-            return ""
-
-    def draw(self,
-             node_color: Callable[[str], str] = None,
-             node_shape: Callable[[str], str] = None,
-             node_label: Callable[[str], str] = None) -> None:
-        color = node_color if node_color else self._get_color
-        shape = node_shape if node_shape else self._get_shape
-        label = node_label if node_label else self._get_label
-        layout = nx.kamada_kawai_layout(self)
-        label_dict = {node: label(node) for node in self.nodes}
-        pos_higher = {}
-        for k, v in layout.items():
-            if v[1] > 0:
-                pos_higher[k] = (v[0] - 0.1, v[1] - 0.2)
-            else:
-                pos_higher[k] = (v[0] - 0.1, v[1] + 0.2)
-        nx.draw_networkx(self, pos=layout, node_size=800, arrowsize=20)
-        nx.draw_networkx_labels(self, pos_higher, label_dict)
-        for node in self.nodes:
-            nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
-                             node_color=color(node),
-                             node_shape=shape(node))
-        plt.show()
-
-    def draw_property(self, node_property: Callable[[str], bool], color: str = 'red') -> None:
-        """Draw a CID with nodes satisfying property highlighted"""
-
-        def node_color(node: str) -> Any:
-            if node_property(node):
-                return color
-            else:
-                return self._get_color(node)
-
-        self.draw(node_color=node_color)
+    def _get_valid_order(self, nodes: List[str]) -> List[str]:
+        srt = [i for i in nx.topological_sort(self) if i in nodes]
+        return srt
 
     def is_s_reachable(self, d1: str, d2: str) -> bool:
         """
@@ -378,3 +260,137 @@ class MACIDBase(BayesianModel):
 
         rg = self.relevance_graph(self.decision_nodes_agent[agent])
         return nx.is_directed_acyclic_graph(rg)  # type: ignore
+
+    def impute_random_decision(self, d: str) -> None:
+        """Impute a random policy to the given decision node"""
+        current_cpd = self.get_cpds(d)
+        if current_cpd:
+            sn = current_cpd.state_names[d]
+        else:
+            raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
+        self.add_cpds(UniformRandomCPD(d, sn))
+
+    def impute_optimal_decision(self, d: str) -> None:
+        """Impute an optimal policy to the given decision node"""
+        self.impute_random_decision(d)
+        cpd = self.get_cpds(d)
+        parents = cpd.variables[1:]
+        idx2name = cpd.no_to_name[d]
+        utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
+        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
+        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
+
+        @lru_cache(maxsize=1000)
+        def opt_policy(*parent_values: tuple) -> Any:
+            nonlocal descendant_utility_nodes
+            context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
+            eu = []
+            for d_idx in range(new.get_cardinality(d)):
+                context[d] = idx2name[d_idx]
+                eu.append(new.expected_value(descendant_utility_nodes, context))
+            return idx2name[np.argmax(eu)]
+
+        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
+
+    def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
+        """Imputes a policy for d = the expectation of y conditioning on d's parents"""
+        parents = self.get_parents(d)
+        new = self.copy()
+
+        @lru_cache(maxsize=1000)
+        def cond_exp_policy(*pv: tuple) -> float:
+            context = {p: pv[i] for i, p in enumerate(parents)}
+            return new.expected_value([y], context)[0]
+
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
+
+    def copy_without_cpds(self) -> MACIDBase:
+        """copy the MACIDBase object without its CPDs"""
+        return MACIDBase(self.edges(),
+                         {agent: {'D': list(self.decision_nodes_agent[agent]),
+                                  'U': list(self.utility_nodes_agent[agent])}
+                          for agent in self.agents})
+
+    def copy(self) -> MACIDBase:
+        """copy the MACIDBase object"""
+        model_copy = self.copy_without_cpds()
+        if self.cpds:
+            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
+        return model_copy
+
+    def _get_color(self, node: str) -> Union[np.ndarray, str]:
+        """
+        Assign a unique colour to each new agent's decision and utility nodes
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
+        if node in self.all_decision_nodes or node in self.all_utility_nodes:
+            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
+        else:
+            return 'lightgray'  # chance node
+
+    def _get_shape(self, node: str) -> str:
+        if node in self.all_decision_nodes:
+            return 's'
+        elif node in self.all_utility_nodes:
+            return 'D'
+        else:
+            return 'o'
+
+    def _get_label(self, node: str) -> Any:
+        cpd = self.get_cpds(node)
+        if hasattr(cpd, "label"):
+            return cpd.label
+        elif hasattr(cpd, "__name__"):
+            return cpd.__name__
+        else:
+            return ""
+
+    def draw(self,
+             node_color: Callable[[str], str] = None,
+             node_shape: Callable[[str], str] = None,
+             node_label: Callable[[str], str] = None) -> None:
+        color = node_color if node_color else self._get_color
+        shape = node_shape if node_shape else self._get_shape
+        label = node_label if node_label else self._get_label
+        layout = nx.kamada_kawai_layout(self)
+        label_dict = {node: label(node) for node in self.nodes}
+        pos_higher = {}
+        for k, v in layout.items():
+            if v[1] > 0:
+                pos_higher[k] = (v[0] - 0.1, v[1] - 0.2)
+            else:
+                pos_higher[k] = (v[0] - 0.1, v[1] + 0.2)
+        nx.draw_networkx(self, pos=layout, node_size=800, arrowsize=20)
+        nx.draw_networkx_labels(self, pos_higher, label_dict)
+        for node in self.nodes:
+            nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
+                             node_color=color(node),
+                             node_shape=shape(node))
+        plt.show()
+
+    def draw_property(self, node_property: Callable[[str], bool], color: str = 'red') -> None:
+        """Draw a CID with nodes satisfying property highlighted"""
+
+        def node_color(node: str) -> Any:
+            if node_property(node):
+                return color
+            else:
+                return self._get_color(node)
+
+        self.draw(node_color=node_color)
+
+
+class MechanismGraph(MACIDBase):
+    """A mechanism graph has an extra parent node+"mec" for each node"""
+
+    def __init__(self, cid: MACIDBase):
+        super().__init__(cid.edges(),
+                         {agent: {'D': list(cid.decision_nodes_agent[agent]),
+                                  'U': list(cid.utility_nodes_agent[agent])}
+                          for agent in cid.agents})
+        for node in cid.nodes:
+            if node[:-3] == "mec":
+                raise Exception("can't create a mechanism graph when node {node} already ends with mec")
+            self.add_node(node + "mec")
+            self.add_edge(node + "mec", node)
+        # TODO: adapt the parameterization from cid as well
