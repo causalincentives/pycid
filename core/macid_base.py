@@ -89,24 +89,23 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def query(self, query: List[str], context: Dict[str, Any], intervention: dict = None,
-              check_uninstantiated: bool = True) -> BeliefPropagation:
+    def query(self, query: List[str], context: Dict[str, Any],
+              intervention: Dict["str", "Any"] = None) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).
         Use context={} to get P(query). """
 
         # Check that strategically relevant decisions have a policy specified
-        if check_uninstantiated:
-            mech_graph = MechanismGraph(self)
-            for decision in self.all_decision_nodes:
-                for query_node in query:
-                    if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
-                        cpd = self.get_cpds(decision)
-                        if not cpd:
-                            raise Exception(f"no DecisionDomain specified for {decision}")
-                        elif isinstance(cpd, DecisionDomain):
-                            raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed")
+        mech_graph = MechanismGraph(self)
+        for decision in self.all_decision_nodes:
+            for query_node in query:
+                if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
+                    cpd = self.get_cpds(decision)
+                    if not cpd:
+                        raise Exception(f"no DecisionDomain specified for {decision}")
+                    elif isinstance(cpd, DecisionDomain):
+                        raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed")
 
         for variable, value in context.items():
             if value not in self.get_cpds(variable).state_names[variable]:
@@ -137,7 +136,7 @@ class MACIDBase(BayesianModel):
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 
-    def intervene(self, intervention: dict) -> None:
+    def intervene(self, intervention: Dict["str", "Any"]) -> None:
         """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
 
         Soft interventions can be achieved by using add_cpds directly.
@@ -149,16 +148,12 @@ class MACIDBase(BayesianModel):
 
         self.add_cpds(*cpds)
 
-    def expected_value(self,
-                       variables: List[str],
-                       context: dict,
-                       intervene: dict = None,
-                       check_uninstantiated: bool = True) -> List[float]:
+    def expected_value(self, variables: List[str], context: Dict["str", "Any"],
+                       intervene: Dict["str", "Any"] = None,) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
         """
-        factor = self.query(variables, context, intervention=intervene,
-                            check_uninstantiated=check_uninstantiated)
+        factor = self.query(variables, context, intervention=intervene)
         factor.normalize()  # make probs add to one
 
         ev = np.array([0.0 for _ in factor.variables])
@@ -172,20 +167,15 @@ class MACIDBase(BayesianModel):
                                 consider imputing a random decision".format(variables, context, idx, prob))
         return ev.tolist()  # type: ignore
 
-    def expected_utility(self,
-                         context: Dict["str", "Any"],
-                         intervene: dict = None,
-                         agent: Union[str, int] = 0,
-                         check_uninstantiated: bool = True) -> float:
+    def expected_utility(self, context: Dict["str", "Any"],
+                         intervene: Dict["str", "Any"] = None, agent: Union[str, int] = 0) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context
         """
-        return sum(self.expected_value(self.utility_nodes_agent[agent],
-                                       context, intervene=intervene,
-                                       check_uninstantiated=check_uninstantiated))
+        return sum(self.expected_value(self.utility_nodes_agent[agent], context, intervene=intervene))
 
     def get_valid_order(self, nodes: List[str] = None) -> List[str]:
         """Get a topological order of the specified set of nodes.
@@ -280,8 +270,7 @@ class MACIDBase(BayesianModel):
         expected_utility: List[float] = []
         for decision_rule in self.possible_decision_rules(decision):
             cid.add_cpds(decision_rule)
-            expected_utility.append(cid.expected_utility({}, agent=self.whose_node[decision],
-                                                         check_uninstantiated=False))
+            expected_utility.append(cid.expected_utility({}, agent=self.whose_node[decision]))
         return [decision_rule for i, decision_rule in enumerate(self.possible_decision_rules(decision))
                 if expected_utility[i] == max(expected_utility)]
 
