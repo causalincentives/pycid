@@ -267,6 +267,9 @@ class MACIDBase(BayesianModel):
     def optimal_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """Return a list of all optimal decision rules for given decision"""
         cid = self.copy()
+        for d in self.all_decision_nodes:
+            if not self.is_s_reachable(decision, d):
+                cid.impute_random_decision(d)
         expected_utility: List[float] = []
         for decision_rule in self.possible_decision_rules(decision):
             cid.add_cpds(decision_rule)
