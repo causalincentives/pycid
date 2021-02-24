@@ -280,9 +280,8 @@ class MACIDBase(BayesianModel):
         expected_utility: List[float] = []
         for decision_rule in self.possible_decision_rules(decision):
             cid.add_cpds(decision_rule)
-            utility_nodes = self.utility_nodes_agent[self.whose_node[decision]]
-            descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
-            expected_utility.append(sum(cid.expected_value(descendant_utility_nodes, {}, check_uninstantiated=False)))
+            expected_utility.append(cid.expected_utility({}, agent=self.whose_node[decision],
+                                                         check_uninstantiated=False))
         return [decision_rule for i, decision_rule in enumerate(self.possible_decision_rules(decision))
                 if expected_utility[i] == max(expected_utility)]
 
@@ -298,7 +297,6 @@ class MACIDBase(BayesianModel):
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
         self.add_cpds(random.choice(self.optimal_decision_rules(d)))
-        return None
         # self.impute_random_decision(d)
         # cpd = self.get_cpds(d)
         # parents = cpd.variables[1:]
