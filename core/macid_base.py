@@ -1,6 +1,8 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
+
+import random
 from functools import lru_cache
 import matplotlib.pyplot as plt
 import numpy as np
@@ -87,23 +89,24 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def _query(self, query: List[str], context: Dict[str, Any], intervention: dict = None) -> BeliefPropagation:
+    def query(self, query: List[str], context: Dict[str, Any], intervention: dict = None,
+              check_uninstantiated: bool = True) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).
         Use context={} to get P(query). """
 
-        # Check that self is sufficiently instantiated to determine query,
-        # in particular that strategically relevant decisions have a policy specified
-        mech_graph = MechanismGraph(self)
-        for decision in self.all_decision_nodes:
-            for query_node in query:
-                if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
-                    cpd = self.get_cpds(decision)
-                    if not cpd:
-                        raise Exception(f"no DecisionDomain specified for {decision}")
-                    elif isinstance(cpd, DecisionDomain):
-                        raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed for it")
+        # Check that strategically relevant decisions have a policy specified
+        if check_uninstantiated:
+            mech_graph = MechanismGraph(self)
+            for decision in self.all_decision_nodes:
+                for query_node in query:
+                    if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
+                        cpd = self.get_cpds(decision)
+                        if not cpd:
+                            raise Exception(f"no DecisionDomain specified for {decision}")
+                        elif isinstance(cpd, DecisionDomain):
+                            raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed")
 
         for variable, value in context.items():
             if value not in self.get_cpds(variable).state_names[variable]:
@@ -146,11 +149,16 @@ class MACIDBase(BayesianModel):
 
         self.add_cpds(*cpds)
 
-    def expected_value(self, variables: List[str], context: dict, intervene: dict = None) -> List[float]:
+    def expected_value(self,
+                       variables: List[str],
+                       context: dict,
+                       intervene: dict = None,
+                       check_uninstantiated: bool = True) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
         """
-        factor = self._query(variables, context, intervention=intervene)
+        factor = self.query(variables, context, intervention=intervene,
+                            check_uninstantiated=check_uninstantiated)
         factor.normalize()  # make probs add to one
 
         ev = np.array([0.0 for _ in factor.variables])
@@ -164,8 +172,11 @@ class MACIDBase(BayesianModel):
                                 consider imputing a random decision".format(variables, context, idx, prob))
         return ev.tolist()  # type: ignore
 
-    def expected_utility(self, context: Dict["str", "Any"],
-                         intervene: dict = None, agent: Union[str, int] = 0) -> float:
+    def expected_utility(self,
+                         context: Dict["str", "Any"],
+                         intervene: dict = None,
+                         agent: Union[str, int] = 0,
+                         check_uninstantiated: bool = True) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
@@ -173,7 +184,8 @@ class MACIDBase(BayesianModel):
         out = self.expected_utility({'D':1}) #TODO: give example that uses context
         """
         return sum(self.expected_value(self.utility_nodes_agent[agent],
-                                       context, intervene=intervene))
+                                       context, intervene=intervene,
+                                       check_uninstantiated=check_uninstantiated))
 
     def get_valid_order(self, nodes: List[str] = None) -> List[str]:
         """Get a topological order of the specified set of nodes.
@@ -218,7 +230,7 @@ class MACIDBase(BayesianModel):
         Agent i in the MAID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
 
-        f an agent is specified, sufficient recall is checked only for that agent.
+        If an agent is specified, sufficient recall is checked only for that agent.
         Otherwise, the check is done for all agents.
         """
         if not agent:
@@ -239,15 +251,21 @@ class MACIDBase(BayesianModel):
 
         cpd: TabularCPD = self.get_cpds(decision)
         evidence_card = cpd.cardinality[1:]
+        parents = cpd.variables[1:]
         state_names = cpd.state_names[decision]
 
         # We begin by representing each possible decision as a list values, with length
         # equal the number of decision contexts
-        functions_as_lists = itertools.product(state_names, repeat=np.product(evidence_card))
+        functions_as_lists = list(itertools.product(state_names, repeat=np.product(evidence_card)))
 
         def arg2idx(parent_values: tuple) -> int:
             """Convert a decision context into an index for the function list"""
-            return sum([pv * np.product(evidence_card[:i]) for i, pv in enumerate(parent_values)])
+            idx = 0
+            for i, pv in enumerate(parent_values):
+                name_to_no: Dict[Any, int] = self.get_cpds(parents[i]).name_to_no[parents[i]]
+                idx += name_to_no[pv] * np.product(evidence_card[:i])
+            assert 0 <= idx <= len(functions_as_lists)
+            return idx
 
         function_cpds: List[FunctionCPD] = []
         for func_list in functions_as_lists:
@@ -262,7 +280,9 @@ class MACIDBase(BayesianModel):
         expected_utility: List[float] = []
         for decision_rule in self.possible_decision_rules(decision):
             cid.add_cpds(decision_rule)
-            expected_utility.append(cid.expected_utility({}, agent=self.whose_node[decision]))
+            utility_nodes = self.utility_nodes_agent[self.whose_node[decision]]
+            descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
+            expected_utility.append(sum(cid.expected_value(descendant_utility_nodes, {}, check_uninstantiated=False)))
         return [decision_rule for i, decision_rule in enumerate(self.possible_decision_rules(decision))
                 if expected_utility[i] == max(expected_utility)]
 
@@ -277,25 +297,27 @@ class MACIDBase(BayesianModel):
 
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
-        self.impute_random_decision(d)
-        cpd = self.get_cpds(d)
-        parents = cpd.variables[1:]
-        idx2name = cpd.no_to_name[d]
-        utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
-        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
-        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
-
-        @lru_cache(maxsize=1000)
-        def opt_policy(*parent_values: tuple) -> Any:
-            nonlocal descendant_utility_nodes
-            context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
-            eu = []
-            for d_idx in range(new.get_cardinality(d)):
-                context[d] = idx2name[d_idx]
-                eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
-            return idx2name[np.argmax(eu)]
-
-        self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
+        self.add_cpds(random.choice(self.optimal_decision_rules(d)))
+        return None
+        # self.impute_random_decision(d)
+        # cpd = self.get_cpds(d)
+        # parents = cpd.variables[1:]
+        # idx2name = cpd.no_to_name[d]
+        # utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
+        # descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
+        # new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
+        #
+        # @lru_cache(maxsize=1000)
+        # def opt_policy(*parent_values: tuple) -> Any:
+        #     nonlocal descendant_utility_nodes
+        #     context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
+        #     eu = []
+        #     for d_idx in range(new.get_cardinality(d)):
+        #         context[d] = idx2name[d_idx]
+        #         eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
+        #     return idx2name[np.argmax(eu)]
+        #
+        # self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""

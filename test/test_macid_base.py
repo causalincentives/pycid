@@ -30,12 +30,12 @@ class TestBASE(unittest.TestCase):
     def test_query(self) -> None:
         three_node = get_3node_cid()
         with self.assertRaises(Exception):
-            three_node._query(['U'], {})
+            three_node.query(['U'], {})
         with self.assertRaises(Exception):
-            three_node._query(['U'], {'D': 0})
+            three_node.query(['U'], {'D': 0})
         three_node.impute_random_policy()
         with self.assertRaises(Exception):
-            three_node._query(['U'], {'S': 0})
+            three_node.query(['U'], {'S': 0})
 
     # @unittest.skip("")
     def test_expected_utility(self) -> None:
@@ -72,6 +72,19 @@ class TestBASE(unittest.TestCase):
             expected_utilities.append(cid.expected_utility({}))
         self.assertEqual(set(expected_utilities), {0, 1})
 
+        cid = get_3node_cid()
+        possible_decision_rules = cid.possible_decision_rules('D')
+        self.assertEqual(len(possible_decision_rules), 4)
+        expected_utilities = []
+        matrices = set()
+        for decision_rule in possible_decision_rules:
+            cid.add_cpds(decision_rule)
+            matrices.add(tuple(cid.get_cpds('D').values.flatten()))
+            cid.check_model()
+            expected_utilities.append(cid.expected_utility({}))
+        self.assertEqual(set(expected_utilities), {-1, 0, 1})
+        self.assertEqual(len(matrices), 4)
+
         five_node = get_5node_cid()
         possible_decision_rules = five_node.possible_decision_rules('D')
         self.assertEqual(len(possible_decision_rules), 16)
@@ -85,6 +98,13 @@ class TestBASE(unittest.TestCase):
     def test_optimal_decision_rules(self) -> None:
         cid = get_minimal_cid()
         optimal_decision_rules = cid.optimal_decision_rules('A')
+        self.assertEqual(len(optimal_decision_rules), 1)
+        for cpd in optimal_decision_rules:
+            cid.add_cpds(cpd)
+            self.assertEqual(cid.expected_utility({}), 1)
+
+        cid = get_3node_cid()
+        optimal_decision_rules = cid.optimal_decision_rules('D')
         self.assertEqual(len(optimal_decision_rules), 1)
         for cpd in optimal_decision_rules:
             cid.add_cpds(cpd)
