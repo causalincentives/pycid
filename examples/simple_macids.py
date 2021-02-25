@@ -242,8 +242,8 @@ def two_agent_one_pne() -> MACID:
                                           [0, 1, 0, 0]]),
                         evidence=['D1', 'D2'], evidence_card=[2, 2])
     cpd_u2 = TabularCPD('U2', 4, np.array([[0, 1, 0, 0],
-                                          [1, 0, 0, 0],
-                                          [0, 0, 0, 1],
+                                          [0, 0, 0, 0],
+                                          [1, 0, 0, 1],
                                           [0, 0, 1, 0]]),
                         evidence=['D1', 'D2'], evidence_card=[2, 2])
 

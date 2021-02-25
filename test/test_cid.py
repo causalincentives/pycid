@@ -11,6 +11,9 @@ from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utilit
     get_sequential_cid
 from examples.story_cids import get_introduced_bias
 
+from core.cid import CID
+from core.cpd import DecisionDomain, FunctionCPD, TabularCPD
+
 
 class TestCID(unittest.TestCase):
 
@@ -65,5 +68,3 @@ class TestCID(unittest.TestCase):
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCID)
     unittest.TextTestRunner().run(suite)
-
-# %%
