@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
+from core.cpd import FunctionCPD
 import numpy as np
 from typing import Any, List, Tuple, Dict, Union
 # import numpy.typing as npt
@@ -237,13 +238,13 @@ class MACID(MACIDBase):
         else:
             return 'lightgray'  # chance node
 
-    def get_all_pure_ne(self):
+    def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         pure_ne = []
 
-        def agent_pure_policies(agent):
+        def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
             possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
             return list(itertools.product(*possible_dec_rules))
-        
+
         all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
         all_dec_decision_rules = list(map(self.possible_pure_decision_rules, self.all_decision_nodes))
         all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
@@ -258,7 +259,7 @@ class MACID(MACIDBase):
                     eu_deviation_agent = self.expected_utility({}, agent=agent_i)
                     if eu_deviation_agent > eu_jp_agent:
                         found = False
-                        
+
             if found:
                 pure_ne.append(jp)
         return pure_ne

@@ -10,7 +10,6 @@ from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_dif
     get_basic2agent_cyclic, get_basic_subgames, get_basic_subgames2, get_basic_subgames3, two_agent_no_pne, \
     two_agent_one_pne, two_agent_two_pne
 
-import itertools
 
 class TestMACID(unittest.TestCase):
 
@@ -39,7 +38,7 @@ class TestMACID(unittest.TestCase):
         macid3 = basic_different_dec_cardinality()
         self.assertEqual(macid3.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 2)]])
 
-    def test_pure_ne2(self):
+    def test_pure_ne2(self) -> None:
         macid = two_agent_two_pne()
         self.assertEqual(len(macid.get_all_pure_ne()), 2)
         macid2 = two_agent_one_pne()
