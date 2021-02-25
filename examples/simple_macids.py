@@ -295,7 +295,7 @@ def two_agent_no_pne() -> MACID:
     cpd_u1 = TabularCPD('U1', 2, np.array([[0, 1, 1, 0],
                                           [1, 0, 0, 1]]),
                         evidence=['D1', 'D2'], evidence_card=[2, 2])
-    cpd_u2 = TabularCPD('U2', 5, np.array([[1, 0, 0, 1],
+    cpd_u2 = TabularCPD('U2', 2, np.array([[1, 0, 0, 1],
                                           [0, 1, 1, 0]]),
                         evidence=['D1', 'D2'], evidence_card=[2, 2])
 

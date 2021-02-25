@@ -236,3 +236,30 @@ class MACID(MACIDBase):
             return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
         else:
             return 'lightgray'  # chance node
+
+    def get_all_pure_ne(self):
+        pure_ne = []
+
+        def agent_pure_policies(agent):
+            possible_dec_rules = list(map(self.possible_decision_rules, self.decision_nodes_agent[agent]))
+            return list(itertools.product(*possible_dec_rules))
+        
+        all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
+        all_dec_decision_rules = list(map(self.possible_decision_rules, self.all_decision_nodes))
+        all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
+
+        for jp in all_joint_policy_profiles:
+            # self.add_cpds(*jp)
+            found = True
+            for agent_i in self.agents:
+                self.add_cpds(*jp)
+                eu_jp_agent = self.expected_utility({}, agent=agent_i)
+                for agent_policy in all_agent_pure_policies[agent_i]:
+                    self.add_cpds(*agent_policy)
+                    eu_deviation_agent = self.expected_utility({}, agent=agent_i)
+                    if eu_deviation_agent > eu_jp_agent:
+                        found = False
+                        
+            if found:
+                pure_ne.append(jp)
+        return pure_ne
