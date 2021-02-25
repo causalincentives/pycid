@@ -224,6 +224,85 @@ def basic2agent_3() -> MACID:
     return macid
 
 
+def two_agent_one_pne() -> MACID:
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
+
+    cpd_d1 = DecisionDomain('D1', [0, 1])
+    cpd_d2 = DecisionDomain('D2', [0, 1])
+
+    cpd_u1 = TabularCPD('U1', 4, np.array([[0, 0, 1, 0],
+                                          [1, 0, 0, 0],
+                                          [0, 0, 0, 1],
+                                          [0, 1, 0, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+    cpd_u2 = TabularCPD('U2', 4, np.array([[0, 1, 0, 0],
+                                          [1, 0, 0, 0],
+                                          [0, 0, 0, 1],
+                                          [0, 0, 1, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def two_agent_two_pne() -> MACID:
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
+
+    cpd_d1 = DecisionDomain('D1', [0, 1])
+    cpd_d2 = DecisionDomain('D2', [0, 1])
+
+    cpd_u1 = TabularCPD('U1', 5, np.array([[0, 0, 0, 0],
+                                          [1, 0, 0, 0],
+                                          [0, 0, 1, 0],
+                                          [0, 0, 0, 1],
+                                          [0, 1, 0, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+    cpd_u2 = TabularCPD('U2', 5, np.array([[0, 0, 0, 0],
+                                          [1, 0, 0, 0],
+                                          [0, 1, 0, 0],
+                                          [0, 0, 0, 1],
+                                          [0, 0, 1, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def two_agent_no_pne() -> MACID:
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {0: {'D': ['D1'], 'U': ['U1']},
+         1: {'D': ['D2'], 'U': ['U2']}})
+
+    cpd_d1 = DecisionDomain('D1', [0, 1])
+    cpd_d2 = DecisionDomain('D2', [0, 1])
+
+    cpd_u1 = TabularCPD('U1', 2, np.array([[0, 1, 1, 0],
+                                          [1, 0, 0, 1]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+    cpd_u2 = TabularCPD('U2', 5, np.array([[1, 0, 0, 1],
+                                          [0, 1, 1, 0]]),
+                        evidence=['D1', 'D2'], evidence_card=[2, 2])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
 def c2d() -> MACID:
     macid = MACID([
         ('C1', 'U1'),
