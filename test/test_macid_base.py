@@ -1,16 +1,15 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
+# %%
 import sys
 import os
-
-from core.relevance_graph import RelevanceGraph
-
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
+from core.relevance_graph import RelevanceGraph
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic
+from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, two_agent_one_pne
 from pgmpy.factors.discrete import TabularCPD
 from examples.story_macids import forgetful_movie_star, subgame_difference
 from core.macid_base import MechanismGraph
@@ -49,6 +48,11 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(eu000, 2)
         eu001 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 1})
         self.assertEqual(eu001, 1)
+        macid_example = two_agent_one_pne()
+        eu_agent0 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=0)
+        self.assertEqual(eu_agent0, 3)
+        eu_agent1 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=1)
+        self.assertEqual(eu_agent1, 0)
 
     # @unittest.skip("")
     def test_intervention(self) -> None:
