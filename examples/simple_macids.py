@@ -225,6 +225,19 @@ def basic2agent_3() -> MACID:
 
 
 def two_agent_one_pne() -> MACID:
+    """ This macim is a simultaneous two player game
+    and has a parameterisation that
+    corresponds to the following normal
+    form game - where the row player is agent 0, and the
+    column player is agent 1
+        +----------+----------+----------+
+        |          | Act(0)   | Act(1)   |
+        +----------+----------+----------+
+        | Act(0)   | 1, 2     | 3, 0     |
+        +----------+----------+----------+
+        | Act(1)   | 0, 3     | 2, 2     |
+        +----------+----------+----------+
+        """
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -252,6 +265,19 @@ def two_agent_one_pne() -> MACID:
 
 
 def two_agent_two_pne() -> MACID:
+    """ This macim is a simultaneous two player game
+    and has a parameterisation that
+    corresponds to the following normal
+    form game - where the row player is agent 0, and the
+    column player is agent 1
+        +----------+----------+----------+
+        |          | Act(0)   | Act(1)   |
+        +----------+----------+----------+
+        | Act(0)   | 1, 1     | 4, 2     |
+        +----------+----------+----------+
+        | Act(1)   | 2, 4     | 3, 3     |
+        +----------+----------+----------+
+        """
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
@@ -281,6 +307,19 @@ def two_agent_two_pne() -> MACID:
 
 
 def two_agent_no_pne() -> MACID:
+    """ This macim is a simultaneous two player game
+    and has a parameterisation that
+    corresponds to the following normal
+    form game - where the row player is agent 0, and the
+    column player is agent 1
+        +----------+----------+----------+
+        |          | Act(0)   | Act(1)   |
+        +----------+----------+----------+
+        | Act(0)   | 1, 0     | 0, 1     |
+        +----------+----------+----------+
+        | Act(1)   | 0, 1     | 1, 0     |
+        +----------+----------+----------+
+        """
     macid = MACID([
         ('D1', 'U1'),
         ('D1', 'U2'),
