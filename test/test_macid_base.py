@@ -65,23 +65,23 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
 
     # @unittest.skip("")
-    def test_possible_decision_rules(self) -> None:
+    def test_possible_pure_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        possible_decision_rules = cid.possible_decision_rules('A')
-        self.assertEqual(len(possible_decision_rules), 2)
+        possible_pure_decision_rules = cid.possible_pure_decision_rules('A')
+        self.assertEqual(len(possible_pure_decision_rules), 2)
         expected_utilities = []
-        for decision_rule in possible_decision_rules:
+        for decision_rule in possible_pure_decision_rules:
             cid.add_cpds(decision_rule)
             cid.check_model()
             expected_utilities.append(cid.expected_utility({}))
         self.assertEqual(set(expected_utilities), {0, 1})
 
         cid = get_3node_cid()
-        possible_decision_rules = cid.possible_decision_rules('D')
-        self.assertEqual(len(possible_decision_rules), 4)
+        possible_pure_decision_rules = cid.possible_pure_decision_rules('D')
+        self.assertEqual(len(possible_pure_decision_rules), 4)
         expected_utilities = []
         matrices = set()
-        for decision_rule in possible_decision_rules:
+        for decision_rule in possible_pure_decision_rules:
             cid.add_cpds(decision_rule)
             matrices.add(tuple(cid.get_cpds('D').values.flatten()))
             cid.check_model()
@@ -90,10 +90,10 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(len(matrices), 4)
 
         five_node = get_5node_cid()
-        possible_decision_rules = five_node.possible_decision_rules('D')
-        self.assertEqual(len(possible_decision_rules), 16)
+        possible_pure_decision_rules = five_node.possible_pure_decision_rules('D')
+        self.assertEqual(len(possible_pure_decision_rules), 16)
         expected_utilities = []
-        for decision_rule in possible_decision_rules:
+        for decision_rule in possible_pure_decision_rules:
             five_node.add_cpds(decision_rule)
             five_node.check_model()
             expected_utilities.append(five_node.expected_utility({}))

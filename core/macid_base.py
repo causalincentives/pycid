@@ -236,7 +236,7 @@ class MACIDBase(BayesianModel):
                 return False
         return True
 
-    def possible_decision_rules(self, decision: str) -> List[FunctionCPD]:
+    def possible_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
         cpd: TabularCPD = self.get_cpds(decision)
@@ -271,10 +271,10 @@ class MACIDBase(BayesianModel):
             if not self.is_s_reachable(decision, d):
                 macid.impute_random_decision(d)
         expected_utility: List[float] = []
-        for decision_rule in self.possible_decision_rules(decision):
+        for decision_rule in self.possible_pure_decision_rules(decision):
             macid.add_cpds(decision_rule)
             expected_utility.append(macid.expected_utility({}, agent=self.whose_node[decision]))
-        return [decision_rule for i, decision_rule in enumerate(self.possible_decision_rules(decision))
+        return [decision_rule for i, decision_rule in enumerate(self.possible_pure_decision_rules(decision))
                 if expected_utility[i] == max(expected_utility)]
 
     def impute_random_decision(self, d: str) -> None:

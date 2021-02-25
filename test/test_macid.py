@@ -72,6 +72,7 @@ class TestMACID(unittest.TestCase):
 
 
     def test_pure_ne2(self):
+        
         #ne = []
 
         macid = two_agent_two_pne()

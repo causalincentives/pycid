@@ -241,15 +241,14 @@ class MACID(MACIDBase):
         pure_ne = []
 
         def agent_pure_policies(agent):
-            possible_dec_rules = list(map(self.possible_decision_rules, self.decision_nodes_agent[agent]))
+            possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
             return list(itertools.product(*possible_dec_rules))
         
         all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
-        all_dec_decision_rules = list(map(self.possible_decision_rules, self.all_decision_nodes))
+        all_dec_decision_rules = list(map(self.possible_pure_decision_rules, self.all_decision_nodes))
         all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
 
         for jp in all_joint_policy_profiles:
-            # self.add_cpds(*jp)
             found = True
             for agent_i in self.agents:
                 self.add_cpds(*jp)
