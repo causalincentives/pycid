@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
 from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_different_dec_cardinality, \
-    get_basic2agent_cyclic, get_basic_subgames, get_basic_subgames2, get_basic_subgames3
+    get_basic2agent_cyclic, get_basic_subgames, get_basic_subgames2, get_basic_subgames3, two_agent_one_pne
 
 
 class TestMACID(unittest.TestCase):
@@ -35,6 +35,12 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(macid2.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 0)]])
         macid3 = basic_different_dec_cardinality()
         self.assertEqual(macid3.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 2)]])
+
+    # def test_pure_ne(self):
+    #     macid = two_agent_one_pne()
+    #     macid.impute_random_policy()
+    #     macid.intervene({'D1': 0})
+
 
 
 if __name__ == "__main__":

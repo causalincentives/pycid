@@ -15,11 +15,6 @@ class CID(MACIDBase):
         self.decision_nodes = self.decision_nodes_agent[0]
         self.utility_nodes = self.utility_nodes_agent[0]
 
-    def impute_random_policy(self) -> None:
-        """Impute a random policy to all decision nodes"""
-        for d in self.decision_nodes:
-            self.impute_random_decision(d)
-
     def impute_optimal_policy(self) -> None:
         """Impute a subgame perfect optimal policy to all decision nodes"""
         if not self.sufficient_recall():
@@ -27,6 +22,11 @@ class CID(MACIDBase):
         decisions = reversed(self.get_valid_order(self.decision_nodes))
         for d in decisions:
             self.impute_optimal_decision(d)
+
+    def impute_random_policy(self) -> None:
+        """Impute a random policy to all decision nodes in the CID"""
+        for d in self.decision_nodes:
+            self.impute_random_decision(d)
 
     def solve(self) -> Dict:
         """Return dictionary with subgame perfect global policy

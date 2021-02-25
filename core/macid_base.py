@@ -286,6 +286,11 @@ class MACIDBase(BayesianModel):
             raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         self.add_cpds(UniformRandomCPD(d, sn))
 
+    def impute_fully_mixed_policy_profile(self) -> None:
+        """Impute a fully mixed policy profile - ie a random decision rule to all decision nodes"""
+        for d in self.all_decision_nodes:
+            self.impute_random_decision(d)
+
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
         self.add_cpds(random.choice(self.optimal_decision_rules(d)))
