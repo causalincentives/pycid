@@ -254,13 +254,13 @@ class MACID(MACIDBase):
 
         for jp in all_joint_policy_profiles:
             found_ne = True
-            for agent_i in self.agents:
+            for a in self.agents:
                 self.add_cpds(*jp)
-                eu_jp_agent = self.expected_utility({}, agent=agent_i)
-                for agent_policy in all_agent_pure_policies[agent_i]:
+                eu_jp_agent_a = self.expected_utility({}, agent=a)
+                for agent_policy in all_agent_pure_policies[a]:
                     self.add_cpds(*agent_policy)
-                    eu_deviation_agent = self.expected_utility({}, agent=agent_i)
-                    if eu_deviation_agent > eu_jp_agent:
+                    eu_deviation_agent_a = self.expected_utility({}, agent=a)
+                    if eu_deviation_agent_a > eu_jp_agent_a:
                         found_ne = False
             if found_ne:
                 pure_ne.append(jp)
