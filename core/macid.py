@@ -265,3 +265,11 @@ class MACID(MACIDBase):
             if found_ne:
                 pure_ne.append(jp)
         return pure_ne
+
+    def joint_policy_assignment(self, joint_policy: List[FunctionCPD]) -> Dict:
+        """Return dictionary with the joint policy assigned - ie a decision rule 
+        to each of the MACIM's decision nodes."""
+        new_macid = self.copy() 
+        new_macid.add_cpds(*joint_policy)
+        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+        
