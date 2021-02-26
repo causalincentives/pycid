@@ -340,12 +340,13 @@ def two_agent_no_pne() -> MACID:
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
 
+
 def prisoners_dilemma() -> MACID:
-    """ This macim is a represetnation of the canonical
+    """ This macim is a representation of the canonical
     prisoner's dilemma. It is a simultaneous
     symmetric two-player game with payoffs
     corresponding to the following normal
-    form game - the row player is agent 1, and the
+    form game - the row player is agent 1 and the
     column player is agent 2:
         +----------+----------+----------+
         |          |Cooperate | Defect   |
@@ -380,11 +381,132 @@ def prisoners_dilemma() -> MACID:
     return macid
 
 
+def battle_of_the_sexes() -> MACID:
+    """ This macim is a representation of the
+    battle of the sexes game (also known as Bach or Stravinsky). 
+    It is a simultaneous symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is Female and the
+    column player is Male:
+        +----------+----------+----------+
+        |          |Opera     | Football |
+        +----------+----------+----------+
+        |  Opera   | 3, 2     |   0, 0   |
+        +----------+----------+----------+
+        | Football | 0, 0     | 2, 3     |
+        +----------+----------+----------+
+    - This game has two pure NE: (Opera, Football) and (Football, Opera)
+    """
+    macid = MACID([
+        ('D_F', 'U_F'),
+        ('D_F', 'U_M'),
+        ('D_M', 'U_M'),
+        ('D_M', 'U_F')],
+        {'M': {'D': ['D_F'], 'U': ['U_F']},
+         'F': {'D': ['D_M'], 'U': ['U_M']}})
+
+    d_f_domain = ['O', 'F']
+    d_m_domain = ['O', 'F']
+    cpd_d_f = DecisionDomain('D_F', d_f_domain)
+    cpd_d_m = DecisionDomain('D_M', d_m_domain)
+
+    agent_f_payoff = np.array([[3, 0],
+                              [0, 2]])
+    agent_m_payoff = np.array([[2, 0],
+                              [0, 3]])
+
+    cpd_u_f = FunctionCPD('U_F', lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)], evidence=['D_F', 'D_M'])
+    cpd_u_m = FunctionCPD('U_M', lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)], evidence=['D_F', 'D_M'])
+
+    macid.add_cpds(cpd_d_f, cpd_d_m, cpd_u_f, cpd_u_m)
+    return macid
 
 
+def matching_pennies() -> MACID:
+    """ This macim is a represetnation of the
+    matching pennies game.
+    It is symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is agent 1 and the
+    column player is agent 2:
+        +----------+----------+----------+
+        |          |Heads     | Tails    |
+        +----------+----------+----------+
+        |  Heads   | +1, -1   | -1, +1   |
+        +----------+----------+----------+
+        | Tails    | -1, +1   | +1, -1   |
+        +----------+----------+----------+
+    - This game has no pure NE, but has a mixed NE where
+    each player chooses Heads or Tails with equal probability.
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['H', 'T']
+    d2_domain = ['H', 'T']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[1, -1],
+                             [-1, 1]])
+    agent2_payoff = np.array([[-1, 1],
+                             [1, -1]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
 
 
+def two_agents_three_actions() -> MACID:
+    """ This macim is a represetnation of a
+    game where two players must decide between
+    threee different actions simultaneously
+    - the row player is agent 1 and the
+    column player is agent 2 - the normal form
+    representation of the payoffs is as follows:
+        +----------+----------+----------+----------+
+        |          |  L       |     C    |     R    |
+        +----------+----------+----------+----------+
+        | T        | 4, 3     | 5, 1     | 6, 2     |
+        +----------+----------+----------+----------+
+        | M        | 2, 1     | 8, 4     |  3, 6    |
+        +----------+----------+----------+----------+
+        | B        | 3, 0     | 9, 6     |  2, 8    |
+        +----------+----------+----------+----------+
+    - The game has one pure NE (T,L)
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
 
+    d1_domain = ['T', 'M', 'B']
+    d2_domain = ['L', 'C', 'R']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[4, 5, 6],
+                             [2, 8, 3],
+                             [3, 9, 2]])
+    agent2_payoff = np.array([[3, 1, 2],
+                             [1, 4, 6],
+                             [0, 6, 8]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
 
 
 
