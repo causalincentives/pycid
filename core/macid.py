@@ -239,6 +239,9 @@ class MACID(MACIDBase):
             return 'lightgray'  # chance node
 
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
+        """
+        Return a list of all pure Nash equilbiria
+        """
         pure_ne = []
 
         def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
@@ -250,7 +253,7 @@ class MACID(MACIDBase):
         all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
 
         for jp in all_joint_policy_profiles:
-            found = True
+            found_ne = True
             for agent_i in self.agents:
                 self.add_cpds(*jp)
                 eu_jp_agent = self.expected_utility({}, agent=agent_i)
@@ -258,8 +261,7 @@ class MACID(MACIDBase):
                     self.add_cpds(*agent_policy)
                     eu_deviation_agent = self.expected_utility({}, agent=agent_i)
                     if eu_deviation_agent > eu_jp_agent:
-                        found = False
-
-            if found:
+                        found_ne = False
+            if found_ne:
                 pure_ne.append(jp)
         return pure_ne
