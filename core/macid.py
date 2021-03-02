@@ -334,11 +334,15 @@ class MACID(MACIDBase):
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
         - If a partial policy is specified, the decison rules of decision nodes specified by the partial policy 
         remain unchanged.
-        TODO: Check that the decisions_in_sg are in the MACID
         TODO: Check that the decisions in decisions_in_sg actually make up a subgame
         """
         if not decisions_in_sg:
             decisions_in_sg = self.all_decision_nodes
+
+        for dec in decisions_in_sg:
+            if dec not in self.all_decision_nodes:
+                raise Exception(f"The node {dec} is not a decision node in the (MACID")
+
 
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
         pure_ne_in_sg = []
@@ -388,19 +392,19 @@ class MACID(MACIDBase):
         
         return pure_ne_in_sg
 
-    def joint_policy_assignment(self, joint_policy: List[FunctionCPD]) -> Dict:
-        """Return dictionary with the joint policy assigned - ie a decision rule 
-        to each of the MACIM's decision nodes."""
-        new_macid = self.copy() 
-        new_macid.add_cpds(*joint_policy)
-        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+    # def joint_policy_assignment(self, joint_policy: List[FunctionCPD]) -> Dict:
+    #     """Return dictionary with the joint policy assigned - ie a decision rule 
+    #     to each of the MACIM's decision nodes."""
+    #     new_macid = self.copy() 
+    #     new_macid.add_cpds(*joint_policy)
+    #     return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
         
-    def partial_policy_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
-        """Return dictionary with the joint policy assigned - ie a decision rule 
-        to each of the MACIM's decision nodes."""
-        new_macid = self.copy_without_cpds() 
-        new_macid.add_cpds(*partial_policy)
-        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+    # def partial_policy_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
+    #     """Return dictionary with the joint policy assigned - ie a decision rule 
+    #     to each of the MACIM's decision nodes."""
+    #     new_macid = self.copy_without_cpds() 
+    #     new_macid.add_cpds(*partial_policy)
+    #     return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
           
     def policy_profile_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
         """Return dictionary with the joint or partial policy profile assigned - 
@@ -409,7 +413,7 @@ class MACID(MACIDBase):
         new_macid.add_cpds(*partial_policy)
         return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
     
-    def get_all_pure_spe_new(self) -> List[List[FunctionCPD]]:
+    def get_all_pure_spe(self) -> List[List[FunctionCPD]]:
         spes: List[List[FunctionCPD]] = [[]]
         crg = CondensedRelevanceGraph(self)
         dec_scc_mapping = crg.graph['mapping']

@@ -44,24 +44,6 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(macid3.get_all_pure_spe(), [[('D1', [], 1), ('D2', [('D1', 0)], 1), ('D2', [('D1', 1)], 2)]])
 
     @unittest.skip("")
-    def test_get_all_pure_ne(self) -> None:
-        macid = prisoners_dilemma()
-        self.assertEqual(len(macid.get_all_pure_ne()), 1)
-        pne = macid.get_all_pure_ne()[0]
-        macid.add_cpds(*pne)
-        self.assertEqual(macid.expected_utility({}, agent=1), -2)
-        self.assertEqual(macid.expected_utility({}, agent=2), -2)   
-        
-        macid2 = battle_of_the_sexes()
-        self.assertEqual(len(macid2.get_all_pure_ne()), 2)
-        
-        macid3 = matching_pennies()
-        self.assertEqual(len(macid3.get_all_pure_ne()), 0)
-
-        macid4 = two_agents_three_actions()
-        self.assertEqual(len(macid4.get_all_pure_ne()), 1)       
-
-    # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision('D1')
@@ -78,10 +60,47 @@ class TestMACID(unittest.TestCase):
         d1_cpd = joint_policy_assignment['D1']
         self.assertEqual(d1_cpd.state_names, {'D1': ['e', 'c']})
         print(d1_cpd.state_names)  # can put this in the notebook too
-        print(type(d1_cpd.values))
-        
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
+
+    @unittest.skip("")
+    def test_get_all_pure_ne(self) -> None:
+        macid = prisoners_dilemma()
+        self.assertEqual(len(macid.get_all_pure_ne()), 1)
+        pne = macid.get_all_pure_ne()[0]
+        macid.add_cpds(*pne)
+        self.assertEqual(macid.expected_utility({}, agent=1), -2)
+        self.assertEqual(macid.expected_utility({}, agent=2), -2)   
         
+        macid2 = battle_of_the_sexes()
+        self.assertEqual(len(macid2.get_all_pure_ne()), 2)
+        
+        macid3 = matching_pennies()
+        self.assertEqual(len(macid3.get_all_pure_ne()), 0)
+
+        macid4 = two_agents_three_actions()
+        self.assertEqual(len(macid4.get_all_pure_ne()), 1)     
+        
+    # @unittest.skip("")
+    def test_get_all_pure_ne_in_sg(self):
+        macid = taxi_competition()
+        ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=['D2'])
+        policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
+        cpd_d2 = policy_assignment['D2']
+        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0,1], [1,0]])))
+        self.assertFalse(policy_assignment['D1'])
+        ne_in_full_macid = macid.get_all_pure_ne_in_sg()
+        self.assertEqual(len(ne_in_full_macid), 3)
+        with self.assertRaises(Exception):
+            macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
+
+
+        
+        
+        # all_spe = macid.get_all_pure_spe()
+        # print(f"len is {len(all_spe)}")
+        # macid.add_cpds(*all_spe[0])
+        
+
 
 
 
