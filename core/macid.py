@@ -360,7 +360,7 @@ class MACID(MACIDBase):
 
         # if a partial policy profile is input, those decision rules should not change
         if partial_policy_profile:
-            pp = self.partial_policy_assignment(partial_policy_profile)     
+            pp = self.policy_profile_assignment(partial_policy_profile)     
             decs_already_optimised = [k for k, v in pp.items() if v != None]
             decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in decs_already_optimised]
         else:

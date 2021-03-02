@@ -80,7 +80,7 @@ class TestMACID(unittest.TestCase):
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_all_pure_ne()), 1)     
         
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self):
         macid = taxi_competition()
         ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=['D2'])
@@ -93,6 +93,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
+    
 
         
         
@@ -250,30 +251,30 @@ class TestMACID(unittest.TestCase):
         #                                                     [1, 1]])))
 
 
-    @unittest.skip("")
-    def test_get_all_pure_spe_new(self) -> None:
-        macid = battle_of_the_sexes()
-        all_spe = macid.get_all_pure_spe_new()
-        print(f"len is {len(all_spe)}")
-
-
-        # macid = modified_taxi_competition()
-        # all_spe = macid.get_all_pure_spe_new()
-        # print(f"len is now {len(all_spe)}")
+    # @unittest.skip("")
+    def test_get_all_pure_spe(self) -> None:
+        macid = taxi_competition()
+        all_spe = macid.get_all_pure_spe()
+        self.assertTrue(len(all_spe)==1)
         spe = all_spe[0]
-        jp = macid.joint_policy_assignment(spe)
-        cpd = jp['D_M']
-        print(f"new D2 = {cpd.values}")
-        cpd = jp['D_F']
-        print(f"new_D1 = {cpd.values}")
+        joint_policy = macid.policy_profile_assignment(spe)
+        cpd_d1 = joint_policy['D1']
+        cpd_d2 = joint_policy['D2']
+        self.assertTrue(np.array_equal(cpd_d1.values, np.array([1,0])))
+        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0,1], [1,0]])))
 
-        spe = all_spe[1]
-        jp = macid.joint_policy_assignment(spe)
-        cpd = jp['D_M']
-        print(f"new D2 = {cpd.values}")
-        cpd = jp['D_F']
-        print(f"new_D1 = {cpd.values}")
+        macid = prisoners_dilemma()
+        all_spe = macid.get_all_pure_spe()
+        self.assertTrue(len(all_spe)==1)
 
+        macid = battle_of_the_sexes()
+        all_spe = macid.get_all_pure_spe()
+        self.assertTrue(len(all_spe)==2)
+
+
+
+
+        
 
 
         # spe = all_spe[1]
