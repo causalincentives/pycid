@@ -380,6 +380,46 @@ def prisoners_dilemma() -> MACID:
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
 
+def prisoners_dilemma2() -> MACID:
+    """ This macim is a representation of the canonical
+    prisoner's dilemma. It is a simultaneous
+    symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is agent 1 and the
+    column player is agent 2:
+        +----------+----------+----------+
+        |          |Cooperate | Defect   |
+        +----------+----------+----------+
+        |Cooperate | -1, -1   | -3, 0    |
+        +----------+----------+----------+
+        |  Defect  | 0, -3    | -2, -2   |
+        +----------+----------+----------+
+    - This game has one pure NE: (defect, defect)
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = [0, 1]
+    d2_domain = [0, 1]
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[-1, -3],
+                             [0, -2]])
+    agent2_payoff = np.transpose(agent1_payoff)
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
 
 def battle_of_the_sexes() -> MACID:
     """ This macim is a representation of the
@@ -532,6 +572,7 @@ def taxi_competition() -> MACID:
         | cheap    |     3    |   1      |
         +----------+----------+----------+
 
+    - There are 3 pure startegy NE and 1 pure SPE.
     """
     macid = MACID([
         ('D1', 'D2'),
@@ -552,8 +593,60 @@ def taxi_competition() -> MACID:
     agent2_payoff = np.array([[2, 5],
                              [3, 1]])
 
-    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
-    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+def modified_taxi_competition() -> MACID:
+    """ Modifying the payoffs in the taxi competition example
+    so that there is a tie break (if taxi 1 chooses to stop
+    in front of the expensive hotel, taxi 2 is indifferent 
+    between their choices.)
+    
+    There are now two SPNE
+        
+                              D1
+        +----------+----------+----------+
+        |  taxi 1  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   3      |
+    D2  +----------+----------+----------+
+        | cheap    |     5    |   1      |
+        +----------+----------+----------+
+
+                              D1
+        +----------+----------+----------+
+        |  taxi 2  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   5      |
+    D2  +----------+----------+----------+
+        | cheap    |     3    |   5      |
+        +----------+----------+----------+
+
+    """
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['e', 'c']
+    d2_domain = ['e', 'c']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[2, 3],
+                             [5, 1]])
+    agent2_payoff = np.array([[2, 5],
+                             [3, 5]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=['D1', 'D2'])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid

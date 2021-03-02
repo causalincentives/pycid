@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
+# from _typeshed import NoneType
 from core.cpd import FunctionCPD
 import numpy as np
 from typing import Any, List, Tuple, Dict, Union
@@ -15,7 +16,6 @@ import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
 from core.relevance_graph import RelevanceGraph, CondensedRelevanceGraph
-
 
 class MACID(MACIDBase):
 
@@ -240,31 +240,153 @@ class MACID(MACIDBase):
 
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
-        Return a list of all pure Nash equilbiria
+        Return a list of all pure Nash equilbiria in the MACID. 
+        - Each NE comes as a list of FunctionCPDs for each decision node in the MACID.
         """
-        pure_ne = []
+        return self.get_all_pure_ne_in_sg()
+    
+    
+    # def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
+    # TODO: Keeping here in case Tom thinks we should keep this direct method for computing all
+    # pure NE in a MACID.
+    #     """
+    #     Return a list of all pure Nash equilbiria - where each NE comes as a
+    #     list of each decision node's corresponding FunctionCPD.
+    #     """
+    #     pure_ne = []
 
+    #     def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
+    #         possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
+    #         return list(itertools.product(*possible_dec_rules))
+
+    #     all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
+    #     all_dec_decision_rules = list(map(self.possible_pure_decision_rules, self.all_decision_nodes))
+    #     all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
+
+    #     for jp in all_joint_policy_profiles:
+    #         found_ne = True
+    #         for a in self.agents:
+    #             self.add_cpds(*jp)
+    #             eu_jp_agent_a = self.expected_utility({}, agent=a)
+    #             for agent_policy in all_agent_pure_policies[a]:
+    #                 self.add_cpds(*agent_policy)
+    #                 eu_deviation_agent_a = self.expected_utility({}, agent=a)
+    #                 if eu_deviation_agent_a > eu_jp_agent_a:
+    #                     found_ne = False
+    #         if found_ne:
+    #             pure_ne.append(jp)
+    #     return pure_ne
+
+
+    # def get_all_pure_ne2(self, decisions_in_sg: List[str] = None) -> List[List[FunctionCPD]]:
+    #     """
+    #     Return a list of all pure Nash equilbiria
+    #     """
+    #     if not decisions_in_sg:
+    #         decisions_in_sg = self.all_decision_nodes
+
+    #     agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
+
+    #     pure_ne_in_sg = []
+
+    #     def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
+    #         agent_decs_in_sg = [dec for dec in self.decision_nodes_agent[agent] if dec in decisions_in_sg]
+    #         possible_dec_rules = list(map(self.possible_pure_decision_rules, agent_decs_in_sg))
+    #         return list(itertools.product(*possible_dec_rules))
+
+    #     all_agent_pure_policies_in_sg = {agent: agent_pure_policies(agent) for agent in agents_in_sg}
+    #     all_dec_decision_rules = list(map(self.possible_pure_decision_rules, decisions_in_sg))
+    #     all_joint_policy_profiles_in_sg = list(itertools.product(*all_dec_decision_rules))
+
+    #     decs_not_in_sg = [dec for dec in self.all_decision_nodes if dec not in decisions_in_sg]
+
+        
+
+    #     for jp in all_joint_policy_profiles_in_sg:
+    #         found_ne = True
+    #         for a in agents_in_sg:
+    #             self.add_cpds(*jp)
+    #             for d in decs_not_in_sg: # to create a fullly mixed joint policy profile
+    #                 print(f"{d} not in subgame")
+    #                 self.impute_random_decision(d)
+
+    #             jp_with_ne_in_sg = [self.get_cpds(d) for d in self.all_decision_nodes]
+
+    #             eu_jp_agent_a = self.expected_utility({}, agent=a)
+    #             for agent_policy in all_agent_pure_policies_in_sg[a]:
+    #                 self.add_cpds(*agent_policy)
+    #                 eu_deviation_agent_a = self.expected_utility({}, agent=a)
+    #                 if eu_deviation_agent_a > eu_jp_agent_a:
+    #                     found_ne = False
+    #         if found_ne:
+                
+    #             # pure_ne_in_sg.append(jp_with_ne_in_sg)
+
+
+    #             pure_ne_in_sg.append(jp)
+    #     return pure_ne_in_sg
+    
+
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = None, partial_policy_profile: List[FunctionCPD] = None) -> List[List[FunctionCPD]]:
+        """
+        Return a list of all pure Nash equilbiria in a MACID subgame given some partial_policy_profile over 
+        some of the MACID's decision nodes. 
+        - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
+        - If a partial policy is specified, the decison rules of decision nodes specified by the partial policy 
+        remain unchanged.
+        TODO: Check that the decisions_in_sg are in the MACID
+        TODO: Check that the decisions in decisions_in_sg actually make up a subgame
+        """
+        if not decisions_in_sg:
+            decisions_in_sg = self.all_decision_nodes
+
+        agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
+        pure_ne_in_sg = []
+
+        # Find all of an agent's pure policies in this subgame.
         def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
-            possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
+            agent_decs_in_sg = [dec for dec in self.decision_nodes_agent[agent] if dec in decisions_in_sg]
+            possible_dec_rules = list(map(self.possible_pure_decision_rules, agent_decs_in_sg))
             return list(itertools.product(*possible_dec_rules))
 
-        all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
-        all_dec_decision_rules = list(map(self.possible_pure_decision_rules, self.all_decision_nodes))
-        all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
+        all_agent_pure_policies_in_sg = {agent: agent_pure_policies(agent) for agent in agents_in_sg}
+        all_dec_decision_rules = list(map(self.possible_pure_decision_rules, decisions_in_sg))
+        all_joint_policy_profiles_in_sg = list(itertools.product(*all_dec_decision_rules))
+        decs_not_in_sg = [dec for dec in self.all_decision_nodes if dec not in decisions_in_sg]
 
-        for jp in all_joint_policy_profiles:
+        # if a partial policy profile is input, those decision rules should not change
+        if partial_policy_profile:
+            pp = self.partial_policy_assignment(partial_policy_profile)     
+            decs_already_optimised = [k for k, v in pp.items() if v != None]
+            decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in decs_already_optimised]
+        else:
+            decs_already_optimised = None
+            decs_to_be_randomised = decs_not_in_sg
+        
+        for pp in all_joint_policy_profiles_in_sg:
             found_ne = True
-            for a in self.agents:
-                self.add_cpds(*jp)
-                eu_jp_agent_a = self.expected_utility({}, agent=a)
-                for agent_policy in all_agent_pure_policies[a]:
+            for a in agents_in_sg:
+                
+                # create a fullly mixed joint policy profile: 
+                self.add_cpds(*pp)
+                if partial_policy_profile:
+                    self.add_cpds(*partial_policy_profile)
+                for d in decs_to_be_randomised:                   
+                    self.impute_random_decision(d)
+
+                # agent a's expected utility according to this subgame policy profile
+                eu_pp_agent_a = self.expected_utility({}, agent=a)
+                for agent_policy in all_agent_pure_policies_in_sg[a]:
                     self.add_cpds(*agent_policy)
+
+                    # agent a's expected utility if they deviate
                     eu_deviation_agent_a = self.expected_utility({}, agent=a)
-                    if eu_deviation_agent_a > eu_jp_agent_a:
+                    if eu_deviation_agent_a > eu_pp_agent_a:
                         found_ne = False
             if found_ne:
-                pure_ne.append(jp)
-        return pure_ne
+                pure_ne_in_sg.append(pp)
+        
+        return pure_ne_in_sg
 
     def joint_policy_assignment(self, joint_policy: List[FunctionCPD]) -> Dict:
         """Return dictionary with the joint policy assigned - ie a decision rule 
@@ -273,3 +395,37 @@ class MACID(MACIDBase):
         new_macid.add_cpds(*joint_policy)
         return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
         
+    def partial_policy_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
+        """Return dictionary with the joint policy assigned - ie a decision rule 
+        to each of the MACIM's decision nodes."""
+        new_macid = self.copy_without_cpds() 
+        new_macid.add_cpds(*partial_policy)
+        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+          
+    def policy_profile_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
+        """Return dictionary with the joint or partial policy profile assigned - 
+        ie a decision rule for each of the MACIM's decision nodes."""
+        new_macid = self.copy_without_cpds() 
+        new_macid.add_cpds(*partial_policy)
+        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+    
+    def get_all_pure_spe_new(self) -> List[List[FunctionCPD]]:
+        spes: List[List[FunctionCPD]] = [[]]
+        crg = CondensedRelevanceGraph(self)
+        dec_scc_mapping = crg.graph['mapping']
+        scc_dec_mapping = {}
+        # invert the dictionary to match each scc with the decision nodes in it
+        for k, v in dec_scc_mapping.items():
+            scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
+        
+        # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
+        for scc in reversed(list(nx.topological_sort(crg))):
+            extended_spes = []
+            dec_nodes_to_be_optimised = scc_dec_mapping[scc]
+            for partial_profile in spes:
+                all_ne_in_sg = self.get_all_pure_ne_in_sg(dec_nodes_to_be_optimised, partial_profile)
+                for ne in all_ne_in_sg:
+                    extended_spes.append(partial_profile + list(ne))
+            spes = extended_spes
+        return spes
+
