@@ -652,51 +652,10 @@ def modified_taxi_competition() -> MACID:
     return macid
 
 
-
-
-
-
-
-
-
-
-
-
-
-def c2d() -> MACID:
-    macid = MACID([
-        ('C1', 'U1'),
-        ('C1', 'U2'),
-        ('C1', 'D1'),
-        ('D1', 'U1'),
-        ('D1', 'U2'),
-        ('D1', 'D2'),
-        ('D2', 'U1'),
-        ('D2', 'U2'),
-        ('C1', 'D2')],
-        {0: {'D': ['D1'], 'U': ['U1']},
-         1: {'D': ['D2'], 'U': ['U2']}})
-
-    cpd_c1 = TabularCPD('C1', 2, np.array([[.5], [.5]]))
-    cpd_d1 = DecisionDomain('D1', [0, 1])
-    cpd_d2 = DecisionDomain('D2', [0, 1])
-    cpd_u1 = TabularCPD('U1', 4, np.array([[0, 0, 0, 0, 1, 0, 0, 0],
-                                           [1, 0, 1, 0, 0, 1, 0, 0],
-                                           [0, 1, 0, 1, 0, 0, 1, 0],
-                                           [0, 0, 0, 0, 0, 0, 0, 1]]),
-                        evidence=['C1', 'D1', 'D2'], evidence_card=[2, 2, 2])
-    cpd_u2 = TabularCPD('U2', 6, np.array([[0, 0, 0, 0, 0, 0, 0, 0],
-                                           [1, 0, 0, 0, 0, 0, 1, 0],
-                                           [0, 1, 0, 0, 0, 0, 0, 0],
-                                           [0, 0, 1, 0, 0, 1, 0, 1],
-                                           [0, 0, 0, 1, 0, 0, 0, 0],
-                                           [0, 0, 0, 0, 1, 0, 0, 0]]),
-                        evidence=['C1', 'D1', 'D2'], evidence_card=[2, 2, 2])
-    macid.add_cpds(cpd_c1, cpd_d1, cpd_d2, cpd_u1, cpd_u2)
-    return macid
-
-
 def basic_different_dec_cardinality() -> MACID:
+    """A basic MACIM where the cardinality of each agent's decision node 
+    is different. It has one subgame perfect NE.
+    """
     macid = MACID([
         ('D1', 'D2'),
         ('D1', 'U1'),
@@ -709,16 +668,13 @@ def basic_different_dec_cardinality() -> MACID:
     cpd_d1 = DecisionDomain('D1', [0, 1])
     cpd_d2 = DecisionDomain('D2', [0, 1, 2])
 
-    cpd_u1 = TabularCPD('U1', 4, np.array([[0, 0, 1, 0, 0, 0],
-                                           [0, 1, 0, 1, 0, 0],
-                                           [0, 0, 0, 0, 1, 0],
-                                           [1, 0, 0, 0, 0, 1]]),
-                        evidence=['D1', 'D2'], evidence_card=[2, 3])
-    cpd_u2 = TabularCPD('U2', 4, np.array([[0, 0, 0, 0, 1, 0],
-                                           [1, 0, 1, 1, 0, 0],
-                                           [0, 1, 0, 0, 0, 0],
-                                           [0, 0, 0, 0, 0, 1]]),
-                        evidence=['D1', 'D2'], evidence_card=[2, 3])
+    agent1_payoff = np.array([[3, 1, 0],
+                             [1, 2, 3]])
+    agent2_payoff = np.array([[1, 2, 1],
+                             [1, 0, 3]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1, d2], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1, d2], evidence=['D1', 'D2'])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
 

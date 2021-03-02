@@ -253,7 +253,7 @@ class MACID(MACIDBase):
     #     Return a list of all pure Nash equilbiria - where each NE comes as a
     #     list of each decision node's corresponding FunctionCPD.
     #     """
-    #     pure_ne = []
+    #     all_pure_ne = []
 
     #     def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
     #         possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
@@ -274,8 +274,8 @@ class MACID(MACIDBase):
     #                 if eu_deviation_agent_a > eu_jp_agent_a:
     #                     found_ne = False
     #         if found_ne:
-    #             pure_ne.append(jp)
-    #     return pure_ne
+    #             all_pure_ne.append(jp)
+    #     return all_pure_ne
 
 
     # def get_all_pure_ne2(self, decisions_in_sg: List[str] = None) -> List[List[FunctionCPD]]:
@@ -345,7 +345,7 @@ class MACID(MACIDBase):
 
 
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
-        pure_ne_in_sg = []
+        all_pure_ne_in_sg = []
 
         # Find all of an agent's pure policies in this subgame.
         def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
@@ -388,9 +388,9 @@ class MACID(MACIDBase):
                     if eu_deviation_agent_a > eu_pp_agent_a:
                         found_ne = False
             if found_ne:
-                pure_ne_in_sg.append(pp)
+                all_pure_ne_in_sg.append(pp)
         
-        return pure_ne_in_sg
+        return all_pure_ne_in_sg
 
     # def joint_policy_assignment(self, joint_policy: List[FunctionCPD]) -> Dict:
     #     """Return dictionary with the joint policy assigned - ie a decision rule 

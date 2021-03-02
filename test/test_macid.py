@@ -146,8 +146,7 @@ class TestMACID(unittest.TestCase):
         # new_macid = prisoners_dilemma2()
         # # new_macid.impute_fully_mixed_policy_profile()
         # # print(new_macid.expected_utility({'D1': 'd'}, agent = 1))
-        # print(new_macid.expected_utility({'D1': 0, 'D2': 0}, agent = 2))
-        # print(new_macid.expected_utility({'D1': 0, 'D2': 0}, agent = 1))
+        
 
 
 
@@ -251,7 +250,7 @@ class TestMACID(unittest.TestCase):
         #                                                     [1, 1]])))
 
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_all_pure_spe()
@@ -263,6 +262,10 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([1,0])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0,1], [1,0]])))
 
+        macid = modified_taxi_competition()
+        all_spe = macid.get_all_pure_spe()
+        self.assertTrue(len(all_spe)==2)
+
         macid = prisoners_dilemma()
         all_spe = macid.get_all_pure_spe()
         self.assertTrue(len(all_spe)==1)
@@ -271,10 +274,28 @@ class TestMACID(unittest.TestCase):
         all_spe = macid.get_all_pure_spe()
         self.assertTrue(len(all_spe)==2)
 
-
-
-
+        macid3 = basic_different_dec_cardinality()
+        all_spe = macid3.get_all_pure_spe()
+        spe = all_spe[0]
+        joint_policy = macid3.policy_profile_assignment(spe)
+        cpd_d1 = joint_policy['D1']
+        cpd_d2 = joint_policy['D2']
+        self.assertTrue(np.array_equal(cpd_d1.values, np.array([0,1])))
+        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0,0], [1,0], [0,1]])))
         
+        
+
+    def test_temp(self):
+        macid = prisoners_dilemma2()
+        print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 2))
+        print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 1))
+
+        macid = prisoners_dilemma()
+        print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
+        print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
+
+
+
 
 
         # spe = all_spe[1]
