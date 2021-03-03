@@ -26,24 +26,24 @@ def get_introduced_bias() -> CID:
     return cid
 
 
-# # TODO add parameterization
-# def get_fitness_tracker() -> CID:
-#     cid = CID([
-#         ('TD', 'TF'),
-#         ('TF', 'SC'),
-#         ('TF', 'C'),
-#         ('EF', 'EWD'),
-#         ('EWD', 'C'),
-#         ('C', 'F'),
-#         ('P', 'D'),
-#         ('P', 'SC'),
-#         ('P', 'F'),
-#         ('SC', 'C'),
-#         ('SC', 'EWD')],
-#         decision_nodes=['C'],
-#         utility_nodes=['F'])
+# TODO add parameterization
+def get_fitness_tracker() -> CID:
+    cid = CID([
+        ('TD', 'TF'),
+        ('TF', 'SC'),
+        ('TF', 'C'),
+        ('EF', 'EWD'),
+        ('EWD', 'C'),
+        ('C', 'F'),
+        ('P', 'D'),
+        ('P', 'SC'),
+        ('P', 'F'),
+        ('SC', 'C'),
+        ('SC', 'EWD')],
+        decision_nodes=['C'],
+        utility_nodes=['F'])
 
-#     return cid
+    return cid
 
 
 def get_car_accident_predictor() -> CID:

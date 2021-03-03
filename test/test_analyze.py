@@ -7,7 +7,7 @@ from analyze.effects import introduced_total_effect, total_effect
 from analyze.value_of_information import admits_voi, admits_voi_list
 from core.cpd import FunctionCPD
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
-from examples.story_cids import get_introduced_bias, get_content_recommender, \
+from examples.story_cids import get_introduced_bias, get_content_recommender, get_fitness_tracker, \
     get_modified_content_recommender, get_grade_predictor
 from analyze.requisite_graph import requisite, requisite_graph
 from analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_voc, admits_indir_voc_list, \
