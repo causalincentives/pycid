@@ -30,7 +30,7 @@ class RelevanceGraph(nx.DiGraph):
 
     def is_acyclic(self) -> bool:
         """
-        Finds whether the relevance graph for all of the decision nodes in the MACID is acyclic.
+        Find whether the relevance graph for all of the decision nodes in the MACID is acyclic.
         """
         return nx.is_directed_acyclic_graph(self)  # type: ignore
 
@@ -61,5 +61,8 @@ class CondensedRelevanceGraph(nx.DiGraph):
         self.graph['mapping'] = con_rel.graph['mapping']
 
     def draw(self) -> None:
+        """
+        Draw the Condensed Relevance graph of a (MA)CID.
+        """
         nx.draw_networkx(self, with_labels=True)
         plt.show()

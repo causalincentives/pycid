@@ -369,6 +369,9 @@ class MACIDBase(BayesianModel):
              node_color: Callable[[str], str] = None,
              node_shape: Callable[[str], str] = None,
              node_label: Callable[[str], str] = None) -> None:
+        """
+        Draw the MACID or CID.
+        """
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
@@ -389,7 +392,7 @@ class MACIDBase(BayesianModel):
         plt.show()
 
     def draw_property(self, node_property: Callable[[str], bool], color: str = 'red') -> None:
-        """Draw a CID with nodes satisfying property highlighted"""
+        """Draw a CID with the nodes satisfying node_property highlighted"""
 
         def node_color(node: str) -> Any:
             if node_property(node):

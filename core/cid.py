@@ -39,6 +39,9 @@ class CID(MACIDBase):
         return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
 
     def copy_without_cpds(self) -> CID:
+        """
+        Return a copy of the CID without the CPDs.
+        """
         return CID(self.edges(), list(self.decision_nodes), list(self.utility_nodes))
 
     def _get_color(self, node: str) -> str:
