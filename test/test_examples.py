@@ -2,13 +2,16 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from examples.simple_cids import get_5node_cid, get_minimal_cid, get_2dec_cid, get_5node_cid_with_scaled_utility, \
-    get_insufficient_recall_cid
-from examples.simple_macids import basic2agent, basic2agent_tie_break, basic_different_dec_cardinality, \
-    c2d, basic2agent_3, get_basic2agent_acyclic, get_basic2agent_cyclic
-from examples.story_cids import get_introduced_bias, get_car_accident_predictor, get_fitness_tracker, \
-    get_content_recommender, get_modified_content_recommender
-from examples.story_macids import sequential, tree_doctor, road_example, politician, umbrella, signal, triage
+from examples.simple_cids import get_minimal_cid, get_3node_cid, get_5node_cid, get_5node_cid_with_scaled_utility, \
+    get_2dec_cid, get_sequential_cid, get_insufficient_recall_cid, get_trim_example_cid   
+from examples.simple_macids import get_basic_subgames, get_basic_subgames2, get_basic_subgames3, get_path_example, \
+    basic2agent_tie_break, two_agent_one_pne, two_agent_two_pne, two_agent_no_pne, two_agents_three_actions, \
+    basic_different_dec_cardinality
+from examples.story_cids import get_introduced_bias, get_fitness_tracker, get_car_accident_predictor, \
+    get_content_recommender, get_content_recommender2, get_modified_content_recommender, get_grade_predictor
+from examples.story_macids import prisoners_dilemma, prisoners_dilemma2, battle_of_the_sexes, matching_pennies, \
+    taxi_competition, modified_taxi_competition, tree_doctor, forgetful_movie_star, subgame_difference, \
+    road_example, politician, umbrella, sequential, signal, triage
 
 from examples.generate import random_cid, random_cids
 import unittest

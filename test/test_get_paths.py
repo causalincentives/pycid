@@ -1,13 +1,14 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-
+#%%
 import unittest
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 from examples.simple_cids import get_3node_cid
-from examples.simple_macids import get_basic2agent_acyclic, get_basic_subgames, get_path_example
+from examples.simple_macids import get_basic_subgames, get_path_example
+from examples.story_macids import taxi_competition
 from core.get_paths import is_active_backdoor_trail, find_active_path, get_motifs, \
     get_motif, find_all_dir_paths, find_all_undir_paths, directed_decision_free_path, \
     is_active_path, is_active_indirect_frontdoor_trail
@@ -18,7 +19,7 @@ class TestPATHS(unittest.TestCase):
 
     # @unittest.skip("")
     def test_find_active_path(self) -> None:
-        example = get_basic2agent_acyclic()
+        example = taxi_competition()
         self.assertEqual(find_active_path(example, 'D1', 'U1', ['D2']), ['D1', 'U1'])
         self.assertFalse(find_active_path(example, 'D1', 'U1', ['D2', 'U1']))
         with self.assertRaises(Exception):

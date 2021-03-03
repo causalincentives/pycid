@@ -1,8 +1,290 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
-
+from core.cpd import DecisionDomain, FunctionCPD
 from core.macid import MACID
-from core.cpd import DecisionDomain
+
+
+def prisoners_dilemma() -> MACID:
+    """ This macim is a representation of the canonical
+    prisoner's dilemma. It is a simultaneous
+    symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is agent 1 and the
+    column player is agent 2:
+        +----------+----------+----------+
+        |          |Cooperate | Defect   |
+        +----------+----------+----------+
+        |Cooperate | -1, -1   | -3, 0    |
+        +----------+----------+----------+
+        |  Defect  | 0, -3    | -2, -2   |
+        +----------+----------+----------+
+    - This game has one pure NE: (defect, defect)
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['c', 'd']
+    d2_domain = ['c', 'd']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[-1, -3],
+                             [0, -2]])
+    agent2_payoff = np.transpose(agent1_payoff)
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def prisoners_dilemma2() -> MACID:
+    """ This macim is a representation of the canonical
+    prisoner's dilemma. It is a simultaneous
+    symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is agent 1 and the
+    column player is agent 2:
+        +----------+----------+----------+
+        |          |Cooperate | Defect   |
+        +----------+----------+----------+
+        |Cooperate | -1, -1   | -3, 0    |
+        +----------+----------+----------+
+        |  Defect  | 0, -3    | -2, -2   |
+        +----------+----------+----------+
+    - This game has one pure NE: (defect, defect)
+    # TODO: Repeat of the prisoner's dilemma above except for interger
+    valued decision domains becuase of the pgmpy query problem.
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = [0, 1]
+    d2_domain = [0, 1]
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[-1, -3],
+                             [0, -2]])
+    agent2_payoff = np.transpose(agent1_payoff)
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def battle_of_the_sexes() -> MACID:
+    """ This macim is a representation of the
+    battle of the sexes game (also known as Bach or Stravinsky).
+    It is a simultaneous symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is Female and the
+    column player is Male:
+        +----------+----------+----------+
+        |          |Opera     | Football |
+        +----------+----------+----------+
+        |  Opera   | 3, 2     |   0, 0   |
+        +----------+----------+----------+
+        | Football | 0, 0     | 2, 3     |
+        +----------+----------+----------+
+    - This game has two pure NE: (Opera, Football) and (Football, Opera)
+    """
+    macid = MACID([
+        ('D_F', 'U_F'),
+        ('D_F', 'U_M'),
+        ('D_M', 'U_M'),
+        ('D_M', 'U_F')],
+        {'M': {'D': ['D_F'], 'U': ['U_F']},
+         'F': {'D': ['D_M'], 'U': ['U_M']}})
+
+    d_f_domain = ['O', 'F']
+    d_m_domain = ['O', 'F']
+    cpd_d_f = DecisionDomain('D_F', d_f_domain)
+    cpd_d_m = DecisionDomain('D_M', d_m_domain)
+
+    agent_f_payoff = np.array([[3, 0],
+                              [0, 2]])
+    agent_m_payoff = np.array([[2, 0],
+                              [0, 3]])
+
+    cpd_u_f = FunctionCPD('U_F', lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
+                          evidence=['D_F', 'D_M'])
+    cpd_u_m = FunctionCPD('U_M', lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
+                          evidence=['D_F', 'D_M'])
+
+    macid.add_cpds(cpd_d_f, cpd_d_m, cpd_u_f, cpd_u_m)
+    return macid
+
+
+def matching_pennies() -> MACID:
+    """ This macim is a representation of the
+    matching pennies game.
+    It is symmetric two-player game with payoffs
+    corresponding to the following normal
+    form game - the row player is agent 1 and the
+    column player is agent 2:
+        +----------+----------+----------+
+        |          |Heads     | Tails    |
+        +----------+----------+----------+
+        |  Heads   | +1, -1   | -1, +1   |
+        +----------+----------+----------+
+        | Tails    | -1, +1   | +1, -1   |
+        +----------+----------+----------+
+    - This game has no pure NE, but has a mixed NE where
+    each player chooses Heads or Tails with equal probability.
+    """
+    macid = MACID([
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['H', 'T']
+    d2_domain = ['H', 'T']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[1, -1],
+                             [-1, 1]])
+    agent2_payoff = np.array([[-1, 1],
+                             [1, -1]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+                         evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def taxi_competition() -> MACID:
+    """ A MACIM for the "Taxi Competition" example
+    introduced in "Equilibrium Refinements for Multi-Agent
+    Influence Diagrams: Theory and Practice" by Hammond, Fox,
+    Everitt, Abate & Wooldridge, 2021:
+
+                              D1
+        +----------+----------+----------+
+        |  taxi 1  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   3      |
+    D2  +----------+----------+----------+
+        | cheap    |     5    |   1      |
+        +----------+----------+----------+
+
+                              D1
+        +----------+----------+----------+
+        |  taxi 2  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   5      |
+    D2  +----------+----------+----------+
+        | cheap    |     3    |   1      |
+        +----------+----------+----------+
+
+    - There are 3 pure startegy NE and 1 pure SPE.
+    """
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['e', 'c']
+    d2_domain = ['e', 'c']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[2, 3],
+                             [5, 1]])
+    agent2_payoff = np.array([[2, 5],
+                             [3, 1]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+                         evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+                         evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def modified_taxi_competition() -> MACID:
+    """ Modifying the payoffs in the taxi competition example
+    so that there is a tie break (if taxi 1 chooses to stop
+    in front of the expensive hotel, taxi 2 is indifferent
+    between their choices.)
+
+    - There are now two SPNE
+
+                              D1
+        +----------+----------+----------+
+        |  taxi 1  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   3      |
+    D2  +----------+----------+----------+
+        | cheap    |     5    |   1      |
+        +----------+----------+----------+
+
+                              D1
+        +----------+----------+----------+
+        |  taxi 2  | expensive|  cheap   |
+        +----------+----------+----------+
+        |expensive |     2    |   5      |
+    D2  +----------+----------+----------+
+        | cheap    |     3    |   5      |
+        +----------+----------+----------+
+
+    """
+    macid = MACID([
+        ('D1', 'D2'),
+        ('D1', 'U1'),
+        ('D1', 'U2'),
+        ('D2', 'U2'),
+        ('D2', 'U1')],
+        {1: {'D': ['D1'], 'U': ['U1']},
+         2: {'D': ['D2'], 'U': ['U2']}})
+
+    d1_domain = ['e', 'c']
+    d2_domain = ['e', 'c']
+    cpd_d1 = DecisionDomain('D1', d1_domain)
+    cpd_d2 = DecisionDomain('D2', d2_domain)
+
+    agent1_payoff = np.array([[2, 3],
+                             [5, 1]])
+    agent2_payoff = np.array([[2, 5],
+                             [3, 5]])
+
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+                         evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+                         evidence=['D1', 'D2'])
+
+    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
 
 
 def tree_doctor() -> MACID:

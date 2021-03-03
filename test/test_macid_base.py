@@ -9,7 +9,8 @@ from core.relevance_graph import RelevanceGraph
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, taxi_competition, two_agent_one_pne
+from examples.simple_macids import two_agent_one_pne
+from examples.story_macids import prisoners_dilemma, taxi_competition
 from pgmpy.factors.discrete import TabularCPD
 from examples.story_macids import forgetful_movie_star, subgame_difference
 from core.macid_base import MechanismGraph
@@ -65,8 +66,8 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
         macid = taxi_competition()
         macid.impute_fully_mixed_policy_profile()
-        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1':'c', 'D2': 'e'})[0], 3)
-        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1':'c', 'D2': 'e'})[0], 5)
+        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 3)
+        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 5)
 
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
@@ -128,7 +129,7 @@ class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
     def test_is_s_reachable(self) -> None:
-        example = get_basic2agent_acyclic()
+        example = taxi_competition()
         self.assertTrue(example.is_s_reachable('D1', 'D2'))
         self.assertFalse(example.is_s_reachable('D2', 'D1'))
 
@@ -146,16 +147,16 @@ class TestBASE(unittest.TestCase):
 
     # @unittest.skip("")
     def test_relevance_graph(self) -> None:
-        example = get_basic2agent_acyclic()
+        example = taxi_competition()
         rg = RelevanceGraph(example)
         self.assertTrue(rg.is_acyclic())
-        example2 = get_basic2agent_cyclic()
+        example2 = prisoners_dilemma()
         rg2 = RelevanceGraph(example2)
         self.assertFalse(rg2.is_acyclic())
 
     # @unittest.skip("")
     def test_mechanism_graph(self) -> None:
-        example = get_basic2agent_acyclic()
+        example = taxi_competition()
         mg = MechanismGraph(example)
         self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
@@ -173,7 +174,7 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.sufficient_recall(1))
         self.assertTrue(example.sufficient_recall(2))
 
-        example2 = get_basic2agent_acyclic()
+        example2 = taxi_competition()
         self.assertTrue(example2.sufficient_recall(1))
         self.assertTrue(example2.sufficient_recall(2))
         with self.assertRaises(Exception):

@@ -1,21 +1,17 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
-# from _typeshed import NoneType
 from core.cpd import FunctionCPD
 import numpy as np
 from typing import Any, List, Tuple, Dict, Union
-# import numpy.typing as npt
 import itertools
-from pgmpy.inference import BeliefPropagation  # type: ignore
 import networkx as nx
 import matplotlib.pyplot as plt
-import operator
-from collections import defaultdict
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
 from core.relevance_graph import RelevanceGraph, CondensedRelevanceGraph
+
 
 class MACID(MACIDBase):
 
@@ -105,11 +101,11 @@ class MACID(MACIDBase):
 
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
-        Return a list of all pure Nash equilbiria in the MACID. 
+        Return a list of all pure Nash equilbiria in the MACID.
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
         return self.get_all_pure_ne_in_sg()
-    
+
     # def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
     # TODO: Keep this here in case Tom thinks we should keep this direct method for computing all
     # pure NE in a MACID.
@@ -141,12 +137,13 @@ class MACID(MACIDBase):
     #             all_pure_ne.append(jp)
     #     return all_pure_ne
 
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = None, partial_policy_profile: List[FunctionCPD] = None) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = [],
+                              partial_policy_profile: List[FunctionCPD] = None) -> List[List[FunctionCPD]]:
         """
-        Return a list of all pure Nash equilbiria in a MACID subgame given some partial_policy_profile over 
-        some of the MACID's decision nodes. 
+        Return a list of all pure Nash equilbiria in a MACID subgame given some partial_policy_profile over
+        some of the MACID's decision nodes.
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
-        - If a partial policy is specified, the decison rules of decision nodes specified by the partial policy 
+        - If a partial policy is specified, the decison rules of decision nodes specified by the partial policy
         remain unchanged.
         TODO: Check that the decisions in decisions_in_sg actually make up a subgame
         """
@@ -157,9 +154,8 @@ class MACID(MACIDBase):
             if dec not in self.all_decision_nodes:
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
 
-
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
-        all_pure_ne_in_sg = []
+        all_pure_ne_in_sg: List[List[FunctionCPD]] = []
 
         # Find all of an agent's pure policies in this subgame.
         def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
@@ -174,23 +170,22 @@ class MACID(MACIDBase):
 
         # if a partial policy profile is input, those decision rules should not change
         if partial_policy_profile:
-            pp = self.policy_profile_assignment(partial_policy_profile)     
-            decs_already_optimised = [k for k, v in pp.items() if v != None]
+            partial_profile_assigned = self.policy_profile_assignment(partial_policy_profile)
+            decs_already_optimised = [k for k, v in partial_profile_assigned.items() if v]
             decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in decs_already_optimised]
         else:
-            decs_already_optimised = None
             decs_to_be_randomised = decs_not_in_sg
-        
+
         # NE finder
         for pp in all_joint_policy_profiles_in_sg:
             found_ne = True
             for a in agents_in_sg:
-                
-                # create a fullly mixed joint policy profile: 
+
+                # create a fullly mixed joint policy profile:
                 self.add_cpds(*pp)
                 if partial_policy_profile:
                     self.add_cpds(*partial_policy_profile)
-                for d in decs_to_be_randomised:                   
+                for d in decs_to_be_randomised:
                     self.impute_random_decision(d)
 
                 # agent a's expected utility according to this subgame policy profile
@@ -203,26 +198,26 @@ class MACID(MACIDBase):
                     if eu_deviation_agent_a > eu_pp_agent_a:
                         found_ne = False
             if found_ne:
-                all_pure_ne_in_sg.append(pp)
-        
+                all_pure_ne_in_sg.append(list(pp))
+
         return all_pure_ne_in_sg
-          
+
     def policy_profile_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
-        """Return dictionary with the joint or partial policy profile assigned - 
+        """Return dictionary with the joint or partial policy profile assigned -
         ie a decision rule for each of the MACIM's decision nodes."""
-        new_macid = self.copy_without_cpds() 
+        new_macid = self.copy_without_cpds()
         new_macid.add_cpds(*partial_policy)
         return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
-    
+
     def get_all_pure_spe(self) -> List[List[FunctionCPD]]:
         spes: List[List[FunctionCPD]] = [[]]
         crg = CondensedRelevanceGraph(self)
         dec_scc_mapping = crg.graph['mapping']
-        scc_dec_mapping = {}
+        scc_dec_mapping: Dict[int, List[str]] = {}
         # invert the dictionary to match each scc with the decision nodes in it
         for k, v in dec_scc_mapping.items():
             scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
-        
+
         # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
         for scc in reversed(list(nx.topological_sort(crg))):
             extended_spes = []
@@ -233,4 +228,3 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
-
