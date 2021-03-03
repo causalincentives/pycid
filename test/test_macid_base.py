@@ -9,7 +9,7 @@ from core.relevance_graph import RelevanceGraph
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, two_agent_one_pne
+from examples.simple_macids import get_basic2agent_acyclic, get_basic2agent_cyclic, taxi_competition, two_agent_one_pne
 from pgmpy.factors.discrete import TabularCPD
 from examples.story_macids import forgetful_movie_star, subgame_difference
 from core.macid_base import MechanismGraph
@@ -49,9 +49,9 @@ class TestBASE(unittest.TestCase):
         eu001 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 1})
         self.assertEqual(eu001, 1)
         macid_example = two_agent_one_pne()
-        eu_agent0 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=0)
+        eu_agent0 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=1)
         self.assertEqual(eu_agent0, 3)
-        eu_agent1 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=1)
+        eu_agent1 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=2)
         self.assertEqual(eu_agent1, 0)
 
     # @unittest.skip("")
@@ -63,6 +63,10 @@ class TestBASE(unittest.TestCase):
             cid.intervene({'A': a})
             self.assertEqual(cid.expected_value(['B'], {})[0], a)
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
+        macid = taxi_competition()
+        macid.impute_fully_mixed_policy_profile()
+        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1':'c', 'D2': 'e'}), 3)
+        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1':'c', 'D2': 'e'}), 5)
 
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:

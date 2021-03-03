@@ -246,18 +246,16 @@ def two_agent_one_pne() -> MACID:
         {1: {'D': ['D1'], 'U': ['U1']},
          2: {'D': ['D2'], 'U': ['U2']}})
 
-    d1_domain = ['a', 'b']
-    d2_domain = ['a', 'b']
-    cpd_d1 = DecisionDomain('D1', d1_domain)
-    cpd_d2 = DecisionDomain('D2', d2_domain)
+    cpd_d1 = DecisionDomain('D1', [0,1])
+    cpd_d2 = DecisionDomain('D2', [0,1])
 
     agent1_payoff = np.array([[1, 3],
                              [0, 2]])
     agent2_payoff = np.array([[2, 0],
                              [3, 2]])
 
-    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
-    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=['D1', 'D2'])
+    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1, d2], evidence=['D1', 'D2'])
+    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1, d2], evidence=['D1', 'D2'])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid

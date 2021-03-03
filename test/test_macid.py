@@ -93,163 +93,6 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    
-
-        
-        
-        # all_spe = macid.get_all_pure_spe()
-        # print(f"len is {len(all_spe)}")
-        # macid.add_cpds(*all_spe[0])
-        
-
-
-
-
-
-
-        # print(policy_assignment)
-
-
-
-        # print(bool(policy_assignment['D1']))
-        # print(bool(policy_assignment['D2']))
-
-
-
-
-        # macid = prisoners_dilemma()
-        # pne = macid.get_all_pure_ne()
-        # jp = macid.policy_profile_assignment(pne[0])
-        # cpd = jp['D1']
-        # self.assertTrue(np.array_equal(cpd.values, np.array([0, 1])))
-        # cpd = jp['D2']
-        # self.assertTrue(np.array_equal(cpd.values, np.array([0, 1])))
-
-
-
-        # # put this in the notebook:
-        # macid = taxi_competition()
-        # macid.impute_fully_mixed_policy_profile()
-        # macid.intervene({'D1': 'c'})
-        # macid.intervene({'D2': 'e'})
-        # cpd = macid.get_cpds('D1')
-        # print(f"D1 is {cpd.values}")
-        # cpd = macid.get_cpds('D2')
-
-        # print(f"D2 is {cpd.values}")
-        # print("util 1")
-        # print(macid.expected_utility({}, agent = 1))
-        # print("util 2")
-        # print(macid.expected_utility({}, agent = 2))
-
-        # print("-------------")
-        # new_macid = prisoners_dilemma2()
-        # # new_macid.impute_fully_mixed_policy_profile()
-        # # print(new_macid.expected_utility({'D1': 'd'}, agent = 1))
-        
-
-
-
-
-
-
-
-
-
-        #print({d: macid.get_cpds(d) for d in macid.all_decision_nodes})
-
-       # cpd_b = FunctionCPD('D1', lambda a: a, evidence=['A'])
-
-
-
-        # decisions_in_subgame = ['D2']
-        # pne = macid.get_all_pure_ne_in_sg(decisions_in_subgame)
-        # jp = macid.policy_profile_assignment(pne[0])
-        
-        # cpd = jp['D2']
-        # print(f"vallues 1b = {cpd.values}")
-        # print(f"jp is {jp}")
-        
-        
-        # jp = macid.joint_policy_assignment(pne[1])
-        # cpd = jp['D1']
-        # print(f"vallues 2 = {cpd.values}")
-
-        # cpd = jp['D2']
-        # print(f"vallues 2b = {cpd.values}")
-        # jp = macid.joint_policy_assignment(pne[2])
-        # cpd = jp['D1']
-
-        # print(f"vallues 3 = {cpd.values}")
-        # cpd = jp['D2']
-        # print(f"vallues 3b = {cpd.values}")
-
-
-
-
-
-
-
-
-        # macid = taxi_competition()
-        # pne = macid.get_all_pure_ne2(['D2'])
-
-        # new_macid = macid.copy_without_cpds()
-        # jp = new_macid.joint_policy_assignment(pne[0])
-        # cpd = jp['D2']
-        # print(f"new = {cpd.values}")
-        # print(f"jp = {jp}")
-
-
-        # macid = taxi_competition()
-        # partial_ne = macid.get_all_pure_ne2(['D2'])
-        # pp = macid.partial_policy_assignment(partial_ne[0])
-        # cpd = pp['D2']
-        # print(f"new = {cpd.values}")
-        # print(f"pp = {pp}")
-
-        
-
-        
-        # new_macid = macid.copy_without_cpds()
-        # new_macid.add_cpds(*pne[0])
-        # print({d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes})
-        # a = [d for d in new_macid.all_decision_nodes if not new_macid.get_cpds(d)]
-        # print(f"a is {a}")
-        # list_cpds = [new_macid.get_cpds(d) for d in new_macid.all_decision_nodes]
-        # print(f"{list_cpds[0]}")
-        # print(list_cpds)
-
-
-
-
-
-
-        # jp = macid.joint_policy_assignment(pne[0])
-        # print(jp)
-        # for k, v in jp.items():
-        #     if '<UniformRandomCPD' in str(v):
-        #         print(k)
-
-
-        # cpd = jp['D2']
-        # print(f"new = {cpd.values}")
-
-        #pne = macid.get_all_pure_ne()[0]
-        #macid.add_cpds(*pne)
-        #print(macid.expected_utility({}, agent=1))
-        #self.assertEqual(macid.expected_utility({}, agent=1), -2)
-
-
-
-
-
-        # self.assertTrue(np.array_equal(cpd.values, np.array([0, 1])))
-        # cpd = jp['D2']
-        # self.assertTrue(np.array_equal(cpd.values, np.array([[0, 0],
-        #                                                     [1, 1]])))
-
-
     @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
@@ -283,76 +126,26 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0,1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0,0], [1,0], [0,1]])))
         
-        
-
-    def test_temp(self):
-        macid = prisoners_dilemma2()
-        print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 2))
-        print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 1))
-
-        macid = prisoners_dilemma()
-        print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
-        print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
+        # # put this in the notebook:
+        # macid = taxi_competition()
+        # macid.impute_fully_mixed_policy_profile()
+        # macid.intervene({'D1': 'c'})
+        # macid.intervene({'D2': 'e'})
+        # cpd = macid.get_cpds('D1')
+        # print(f"D1 is {cpd.values}")
+        # cpd = macid.get_cpds('D2')
 
 
+    # TODO: Show Tom That this doesn't work :( - is a problem with pgmpy rather than our codebase
+    # def test_temp(self):
+    #     macid = prisoners_dilemma2()
+    #     print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 2))
+    #     print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 1))
 
+    #     macid = prisoners_dilemma()
+    #     print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
+    #     print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
 
-
-        # spe = all_spe[1]
-        # jp = macid.joint_policy_assignment(spe)
-        # cpd = jp['D2']
-        # print(f"new D2 = {cpd.values}")
-
-        # cpd = jp['D1']
-        # print(f"new_D1 = {cpd.values}")
-
-
-        
-
-
-        # rg = RelevanceGraph(macid)
-        # rg.draw()
-        # crg = CondensedRelevanceGraph(macid)
-        # crg.draw()
-        # print(crg.graph['mapping'])
-
-        # dec_scc_mapping = crg.graph['mapping']
-        # scc_dec_mapping = {}
-        # for k, v in dec_scc_mapping.items():
-        #     scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
-        # print(scc_dec_mapping)
-        # print(list(nx.topological_sort(crg)))
-
-        # rev_top_order = reversed(list(nx.topological_sort(crg)))
-        # spes = [[]]
-
-        # for scc in rev_top_order:
-        #     extended_spes = []
-        #     for partial_profile in spes:
-        #         macid.add_cpds(*partial_profile)
-        #         for ne in macid.get_all_pure_ne(scc): 
-        #             extended_spes.append(partial_profile + ne)
-        #     spes = extended_spes
-        # return spes    
-
-
-
-
-        # matching = two_agents_three_actions()
-        # matching.impute_fully_mixed_policy_profile()
-        # print(f" ------------ {matching.get_cpds('D1').values}")
-        # pne_new = matching.get_all_pure_ne()[0]
-        # print(f"len is {len(pne_new)}")
-        # pne = matching.get_all_pure_ne()[0]
-        # matching.add_cpds(*pne)
-
-        # print(matching.expected_utility({}, agent=1))
-        # print(matching.expected_utility({}, agent=2))
-        # print(matching.expected_value(['U1'], {}))
-        # print(matching.get_cpds('D1').possible_values(matching))
-        # print(matching.get_cpds('D1').get_values())
-        # print(matching.get_cpds('D1'))
-        # print(matching.get_cpds('D1').state_names)
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID)

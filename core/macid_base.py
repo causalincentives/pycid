@@ -136,17 +136,26 @@ class MACIDBase(BayesianModel):
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 
+    # def intervene(self, intervention: Dict["str", "Any"]) -> None:
+    #     """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
+
+    #     Soft interventions can be achieved by using add_cpds directly.
+    #     """
+    #     cpds = []
+    #     for variable, value in intervention.items():
+    #         cpds.append(FunctionCPD(variable, lambda *x: value,
+    #                                 evidence=self.get_parents(variable)))
+    #     self.add_cpds(*cpds)
+
     def intervene(self, intervention: Dict["str", "Any"]) -> None:
         """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
 
         Soft interventions can be achieved by using add_cpds directly.
         """
-        cpds = []
         for variable, value in intervention.items():
-            cpds.append(FunctionCPD(variable, lambda *x: value,
-                                    evidence=self.get_parents(variable)))
-
-        self.add_cpds(*cpds)
+            cpd = FunctionCPD(variable, lambda *x: value,
+                                    evidence=self.get_parents(variable))
+            self.add_cpds(cpd)
 
     def expected_value(self, variables: List[str], context: Dict["str", "Any"],
                        intervene: Dict["str", "Any"] = None,) -> List[float]:
