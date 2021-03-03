@@ -142,10 +142,11 @@ class MACID(MACIDBase):
         """
         Return a list of all pure Nash equilbiria in a MACID subgame given some partial_policy_profile over
         some of the MACID's decision nodes.
+        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
         - If a partial policy is specified, the decison rules of decision nodes specified by the partial policy
         remain unchanged.
-        TODO: Check that the decisions in decisions_in_sg actually make up a subgame
+        TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         """
         if not decisions_in_sg:
             decisions_in_sg = self.all_decision_nodes
@@ -203,13 +204,16 @@ class MACID(MACIDBase):
         return all_pure_ne_in_sg
 
     def policy_profile_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
-        """Return dictionary with the joint or partial policy profile assigned -
+        """Return a dictionary with the joint or partial policy profile assigned -
         ie a decision rule for each of the MACIM's decision nodes."""
         new_macid = self.copy_without_cpds()
         new_macid.add_cpds(*partial_policy)
         return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
 
     def get_all_pure_spe(self) -> List[List[FunctionCPD]]:
+        """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM
+        - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        """
         spes: List[List[FunctionCPD]] = [[]]
         crg = CondensedRelevanceGraph(self)
         dec_scc_mapping = crg.graph['mapping']
