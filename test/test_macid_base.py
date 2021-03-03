@@ -65,8 +65,8 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
         macid = taxi_competition()
         macid.impute_fully_mixed_policy_profile()
-        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1':'c', 'D2': 'e'}), 3)
-        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1':'c', 'D2': 'e'}), 5)
+        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1':'c', 'D2': 'e'})[0], 3)
+        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1':'c', 'D2': 'e'})[0], 5)
 
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
