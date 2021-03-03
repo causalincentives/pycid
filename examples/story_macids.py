@@ -286,7 +286,6 @@ def modified_taxi_competition() -> MACID:
     return macid
 
 
-
 def tree_doctor() -> MACID:
     macid = MACID([
         ('PT', 'E'),
