@@ -95,9 +95,3 @@ class CondensedRelevanceGraph(nx.DiGraph):
         """
         nx.draw_networkx(self, with_labels=True)
         plt.show()
-
-    def get_scc_topological_ordering(self) -> List[int]:
-        """
-        Returns a topological ordering (which might not be unique) of the SCCs
-        """
-        return list(nx.topological_sort(self))
