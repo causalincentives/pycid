@@ -19,36 +19,6 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-    def get_sccs(self) -> List[set]:
-        """
-        Return a list with the maximal strongly connected components of the MACID's
-        full strategic relevance graph.
-        Uses Tarjan’s algorithm with Nuutila’s modifications
-        - complexity is linear in the number of edges and nodes """
-        rg = RelevanceGraph(self)
-        return list(nx.strongly_connected_components(rg))
-
-    def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
-        "Assign a unique color to the set of nodes in each SCC."
-        colors = cm.rainbow(np.linspace(0, 1, len(sccs)))
-        scc_index = 0
-        for idx, scc in enumerate(sccs):
-            if node in scc:
-                scc_index = idx
-                break
-        return colors[scc_index]  # type: ignore
-
-    def draw_sccs(self) -> None:
-        """
-        Show the SCCs for the MACID's full strategic relevance graph
-        """
-        rg = RelevanceGraph(self)
-        sccs = list(nx.strongly_connected_components(rg))
-        layout = nx.kamada_kawai_layout(rg)
-        colors = [self._set_color_scc(node, sccs) for node in rg.nodes]
-        nx.draw_networkx(rg, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
-        plt.show()
-
     def all_maid_subgames(self) -> List[set]:
         """
         Return a list giving the set of decision nodes in each MAID subgame of the original MAID.

@@ -11,6 +11,7 @@ from examples.simple_macids import basic_different_dec_cardinality, get_basic_su
 from examples.story_macids import battle_of_the_sexes, matching_pennies, prisoners_dilemma2, taxi_competition, modified_taxi_competition, \
     prisoners_dilemma
 import numpy as np
+from core.relevance_graph import RelevanceGraph
 
 
 class TestMACID(unittest.TestCase):
@@ -114,22 +115,11 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
-
-    # TODO: Show Tom That this doesn't work :( - looks to be a problem with pgmpy rather than our code
     def test_temp(self):
-        # macid = prisoners_dilemma2()
-        # print(macid.expected_utility({'D1': 1, 'D2': 1}, agent = 2))
-        # print(macid.expected_utility({'D1': 1, 'D2': 1}, agent = 1))
-
-
-        # macid = prisoners_dilemma()
-        # print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
-        # print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
-
         macid = taxi_competition()
-        print(macid.expected_utility({'D1': 'c', 'D2': 'e'}, agent = 1))
-        print(macid.expected_utility({'D1': 'c', 'D2': 'e'}, agent = 2))
-
+        rg = RelevanceGraph(macid)
+        rg.draw_sccs()
+        print(rg.get_sccs())
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID)

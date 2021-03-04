@@ -1,7 +1,8 @@
 from __future__ import annotations
 import itertools
-from typing import List
-
+from typing import List, Any
+import numpy as np
+import matplotlib.cm as cm
 import networkx as nx
 import matplotlib.pyplot as plt
 from typing import TYPE_CHECKING
@@ -33,6 +34,34 @@ class RelevanceGraph(nx.DiGraph):
         Find whether the relevance graph for all of the decision nodes in the MACID is acyclic.
         """
         return nx.is_directed_acyclic_graph(self)  # type: ignore
+
+    def get_sccs(self) -> List[set]:
+        """
+        Return a list with the maximal strongly connected components of the MACID's
+        full strategic relevance graph.
+        Uses Tarjan’s algorithm with Nuutila’s modifications
+        - complexity is linear in the number of edges and nodes """
+        return list(nx.strongly_connected_components(self))
+
+    def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
+        "Assign a unique color to the set of nodes in each SCC."
+        colors = cm.rainbow(np.linspace(0, 1, len(sccs)))
+        scc_index = 0
+        for idx, scc in enumerate(sccs):
+            if node in scc:
+                scc_index = idx
+                break
+        return colors[scc_index]  # type: ignore
+
+    def draw_sccs(self) -> None:
+        """
+        Show the SCCs for the MACID's full strategic relevance graph
+        """
+        sccs = list(nx.strongly_connected_components(self))
+        layout = nx.kamada_kawai_layout(self)
+        colors = [self._set_color_scc(node, sccs) for node in self.nodes]
+        nx.draw_networkx(self, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
+        plt.show()
 
     def draw(self) -> None:
         """
