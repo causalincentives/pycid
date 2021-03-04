@@ -49,11 +49,11 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(eu000, 2)
         eu001 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 1})
         self.assertEqual(eu001, 1)
-        macid_example = two_agent_one_pne()
-        eu_agent0 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=1)
-        self.assertEqual(eu_agent0, 3)
-        eu_agent1 = macid_example.expected_utility({'D1': 0, 'D2': 1}, agent=2)
-        self.assertEqual(eu_agent1, 0)
+        macid_example = prisoners_dilemma()
+        eu_agent0 = macid_example.expected_utility({'D1': 'd', 'D2': 'c'}, agent=1)
+        self.assertEqual(eu_agent0, 0)
+        eu_agent1 = macid_example.expected_utility({'D1': 'd', 'D2': 'c'}, agent=2)
+        self.assertEqual(eu_agent1, -3)
 
     # @unittest.skip("")
     def test_intervention(self) -> None:

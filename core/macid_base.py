@@ -138,8 +138,9 @@ class MACIDBase(BayesianModel):
         # TODO: check for probability 0 queries
         # factor = bp.query(query, filtered_context)
 
-        #revise context so state_names are switched to their state number (overcomes pgmpy's bug)
-        revised_context = {variable: self.get_cpds(variable).name_to_no[variable][value] for variable, value in context.items()}        
+        # revise context so state_names are switched to their state number (overcomes pgmpy's bug)
+        revised_context = {variable: self.get_cpds(variable).name_to_no[variable][value]
+                           for variable, value in context.items()}
         factor = bp.query(query, revised_context)
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
