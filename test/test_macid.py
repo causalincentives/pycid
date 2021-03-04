@@ -11,7 +11,7 @@ from examples.simple_macids import basic_different_dec_cardinality, get_basic_su
 from examples.story_macids import battle_of_the_sexes, matching_pennies, prisoners_dilemma2, taxi_competition, modified_taxi_competition, \
     prisoners_dilemma
 import numpy as np
-from core.relevance_graph import RelevanceGraph
+from core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 
 class TestMACID(unittest.TestCase):
@@ -82,9 +82,10 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
+        print(CondensedRelevanceGraph(macid).get_decisions_in_scc())
         all_spe = macid.get_all_pure_spe()
         self.assertTrue(len(all_spe) == 1)
         spe = all_spe[0]
@@ -115,12 +116,15 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
-    # @unittest.skip("")
     def test_temp(self):
-        macid = taxi_competition()
-        rg = RelevanceGraph(macid)
-        rg.draw_sccs()
-        print(rg.get_sccs())
+        # a = [{'D1'}, {'D2', 'D3'}]
+        # b = {'D2', 'D3'}
+        # if b in a:
+        #     print("yes")
+        a = []
+        if a is None:
+            print("yes")
+
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID)
