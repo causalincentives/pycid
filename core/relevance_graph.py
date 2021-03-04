@@ -100,7 +100,7 @@ class CondensedRelevanceGraph(nx.DiGraph):
 
     def get_scc_topological_ordering(self) -> List[List(str)]:
         """
-        Return a topological ordering (which might not be unique) of the SCCs as 
+        Return a topological ordering (which might not be unique) of the SCCs as
         a list of decision nodes in each SCC.
         """
         decs_in_each_scc = [self.get_decisions_in_scc()[scc] for scc in list(nx.topological_sort(self))]

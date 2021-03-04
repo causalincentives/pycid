@@ -5,7 +5,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from core.relevance_graph import RelevanceGraph
+from core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
@@ -167,6 +167,13 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(rg2.is_acyclic())
         self.assertTrue(len(rg.get_sccs()) == 2)
         self.assertEqual(rg2.get_sccs(), [{'D1', 'D2'}])
+
+    # @unittest.skip("")
+    def test_condensed_relevance_graph(self) -> None:
+        example = taxi_competition()
+        crg = CondensedRelevanceGraph(example)
+        self.assertEqual(crg.get_scc_topological_ordering(), [['D1'], ['D2']])
+        self.assertEqual(crg.get_decisions_in_scc()[0], ['D2'])
 
     # @unittest.skip("")
     def test_mechanism_graph(self) -> None:

@@ -58,11 +58,7 @@ class MACID(MACIDBase):
         
         if decisions_in_sg is None:
             decisions_in_sg = self.all_decision_nodes
-        # else:
-        #     if not set(decisions_in_sg) in self.decs_in_each_maid_subgame():
-        #         raise Exception(f"The decision nodes in decisions_in_sg: {decisions_in_sg} do \
-        #                     not make up a MAID subgame of this MACID")
-
+        
         for dec in decisions_in_sg:
             if dec not in self.all_decision_nodes:
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
@@ -134,7 +130,7 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
-    
+
     def copy_without_cpds(self) -> MACID:
         """copy the MACID structure"""
         return MACID(self.edges(),

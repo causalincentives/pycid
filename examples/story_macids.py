@@ -45,51 +45,6 @@ def prisoners_dilemma() -> MACID:
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
 
-
-def prisoners_dilemma2() -> MACID:
-    """ This macim is a representation of the canonical
-    prisoner's dilemma. It is a simultaneous
-    symmetric two-player game with payoffs
-    corresponding to the following normal
-    form game - the row player is agent 1 and the
-    column player is agent 2:
-        +----------+----------+----------+
-        |          |Cooperate | Defect   |
-        +----------+----------+----------+
-        |Cooperate | -1, -1   | -3, 0    |
-        +----------+----------+----------+
-        |  Defect  | 0, -3    | -2, -2   |
-        +----------+----------+----------+
-    - This game has one pure NE: (defect, defect)
-    # TODO: Repeat of the prisoner's dilemma above except for interger
-    valued decision domains becuase of the pgmpy query problem.
-    """
-    macid = MACID([
-        ('D1', 'U1'),
-        ('D1', 'U2'),
-        ('D2', 'U2'),
-        ('D2', 'U1')],
-        {1: {'D': ['D1'], 'U': ['U1']},
-         2: {'D': ['D2'], 'U': ['U2']}})
-
-    d1_domain = [0, 1]
-    d2_domain = [0, 1]
-    cpd_d1 = DecisionDomain('D1', d1_domain)
-    cpd_d2 = DecisionDomain('D2', d2_domain)
-
-    agent1_payoff = np.array([[-1, -3],
-                             [0, -2]])
-    agent2_payoff = np.transpose(agent1_payoff)
-
-    cpd_u1 = FunctionCPD('U1', lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-                         evidence=['D1', 'D2'])
-    cpd_u2 = FunctionCPD('U2', lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-                         evidence=['D1', 'D2'])
-
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
-    return macid
-
-
 def battle_of_the_sexes() -> MACID:
     """ This macim is a representation of the
     battle of the sexes game (also known as Bach or Stravinsky).

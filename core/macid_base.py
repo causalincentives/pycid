@@ -6,13 +6,11 @@ import random
 from functools import lru_cache
 import matplotlib.pyplot as plt
 import numpy as np
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.factors.discrete.DiscreteFactor import State  # type: ignore
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pgmpy.models import BayesianModel  # type: ignore
 from typing import List, Tuple, Dict, Any, Callable, Union
 from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
 import networkx as nx
-from pgmpy.utils import state_name
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
 import matplotlib.cm as cm
@@ -112,9 +110,6 @@ class MACIDBase(BayesianModel):
         for variable, value in context.items():
             if value not in self.get_cpds(variable).state_names[variable]:
                 raise Exception(f"The value {value} is not in the state_names of {variable}")
-
-        
-
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()
