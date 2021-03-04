@@ -184,10 +184,17 @@ class MACIDBase(BayesianModel):
         return sum(self.expected_value(self.utility_nodes_agent[agent], context, intervene=intervene))
 
     def get_valid_order(self, nodes: List[str] = None) -> List[str]:
-        """Get a topological order of the specified set of nodes.
+        """Get a topological order of the specified set of nodes (this may not be unique).
 
         By default, a topological ordering of the decision nodes is given"""
-        # TODO: should this method check for sufficient recall?
+        if not nx.is_directed_acyclic_graph(self):
+            raise Exception("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
+
+        if nodes:
+            for node in nodes:
+                if node not in self.nodes:
+                    raise Exception(f"{node} is not in the (MA)CID.")
+
         if not nodes:
             nodes = self.all_decision_nodes
         srt = [i for i in nx.topological_sort(self) if i in nodes]

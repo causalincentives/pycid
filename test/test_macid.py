@@ -16,23 +16,16 @@ from core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 class TestMACID(unittest.TestCase):
 
-    @unittest.skip("")
-    def test_get_sccs(self) -> None:
+    # @unittest.skip("")
+    def test_decs_in_each_maid_subgame(self) -> None:
         macid = prisoners_dilemma()
-        self.assertEqual(macid.get_sccs(), [{'D1', 'D2'}])
-        macid = get_basic_subgames2()
-        self.assertTrue(len(macid.get_sccs()) == 3)
-
-    @unittest.skip("")
-    def test_all_maid_subgames(self) -> None:
-        macid = prisoners_dilemma()
-        self.assertCountEqual(macid.all_maid_subgames(), [{'D1', 'D2'}])
+        self.assertCountEqual(macid.decs_in_each_maid_subgame(), [{'D1', 'D2'}])
         macid = get_basic_subgames()
-        self.assertTrue(len(macid.all_maid_subgames()) == 4)
+        self.assertTrue(len(macid.decs_in_each_maid_subgame()) == 4)
         macid = get_basic_subgames3()
-        self.assertTrue(len(macid.all_maid_subgames()) == 5)
+        self.assertTrue(len(macid.decs_in_each_maid_subgame()) == 5)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision('D1')
@@ -51,7 +44,7 @@ class TestMACID(unittest.TestCase):
         print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_all_pure_ne(self) -> None:
         macid = prisoners_dilemma()
         self.assertEqual(len(macid.get_all_pure_ne()), 1)
@@ -69,7 +62,7 @@ class TestMACID(unittest.TestCase):
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_all_pure_ne()), 1)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()
         ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=['D2'])
@@ -115,15 +108,6 @@ class TestMACID(unittest.TestCase):
         cpd_d2 = joint_policy['D2']
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
-
-    def test_temp(self):
-        # a = [{'D1'}, {'D2', 'D3'}]
-        # b = {'D2', 'D3'}
-        # if b in a:
-        #     print("yes")
-        a = []
-        if a is None:
-            print("yes")
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-    def all_maid_subgames(self) -> List[set]:
+    def decs_in_each_maid_subgame(self) -> List[set]:
         """
         Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
         """
@@ -39,30 +39,6 @@ class MACID(MACIDBase):
 
         return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
 
-    def _get_scc_topological_ordering(self) -> List[int]:
-        """
-        Returns a topological ordering (which might not be unique) of the SCCs
-        """
-        con_rel = CondensedRelevanceGraph(self)
-        return list(nx.topological_sort(con_rel))
-
-    def copy_without_cpds(self) -> MACID:
-        """copy the MACID structure"""
-        return MACID(self.edges(),
-                     {agent: {'D': list(self.decision_nodes_agent[agent]),
-                              'U': list(self.utility_nodes_agent[agent])}
-                     for agent in self.agents})
-
-    def _get_color(self, node: str) -> Union[str, np.ndarray]:
-        """
-        Assign a unique colour with each new agent's decision and utility nodes
-        """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
-        else:
-            return 'lightgray'  # chance node
-
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in the MACID.
@@ -70,38 +46,7 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
-    # def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
-    # TODO: Keep this here in case Tom thinks we should keep this direct method for computing all
-    # pure NE in a MACID.
-    #     """
-    #     Return a list of all pure Nash equilbiria - where each NE comes as a
-    #     list of each decision node's corresponding FunctionCPD.
-    #     """
-    #     all_pure_ne = []
-
-    #     def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
-    #         possible_dec_rules = list(map(self.possible_pure_decision_rules, self.decision_nodes_agent[agent]))
-    #         return list(itertools.product(*possible_dec_rules))
-
-    #     all_agent_pure_policies = {agent: agent_pure_policies(agent) for agent in self.agents}
-    #     all_dec_decision_rules = list(map(self.possible_pure_decision_rules, self.all_decision_nodes))
-    #     all_joint_policy_profiles = list(itertools.product(*all_dec_decision_rules))
-
-    #     for jp in all_joint_policy_profiles:
-    #         found_ne = True
-    #         for a in self.agents:
-    #             self.add_cpds(*jp)
-    #             eu_jp_agent_a = self.expected_utility({}, agent=a)
-    #             for agent_policy in all_agent_pure_policies[a]:
-    #                 self.add_cpds(*agent_policy)
-    #                 eu_deviation_agent_a = self.expected_utility({}, agent=a)
-    #                 if eu_deviation_agent_a > eu_jp_agent_a:
-    #                     found_ne = False
-    #         if found_ne:
-    #             all_pure_ne.append(jp)
-    #     return all_pure_ne
-
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = []) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = None) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
@@ -113,10 +58,10 @@ class MACID(MACIDBase):
         
         if decisions_in_sg is None:
             decisions_in_sg = self.all_decision_nodes
-        else:
-            if not set(decisions_in_sg) in self.decs_in_each_maid_subgame():
-                raise Exception(f"The decision nodes in decisions_in_sg: {decisions_in_sg} do \
-                            not make up a MAID subgame of this MACID")
+        # else:
+        #     if not set(decisions_in_sg) in self.decs_in_each_maid_subgame():
+        #         raise Exception(f"The decision nodes in decisions_in_sg: {decisions_in_sg} do \
+        #                     not make up a MAID subgame of this MACID")
 
         for dec in decisions_in_sg:
             if dec not in self.all_decision_nodes:
@@ -143,9 +88,10 @@ class MACID(MACIDBase):
 
         # NE finder
         for pp in all_joint_policy_profiles_in_sg:
+            found_ne = True
             for a in agents_in_sg:
 
-                # create a fully mixed joint policy profile:
+                # create a fully mixed policy profile over the decision nodes not already optimised
                 self.add_cpds(*pp)
                 for d in decs_to_be_randomised:
                     self.impute_random_decision(d)
@@ -188,3 +134,20 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
+    
+    def copy_without_cpds(self) -> MACID:
+        """copy the MACID structure"""
+        return MACID(self.edges(),
+                     {agent: {'D': list(self.decision_nodes_agent[agent]),
+                              'U': list(self.utility_nodes_agent[agent])}
+                     for agent in self.agents})
+
+    def _get_color(self, node: str) -> Union[str, np.ndarray]:
+        """
+        Assign a unique colour with each new agent's decision and utility nodes
+        """
+        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
+        if node in self.all_decision_nodes or node in self.all_utility_nodes:
+            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
+        else:
+            return 'lightgray'  # chance node
