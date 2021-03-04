@@ -1,6 +1,6 @@
 from __future__ import annotations
 import itertools
-from typing import List, Any
+from typing import List, Any, Dict
 import numpy as np
 import matplotlib.cm as cm
 import networkx as nx
@@ -87,6 +87,8 @@ class CondensedRelevanceGraph(nx.DiGraph):
         con_rel = nx.condensation(rg)
         self.add_nodes_from(con_rel.nodes)
         self.add_edges_from(con_rel.edges)
+        # this generates a dictionary matching each decision node
+        # in rg to the node of con_rel that it's in.
         self.graph['mapping'] = con_rel.graph['mapping']
 
     def draw(self) -> None:
@@ -100,4 +102,13 @@ class CondensedRelevanceGraph(nx.DiGraph):
         """
         Returns a topological ordering (which might not be unique) of the SCCs
         """
-        return list(nx.topological_sort(self))
+        decs_in_each_scc = [self.get_decisions_in_scc()[scc] for scc in list(nx.topological_sort(self))]
+        return decs_in_each_scc
+
+    def get_decisions_in_scc(self) -> Dict[int, List[str]]:
+        """ Return a dictionary matching each SCC with a list of decision nodes that it contains"""
+        scc_dec_mapping: Dict[int, List[str]] = {}
+        # invert the dictionary to match each scc with the decision nodes in it
+        for k, v in self.graph['mapping'].items():
+            scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
+        return scc_dec_mapping
