@@ -138,11 +138,6 @@ class MACID(MACIDBase):
         all_joint_policy_profiles_in_sg = list(itertools.product(*all_dec_decision_rules))
         decs_not_in_sg = [dec for dec in self.all_decision_nodes if dec not in decisions_in_sg]
 
-<<<<<<< HEAD
-        macid_decs_already_optimised = [dec for dec in self.all_decision_nodes if not
-                                        isinstance(self.get_cpds(dec), DecisionDomain)]
-        decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in macid_decs_already_optimised]
-=======
         # if a partial policy profile is input, those decision rules should not change
         if partial_policy_profile:
             partial_profile_assigned = self.policy_profile_assignment(partial_policy_profile)
@@ -150,7 +145,6 @@ class MACID(MACIDBase):
             decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in decs_already_optimised]
         else:
             decs_to_be_randomised = decs_not_in_sg
->>>>>>> parent of f37dfcd... update NE in subgame method
 
         # NE finder
         for pp in all_joint_policy_profiles_in_sg:
@@ -159,11 +153,8 @@ class MACID(MACIDBase):
                 # create a fully mixed policy profile across decision nodes that
                 # have not already been optimised:
                 self.add_cpds(*pp)
-<<<<<<< HEAD
-=======
                 if partial_policy_profile:
                     self.add_cpds(*partial_policy_profile)
->>>>>>> parent of f37dfcd... update NE in subgame method
                 for d in decs_to_be_randomised:
                     self.impute_random_decision(d)
 
@@ -175,13 +166,8 @@ class MACID(MACIDBase):
                     # agent a's expected utility if they deviate
                     eu_deviation_agent_a = self.expected_utility({}, agent=a)
                     if eu_deviation_agent_a > eu_pp_agent_a:
-<<<<<<< HEAD
-                        break
-            else:
-=======
                         found_ne = False
             if found_ne:
->>>>>>> parent of f37dfcd... update NE in subgame method
                 all_pure_ne_in_sg.append(list(pp))
 
         return all_pure_ne_in_sg
@@ -215,23 +201,3 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
-<<<<<<< HEAD
-
-    def copy_without_cpds(self) -> MACID:
-        """copy the MACID structure"""
-        return MACID(self.edges(),
-                     {agent: {'D': list(self.decision_nodes_agent[agent]),
-                              'U': list(self.utility_nodes_agent[agent])}
-                     for agent in self.agents})
-
-    def _get_color(self, node: str) -> Union[str, np.ndarray]:
-        """
-        Assign a unique colour with each new agent's decision and utility nodes
-        """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
-        else:
-            return 'lightgray'  # chance node
-=======
->>>>>>> parent of f37dfcd... update NE in subgame method

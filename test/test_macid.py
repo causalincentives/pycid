@@ -82,7 +82,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_all_pure_spe()
@@ -115,6 +115,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
+    # @unittest.skip("")
     def test_temp(self):
         macid = taxi_competition()
         rg = RelevanceGraph(macid)
