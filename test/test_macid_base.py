@@ -19,7 +19,7 @@ import networkx as nx
 
 class TestBASE(unittest.TestCase):
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_assign_cpd(self) -> None:
         three_node = get_3node_cid()
         three_node.add_cpds(TabularCPD('D', 2, np.eye(2), evidence=['S'], evidence_card=[2]))
@@ -27,7 +27,7 @@ class TestBASE(unittest.TestCase):
         cpd = three_node.get_cpds('D').values
         self.assertTrue(np.array_equal(cpd, np.array([[1, 0], [0, 1]])))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_query(self) -> None:
         three_node = get_3node_cid()
         with self.assertRaises(Exception):
@@ -38,7 +38,7 @@ class TestBASE(unittest.TestCase):
         with self.assertRaises(Exception):
             three_node.query(['U'], {'S': 0})
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_expected_utility(self) -> None:
         three_node = get_3node_cid()
         five_node = get_5node_cid()
@@ -66,7 +66,7 @@ class TestBASE(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_valid_order(['D3'])     
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_intervention(self) -> None:
         cid = get_minimal_cid()
         cid.impute_random_policy()
@@ -80,7 +80,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 3)
         self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 5)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
         cid = get_minimal_cid()
         possible_pure_decision_rules = cid.possible_pure_decision_rules('A')
@@ -115,7 +115,7 @@ class TestBASE(unittest.TestCase):
             expected_utilities.append(five_node.expected_utility({}))
         self.assertEqual(set(expected_utilities), {0.5, 1.0, 1.5})
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_optimal_decision_rules(self) -> None:
         cid = get_minimal_cid()
         optimal_decision_rules = cid.optimal_decision_rules('A')
@@ -139,7 +139,7 @@ class TestBASE(unittest.TestCase):
             five_node.add_cpds(cpd)
             self.assertEqual(five_node.expected_utility({}), 1.5)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_is_s_reachable(self) -> None:
         example = taxi_competition()
         self.assertTrue(example.is_s_reachable('D1', 'D2'))
@@ -149,7 +149,7 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(example2.is_s_reachable('D1', 'D2'))
         self.assertFalse(example2.is_s_reachable('D2', 'D1'))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_is_r_reachable(self) -> None:
         example = subgame_difference()
         self.assertFalse(example.is_r_reachable('D2', 'D1'))
@@ -157,7 +157,7 @@ class TestBASE(unittest.TestCase):
         self.assertFalse(example.is_r_reachable('D1', 'N'))
         self.assertTrue(example.is_r_reachable('D1', 'D2'))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_relevance_graph(self) -> None:
         example = taxi_competition()
         rg = RelevanceGraph(example)
@@ -165,8 +165,10 @@ class TestBASE(unittest.TestCase):
         example2 = prisoners_dilemma()
         rg2 = RelevanceGraph(example2)
         self.assertFalse(rg2.is_acyclic())
+        self.assertTrue(len(rg.get_sccs()) == 2)
+        self.assertEqual(rg2.get_sccs(), [{'D1', 'D2'}])
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_mechanism_graph(self) -> None:
         example = taxi_competition()
         mg = MechanismGraph(example)
@@ -174,13 +176,13 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_copy_without_cpds(self) -> None:
         cid = get_3node_cid()
         cid_no_cpds = cid.copy_without_cpds()
         self.assertTrue(len(cid_no_cpds.cpds) == 0)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_sufficient_recall(self) -> None:
         example = forgetful_movie_star()
         self.assertFalse(example.sufficient_recall(1))
