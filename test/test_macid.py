@@ -82,7 +82,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
         print(CondensedRelevanceGraph(macid).get_decisions_in_scc())

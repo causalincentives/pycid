@@ -101,13 +101,12 @@ class MACID(MACIDBase):
     #             all_pure_ne.append(jp)
     #     return all_pure_ne
 
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = [],
-                              partial_policy_profile: List[FunctionCPD] = None) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = []) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
-        - If the MACID being operated on already has function CPDs for some decision nodes, it is 
+        - If the MACID being operated on already has function CPDs for some decision nodes, it is
         assumed that these have already been optimised and so these are not changed.
         TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         """
