@@ -98,7 +98,7 @@ class CondensedRelevanceGraph(nx.DiGraph):
         nx.draw_networkx(self, with_labels=True)
         plt.show()
 
-    def get_scc_topological_ordering(self) -> List[List(str)]:
+    def get_scc_topological_ordering(self) -> List[List[str]]:
         """
         Return a topological ordering (which might not be unique) of the SCCs as
         a list of decision nodes in each SCC.

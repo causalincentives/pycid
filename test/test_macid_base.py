@@ -9,12 +9,10 @@ from core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.simple_macids import two_agent_one_pne
 from examples.story_macids import prisoners_dilemma, taxi_competition
-from pgmpy.factors.discrete import TabularCPD
+from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from examples.story_macids import forgetful_movie_star, subgame_difference
 from core.macid_base import MechanismGraph
-import networkx as nx
 
 
 class TestBASE(unittest.TestCase):
@@ -64,7 +62,7 @@ class TestBASE(unittest.TestCase):
         with self.assertRaises(Exception):
             rg.get_valid_order()
         with self.assertRaises(Exception):
-            macid.get_valid_order(['D3'])     
+            macid.get_valid_order(['D3'])
 
     # @unittest.skip("")
     def test_intervention(self) -> None:

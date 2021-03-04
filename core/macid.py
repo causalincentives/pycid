@@ -3,10 +3,9 @@
 from __future__ import annotations
 from core.cpd import FunctionCPD
 import numpy as np
-from typing import Any, List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 import itertools
 import networkx as nx
-import matplotlib.pyplot as plt
 import copy
 import matplotlib.cm as cm
 from core.macid_base import MACIDBase
@@ -20,25 +19,6 @@ class MACID(MACIDBase):
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
-    def decs_in_each_maid_subgame(self) -> List[set]:
-        """
-        Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
-        """
-        con_rel = CondensedRelevanceGraph(self)
-        con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
-        powerset = list(itertools.chain.from_iterable(itertools.combinations(con_rel_sccs, r)
-                                                      for r in range(1, len(con_rel_sccs) + 1)))
-        con_rel_subgames = copy.deepcopy(powerset)
-        for subset in powerset:
-            for node in subset:
-                if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
-                    con_rel_subgames.remove(subset)
-
-        dec_subgames = [[con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame]
-                        for con_rel_subgame in con_rel_subgames]
-
-        return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
-
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in the MACID.
@@ -46,7 +26,7 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: List[str] = None) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[List[str]] = None) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
@@ -55,10 +35,9 @@ class MACID(MACIDBase):
         assumed that these have already been optimised and so these are not changed.
         TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         """
-        
         if decisions_in_sg is None:
             decisions_in_sg = self.all_decision_nodes
-        
+
         for dec in decisions_in_sg:
             if dec not in self.all_decision_nodes:
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
@@ -68,7 +47,8 @@ class MACID(MACIDBase):
 
         # Find all of an agent's pure policies in this subgame.
         def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
-            agent_decs_in_sg = [dec for dec in self.decision_nodes_agent[agent] if dec in decisions_in_sg]
+            agent_decs_in_sg = [dec for dec in self.decision_nodes_agent[agent]
+                                if dec in decisions_in_sg]  # type: ignore
             possible_dec_rules = list(map(self.possible_pure_decision_rules, agent_decs_in_sg))
             return list(itertools.product(*possible_dec_rules))
 
@@ -130,6 +110,25 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
+
+    def decs_in_each_maid_subgame(self) -> List[set]:
+        """
+        Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
+        """
+        con_rel = CondensedRelevanceGraph(self)
+        con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
+        powerset = list(itertools.chain.from_iterable(itertools.combinations(con_rel_sccs, r)
+                                                      for r in range(1, len(con_rel_sccs) + 1)))
+        con_rel_subgames = copy.deepcopy(powerset)
+        for subset in powerset:
+            for node in subset:
+                if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
+                    con_rel_subgames.remove(subset)
+
+        dec_subgames = [[con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame]
+                        for con_rel_subgame in con_rel_subgames]
+
+        return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
 
     def copy_without_cpds(self) -> MACID:
         """copy the MACID structure"""

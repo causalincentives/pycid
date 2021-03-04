@@ -6,12 +6,11 @@ import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
-from examples.simple_macids import basic_different_dec_cardinality, get_basic_subgames, get_basic_subgames2, \
+from examples.simple_macids import basic_different_dec_cardinality, get_basic_subgames, \
     get_basic_subgames3, two_agents_three_actions
-from examples.story_macids import battle_of_the_sexes, matching_pennies, prisoners_dilemma2, taxi_competition, modified_taxi_competition, \
-    prisoners_dilemma
+from examples.story_macids import battle_of_the_sexes, matching_pennies, taxi_competition, \
+    modified_taxi_competition, prisoners_dilemma
 import numpy as np
-from core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 
 class TestMACID(unittest.TestCase):
@@ -78,7 +77,6 @@ class TestMACID(unittest.TestCase):
     # @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
-        print(CondensedRelevanceGraph(macid).get_decisions_in_scc())
         all_spe = macid.get_all_pure_spe()
         self.assertTrue(len(all_spe) == 1)
         spe = all_spe[0]

@@ -45,6 +45,7 @@ def prisoners_dilemma() -> MACID:
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
 
+
 def battle_of_the_sexes() -> MACID:
     """ This macim is a representation of the
     battle of the sexes game (also known as Bach or Stravinsky).

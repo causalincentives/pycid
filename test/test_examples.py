@@ -9,7 +9,7 @@ from examples.simple_macids import get_basic_subgames, get_basic_subgames2, get_
     basic_different_dec_cardinality
 from examples.story_cids import get_introduced_bias, get_car_accident_predictor, get_fitness_tracker, \
     get_content_recommender, get_content_recommender2, get_modified_content_recommender, get_grade_predictor
-from examples.story_macids import prisoners_dilemma, prisoners_dilemma2, battle_of_the_sexes, matching_pennies, \
+from examples.story_macids import prisoners_dilemma, battle_of_the_sexes, matching_pennies, \
     taxi_competition, modified_taxi_competition, tree_doctor, forgetful_movie_star, subgame_difference, \
     road_example, politician, umbrella, sequential, signal, triage
 
@@ -58,7 +58,6 @@ class TestExamples(unittest.TestCase):
 
     def test_story_macid_examples(self) -> None:
         prisoners_dilemma()
-        prisoners_dilemma2()
         battle_of_the_sexes()
         matching_pennies()
         taxi_competition()
