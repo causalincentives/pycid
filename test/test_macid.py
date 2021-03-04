@@ -24,13 +24,13 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(len(macid.get_sccs()) == 3)
 
     @unittest.skip("")
-    def test_all_maid_subgames(self) -> None:
+    def test_decs_in_each_maid_subgame(self) -> None:
         macid = prisoners_dilemma()
-        self.assertCountEqual(macid.all_maid_subgames(), [{'D1', 'D2'}])
+        self.assertCountEqual(macid.decs_in_each_maid_subgame(), [{'D1', 'D2'}])
         macid = get_basic_subgames()
-        self.assertTrue(len(macid.all_maid_subgames()) == 4)
+        self.assertTrue(len(macid.decs_in_each_maid_subgame()) == 4)
         macid = get_basic_subgames3()
-        self.assertTrue(len(macid.all_maid_subgames()) == 5)
+        self.assertTrue(len(macid.decs_in_each_maid_subgame()) == 5)
 
     @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
@@ -69,20 +69,21 @@ class TestMACID(unittest.TestCase):
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_all_pure_ne()), 1)
 
+
     @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()
-        ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=['D2'])
+        ne_in_subgame = macid.get_all_pure_ne_in_sg2(decisions_in_sg=['D2'])
         policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
         cpd_d2 = policy_assignment['D2']
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
         self.assertFalse(policy_assignment['D1'])
-        ne_in_full_macid = macid.get_all_pure_ne_in_sg()
+        ne_in_full_macid = macid.get_all_pure_ne_in_sg2()
         self.assertEqual(len(ne_in_full_macid), 3)
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_all_pure_spe()
@@ -115,6 +116,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
+    @unittest.skip("")
     def test_temp(self):
         macid = taxi_competition()
         rg = RelevanceGraph(macid)
