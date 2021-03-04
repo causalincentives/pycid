@@ -8,21 +8,21 @@ sys.path.insert(0, os.path.abspath('../'))
 import unittest
 from examples.simple_macids import basic_different_dec_cardinality, get_basic_subgames, get_basic_subgames2, \
     get_basic_subgames3, two_agents_three_actions
-from examples.story_macids import battle_of_the_sexes, matching_pennies, taxi_competition, modified_taxi_competition, \
+from examples.story_macids import battle_of_the_sexes, matching_pennies, prisoners_dilemma2, taxi_competition, modified_taxi_competition, \
     prisoners_dilemma
 import numpy as np
 
 
 class TestMACID(unittest.TestCase):
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_sccs(self) -> None:
         macid = prisoners_dilemma()
         self.assertEqual(macid.get_sccs(), [{'D1', 'D2'}])
         macid = get_basic_subgames2()
         self.assertTrue(len(macid.get_sccs()) == 3)
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_all_maid_subgames(self) -> None:
         macid = prisoners_dilemma()
         self.assertCountEqual(macid.all_maid_subgames(), [{'D1', 'D2'}])
@@ -31,7 +31,7 @@ class TestMACID(unittest.TestCase):
         macid = get_basic_subgames3()
         self.assertTrue(len(macid.all_maid_subgames()) == 5)
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision('D1')
@@ -50,7 +50,7 @@ class TestMACID(unittest.TestCase):
         print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_ne(self) -> None:
         macid = prisoners_dilemma()
         self.assertEqual(len(macid.get_all_pure_ne()), 1)
@@ -68,7 +68,7 @@ class TestMACID(unittest.TestCase):
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_all_pure_ne()), 1)
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()
         ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=['D2'])
@@ -81,7 +81,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(Exception):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=['D3'])
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_all_pure_spe()
@@ -114,15 +114,21 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
-    # TODO: Show Tom That this doesn't work :( - looks to be a problem with pgmpy rather than our code
-    # def test_temp(self):
-    #     macid = prisoners_dilemma2()
-    #     print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 2))
-    #     print(macid.expected_utility({'D1': 0, 'D2': 0}, agent = 1))
 
-    #     macid = prisoners_dilemma()
-    #     print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
-    #     print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
+    # TODO: Show Tom That this doesn't work :( - looks to be a problem with pgmpy rather than our code
+    def test_temp(self):
+        # macid = prisoners_dilemma2()
+        # print(macid.expected_utility({'D1': 1, 'D2': 1}, agent = 2))
+        # print(macid.expected_utility({'D1': 1, 'D2': 1}, agent = 1))
+
+
+        # macid = prisoners_dilemma()
+        # print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 2))
+        # print(macid.expected_utility({'D1': 'd', 'D2': 'd'}, agent = 1))
+
+        macid = taxi_competition()
+        print(macid.expected_utility({'D1': 'c', 'D2': 'e'}, agent = 1))
+        print(macid.expected_utility({'D1': 'c', 'D2': 'e'}, agent = 2))
 
 
 if __name__ == "__main__":
