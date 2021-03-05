@@ -12,7 +12,7 @@ from examples.story_cids import get_introduced_bias
 
 class TestCPD(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     def test_initialize_uniform_random_cpd(self) -> None:

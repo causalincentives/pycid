@@ -15,7 +15,7 @@ from examples.story_cids import get_introduced_bias
 
 class TestCID(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")
@@ -59,11 +59,9 @@ class TestCID(unittest.TestCase):
         cid.impute_conditional_expectation_decision('D', 'Y')
         eu_ce = cid.expected_utility({})
         self.assertAlmostEqual(eu_ce, -0.1666, 2)
-        # TODO: It doesn't always work to impute an optimal policy after imputing a
-        #       conditional expectation one, possibly because the real-valued decision domain?
-        # cid.impute_optimal_policy()
-        # eu_opt = cid.expected_utility({})
-        # self.assertEqual(eu_ce, eu_opt)
+        cid.impute_optimal_policy()
+        eu_opt = cid.expected_utility({})
+        self.assertEqual(eu_ce, eu_opt)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ from core.macid import MACID
 
 class TestAnalyze(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")

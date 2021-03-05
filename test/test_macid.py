@@ -16,7 +16,7 @@ import numpy as np
 
 class TestMACID(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")

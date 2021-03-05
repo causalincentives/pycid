@@ -31,7 +31,7 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
 
 class TestNotebooks(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     def test_fairness_notebook(self) -> None:

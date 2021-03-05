@@ -18,7 +18,7 @@ from core.macid_base import MechanismGraph
 
 class TestBASE(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")

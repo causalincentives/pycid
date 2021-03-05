@@ -17,7 +17,7 @@ from core.macid import MACID
 
 class TestPATHS(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")

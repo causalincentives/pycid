@@ -20,7 +20,7 @@ import unittest
 
 class TestExamples(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         logging.disable()
 
     def test_random_cid(self) -> None:
