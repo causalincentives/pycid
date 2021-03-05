@@ -1,3 +1,4 @@
+import logging
 import unittest
 import os
 import nbformat
@@ -29,6 +30,9 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
 
 
 class TestNotebooks(unittest.TestCase):
+
+    def setUp(self):
+        logging.disable()
 
     def test_fairness_notebook(self) -> None:
         _, errors = run_notebook('notebooks/fairness.ipynb')

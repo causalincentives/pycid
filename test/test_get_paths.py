@@ -1,5 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
+import logging
 import unittest
 import sys
 import os
@@ -15,6 +16,9 @@ from core.macid import MACID
 
 
 class TestPATHS(unittest.TestCase):
+
+    def setUp(self):
+        logging.disable()
 
     # @unittest.skip("")
     def test_find_active_path(self) -> None:

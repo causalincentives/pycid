@@ -136,7 +136,7 @@ class MACIDBase(BayesianModel):
         # revise context so state_names are switched to their state number (overcomes pgmpy's bug)
         revised_context = {variable: self.get_cpds(variable).name_to_no[variable][value]
                            for variable, value in context.items()}
-        factor = bp.query(query, revised_context)
+        factor = bp.query(query, revised_context, show_progress=False)
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 

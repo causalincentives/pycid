@@ -1,3 +1,4 @@
+import logging
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -18,6 +19,9 @@ import unittest
 
 
 class TestExamples(unittest.TestCase):
+
+    def setUp(self):
+        logging.disable()
 
     def test_random_cid(self) -> None:
         random_cid(4, 1, 1)

@@ -1,3 +1,4 @@
+import logging
 import sys
 import os
 import unittest
@@ -18,6 +19,9 @@ from core.macid import MACID
 
 
 class TestAnalyze(unittest.TestCase):
+
+    def setUp(self):
+        logging.disable()
 
     # @unittest.skip("")
     def test_value_of_information(self) -> None:

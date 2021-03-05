@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
+import logging
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -13,6 +14,9 @@ from examples.story_cids import get_introduced_bias
 
 
 class TestCID(unittest.TestCase):
+
+    def setUp(self):
+        logging.disable()
 
     # @unittest.skip("")
     def test_sufficient_recall(self) -> None:
