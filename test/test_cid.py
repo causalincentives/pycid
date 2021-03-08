@@ -2,14 +2,22 @@
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
 import logging
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
+
 import numpy as np
-from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_sequential_cid, get_insufficient_recall_cid
+
+from examples.simple_cids import (
+    get_2dec_cid,
+    get_3node_cid,
+    get_5node_cid_with_scaled_utility,
+    get_insufficient_recall_cid,
+    get_sequential_cid,
+)
 from examples.story_cids import get_introduced_bias
 
 

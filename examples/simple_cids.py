@@ -2,7 +2,7 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from pycid.core.cid import CID
-from pycid.core.cpd import FunctionCPD, DecisionDomain, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
 
 
 def get_minimal_cid() -> CID:

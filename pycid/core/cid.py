@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import random
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid_base import MACIDBase

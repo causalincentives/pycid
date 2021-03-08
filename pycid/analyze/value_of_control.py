@@ -1,8 +1,10 @@
-from pycid.core.cid import CID
-import networkx as nx
-from pycid.analyze.requisite_graph import requisite_graph
 from typing import List
-from pycid.core.get_paths import is_active_backdoor_trail, find_all_dir_paths
+
+import networkx as nx
+
+from pycid.analyze.requisite_graph import requisite_graph
+from pycid.core.cid import CID
+from pycid.core.get_paths import find_all_dir_paths, is_active_backdoor_trail
 
 
 def admits_voc(cid: CID, node: str) -> bool:

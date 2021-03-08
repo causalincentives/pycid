@@ -1,7 +1,8 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from pycid.core.macid import MACID
+
 from pycid.core.cpd import DecisionDomain, FunctionCPD
+from pycid.core.macid import MACID
 
 
 def get_basic_subgames() -> MACID:

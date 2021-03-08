@@ -1,13 +1,15 @@
 import logging
+import os
+import sys
+import unittest
 
 import numpy as np
-import unittest
-import sys, os
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from pycid.core.cpd import UniformRandomCPD, FunctionCPD
 from examples.simple_cids import get_minimal_cid
 from examples.story_cids import get_introduced_bias
+from pycid.core.cpd import FunctionCPD, UniformRandomCPD
 
 
 class TestCPD(unittest.TestCase):

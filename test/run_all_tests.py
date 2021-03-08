@@ -1,15 +1,13 @@
 import unittest
-
 from test.test_analyze import TestAnalyze
+from test.test_cid import TestCID
 from test.test_cpd import TestCPD
 from test.test_examples import TestExamples
-from test.test_notebooks import TestNotebooks
-from test.test_cid import TestCID
-from test.test_macid import TestMACID
 from test.test_get_paths import TestPATHS
-from test.test_reasoning_patterns import TestReasoning
+from test.test_macid import TestMACID
 from test.test_macid_base import TestBASE
-
+from test.test_notebooks import TestNotebooks
+from test.test_reasoning_patterns import TestReasoning
 
 if __name__ == '__main__':
     # All tests can also be run with python3 -m unittest

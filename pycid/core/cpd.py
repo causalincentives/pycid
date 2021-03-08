@@ -2,13 +2,15 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
+
 import itertools
-from inspect import getsourcelines
 import random
-from typing import List, Callable, Dict
+from inspect import getsourcelines
+from typing import Callable, Dict, List
+
+import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pgmpy.models import BayesianModel  # type: ignore
-import numpy as np
 
 
 class UniformRandomCPD(TabularCPD):

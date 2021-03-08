@@ -1,6 +1,7 @@
+from typing import List
+
 import networkx as nx
 
-from typing import List
 from pycid.core.macid_base import MACIDBase
 
 

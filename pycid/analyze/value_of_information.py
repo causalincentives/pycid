@@ -1,4 +1,5 @@
 from typing import List
+
 import networkx as nx
 
 from pycid.analyze.requisite_graph import requisite_graph

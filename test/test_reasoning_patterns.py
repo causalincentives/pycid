@@ -1,14 +1,21 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from pycid.core.macid import MACID
-from pycid.analyze.reasoning_patterns import direct_effect, get_reasoning_patterns, manipulation, \
-    revealing_or_denying, signaling
 import unittest
+
+from pycid.analyze.reasoning_patterns import (
+    direct_effect,
+    get_reasoning_patterns,
+    manipulation,
+    revealing_or_denying,
+    signaling,
+)
+from pycid.core.macid import MACID
 
 
 class TestReasoning(unittest.TestCase):

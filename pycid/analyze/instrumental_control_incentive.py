@@ -1,6 +1,7 @@
+from typing import List
+
 from pycid.core.cid import CID
 from pycid.core.get_paths import find_all_dir_paths
-from typing import List
 
 
 def admits_ici(cid: CID, decision: str, node: str) -> bool:

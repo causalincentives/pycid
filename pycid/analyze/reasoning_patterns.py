@@ -1,10 +1,18 @@
-from pycid.core.macid_base import MACIDBase
-from pycid.core.macid import MACID
-import networkx as nx
-from typing import Any, List, Dict, Union
-from pycid.core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
-    is_active_indirect_frontdoor_trail, is_active_path
 import copy
+from typing import Any, Dict, List, Union
+
+import networkx as nx
+
+from pycid.core.get_paths import (
+    directed_decision_free_path,
+    find_all_dir_paths,
+    find_all_undir_paths,
+    get_motif,
+    is_active_indirect_frontdoor_trail,
+    is_active_path,
+)
+from pycid.core.macid import MACID
+from pycid.core.macid_base import MACIDBase
 
 
 def _get_key_node(mb: MACIDBase, path: List[str]) -> str:

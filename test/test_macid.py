@@ -2,16 +2,28 @@
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
 import logging
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 import unittest
-from examples.simple_macids import basic_different_dec_cardinality, get_basic_subgames, \
-    get_basic_subgames3, two_agents_three_actions
-from examples.story_macids import battle_of_the_sexes, matching_pennies, taxi_competition, \
-    modified_taxi_competition, prisoners_dilemma
+
 import numpy as np
+
+from examples.simple_macids import (
+    basic_different_dec_cardinality,
+    get_basic_subgames,
+    get_basic_subgames3,
+    two_agents_three_actions,
+)
+from examples.story_macids import (
+    battle_of_the_sexes,
+    matching_pennies,
+    modified_taxi_competition,
+    prisoners_dilemma,
+    taxi_competition,
+)
 
 
 class TestMACID(unittest.TestCase):

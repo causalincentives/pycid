@@ -2,18 +2,20 @@
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
 import logging
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 import unittest
+
 import numpy as np
-from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.story_macids import prisoners_dilemma, taxi_competition
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from examples.story_macids import forgetful_movie_star, subgame_difference
+
+from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
+from examples.story_macids import forgetful_movie_star, prisoners_dilemma, subgame_difference, taxi_competition
 from pycid.core.macid_base import MechanismGraph
+from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 
 class TestBASE(unittest.TestCase):

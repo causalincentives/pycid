@@ -1,5 +1,5 @@
 from pycid.core.cid import CID
-from pycid.core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
 
 
 def get_introduced_bias() -> CID:

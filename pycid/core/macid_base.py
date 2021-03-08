@@ -2,18 +2,20 @@
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
 
+import itertools
 import random
 from functools import lru_cache
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
+
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from pgmpy.models import BayesianModel  # type: ignore
-from typing import List, Tuple, Dict, Any, Callable, Union, Iterable
 from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
-import networkx as nx
-from pycid.core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
-import itertools
-import matplotlib.cm as cm
+from pgmpy.models import BayesianModel  # type: ignore
+
+from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 

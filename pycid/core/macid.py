@@ -1,16 +1,18 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 from __future__ import annotations
-from pycid.core.cpd import FunctionCPD
-import numpy as np
-from typing import List, Tuple, Dict, Union, Optional
-import itertools
-import networkx as nx
+
 import copy
+import itertools
+from typing import Dict, List, Optional, Tuple, Union
+
 import matplotlib.cm as cm
+import networkx as nx
+import numpy as np
+
+from pycid.core.cpd import DecisionDomain, FunctionCPD
 from pycid.core.macid_base import MACIDBase
 from pycid.core.relevance_graph import CondensedRelevanceGraph
-from pycid.core.cpd import DecisionDomain
 
 
 class MACID(MACIDBase):

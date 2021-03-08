@@ -1,8 +1,10 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
-from pycid.core.macid_base import MACIDBase
 from typing import List, Set, Tuple
+
 import networkx as nx
+
+from pycid.core.macid_base import MACIDBase
 
 
 def _active_neighbours(mb: MACIDBase, path: List[str], observed: List[str]) -> Set[str]:

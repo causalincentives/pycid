@@ -1,9 +1,10 @@
 import logging
-import unittest
 import os
+import unittest
+from typing import Any, List, Tuple
+
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-from typing import Any, List, Tuple
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

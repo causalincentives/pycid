@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import itertools
-from typing import List, Any, Dict
-import numpy as np
+from typing import TYPE_CHECKING, Any, Dict, List
+
 import matplotlib.cm as cm
-import networkx as nx
 import matplotlib.pyplot as plt
-from typing import TYPE_CHECKING
+import networkx as nx
+import numpy as np
+
 if TYPE_CHECKING:
     from pycid.core.macid_base import MACIDBase
 

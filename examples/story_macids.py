@@ -1,5 +1,6 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
+
 from pycid.core.cpd import DecisionDomain, FunctionCPD
 from pycid.core.macid import MACID
 
