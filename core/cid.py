@@ -25,7 +25,8 @@ class CID(MACIDBase):
             decisions = self.get_valid_order(self.decision_nodes)
             for d in reversed(decisions):
                 self.impute_optimal_decision(d)
-        self.add_cpds(*random.choice(self.optimal_policies()))
+        else:
+            self.add_cpds(*random.choice(self.optimal_policies()))
 
     def optimal_policies(self) -> List[List[FunctionCPD]]:
         """

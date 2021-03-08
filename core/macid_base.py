@@ -306,7 +306,9 @@ class MACIDBase(BayesianModel):
         assert set(decisions).issubset(self.decision_nodes_agent[agent])
         macid = self.copy()
         for d in macid.all_decision_nodes:
-            if not macid.is_s_reachable(decisions, d) and isinstance(macid.get_cpds(d), DecisionDomain):
+            if isinstance(macid.get_cpds(d), DecisionDomain) and \
+                    not macid.is_s_reachable(decisions, d) and \
+                    d not in decisions:
                 macid.impute_random_decision(d)
         expected_utility: List[float] = []
         strategies = macid.pure_strategies(decisions)
