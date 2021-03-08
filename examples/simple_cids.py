@@ -1,8 +1,8 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
-from core.cid import CID
-from core.cpd import FunctionCPD, DecisionDomain, UniformRandomCPD
+from pycid.core.cid import CID
+from pycid.core.cpd import FunctionCPD, DecisionDomain, UniformRandomCPD
 
 
 def get_minimal_cid() -> CID:

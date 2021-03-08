@@ -1,7 +1,7 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
-from core.cpd import DecisionDomain, FunctionCPD
-from core.macid import MACID
+from pycid.core.cpd import DecisionDomain, FunctionCPD
+from pycid.core.macid import MACID
 
 
 def prisoners_dilemma() -> MACID:

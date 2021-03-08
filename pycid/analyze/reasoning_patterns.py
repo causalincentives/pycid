@@ -1,8 +1,8 @@
-from core.macid_base import MACIDBase
-from core.macid import MACID
+from pycid.core.macid_base import MACIDBase
+from pycid.core.macid import MACID
 import networkx as nx
 from typing import Any, List, Dict, Union
-from core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
+from pycid.core.get_paths import directed_decision_free_path, find_all_dir_paths, find_all_undir_paths, get_motif, \
     is_active_indirect_frontdoor_trail, is_active_path
 import copy
 

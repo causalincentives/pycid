@@ -1,6 +1,6 @@
-from core.cid import CID
-from core.get_paths import find_all_dir_paths
-from analyze.requisite_graph import requisite_graph
+from pycid.core.cid import CID
+from pycid.core.get_paths import find_all_dir_paths
+from pycid.analyze.requisite_graph import requisite_graph
 from typing import List
 
 

@@ -1,5 +1,5 @@
-from core.cid import CID
-from core.get_paths import find_all_dir_paths
+from pycid.core.cid import CID
+from pycid.core.get_paths import find_all_dir_paths
 from typing import List
 
 

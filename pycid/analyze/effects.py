@@ -1,4 +1,4 @@
-from core.cid import CID
+from pycid.core.cid import CID
 
 
 def total_effect(cid: CID, a: str, x: str, a1: int, a2: int) -> float:

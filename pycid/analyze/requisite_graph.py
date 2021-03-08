@@ -1,7 +1,7 @@
 import networkx as nx
 
 from typing import List
-from core.macid_base import MACIDBase
+from pycid.core.macid_base import MACIDBase
 
 
 def requisite(cid: MACIDBase, decision: str, node: str) -> bool:

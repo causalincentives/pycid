@@ -13,8 +13,8 @@ checking graphical criteria for various types of incentives.
 
 ```python
 # Import
-from core.cid import CID
-from core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
+from pycid.core.cid import CID
+from pycid.core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
 
 # Specify the nodes and edges of a simple CID
 cid = CID([('S', 'D'),   # add nodes S and D, and a link S -> D
@@ -43,14 +43,14 @@ a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
 ## Code overview
 
-The code is structured into 5 folders:
-* [core](./core) contains methods and classes for specifying CID and MACID models, 
+The code is structured into the following folders:
+* [pycid/core](./pycid/core) contains methods and classes for specifying CID and MACID models,
   for finding and characterising types of paths in these models' graphs, and for 
   computing optimal policies and Nash equilibria.
+* [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
+as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [examples](./examples) has a range of pre-specified CIDs and MACIDs, 
   as well as methods for generating random ones.
-* [analyze](./analyze) has methods for analyzing different types of effects and interventions
-as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [test](./test) has unit tests for all public methods.
 
@@ -62,7 +62,7 @@ you can download and setup pycid via:
 ```shell
 git clone https://github.com/causalincentives/pycid  # download the code
 cd pycid
-pip3 install -r Requirements.txt  # install required python packages
+pip3 install --editable .[test]
 python3 -m unittest   # check that everything works
 ```
 
