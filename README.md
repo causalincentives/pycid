@@ -3,11 +3,11 @@
 This package implements causal influence diagrams and methods to analyze them, and is part of the
 [Causal Incentives](https://causalincentives.com) project.
 
-Building on [pgmpy](https://pgmpy.org/), pycid provides methods for 
-defining CIDs and MACIDs, 
+Building on [pgmpy](https://pgmpy.org/), pycid provides methods for
+defining CIDs and MACIDs,
 computing optimal policies and Nash equilibria,
 studying the effects of interventions, and
-checking graphical criteria for various types of incentives. 
+checking graphical criteria for various types of incentives.
 
 ## Basic usage
 
@@ -37,7 +37,7 @@ cid.draw()
 ![image](./image.png "")
 
 The [notebooks](./notebooks) provide many more examples, including
-a [CID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb), 
+a [CID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb),
 a [MACID Basics Tutorial](./notebooks/MACID_Basics_Tutorial.ipynb), and
 a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
@@ -45,18 +45,18 @@ a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
 The code is structured into the following folders:
 * [pycid/core](./pycid/core) contains methods and classes for specifying CID and MACID models,
-  for finding and characterising types of paths in these models' graphs, and for 
+  for finding and characterising types of paths in these models' graphs, and for
   computing optimal policies and Nash equilibria.
 * [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
-* [examples](./examples) has a range of pre-specified CIDs and MACIDs, 
+* [examples](./examples) has a range of pre-specified CIDs and MACIDs,
   as well as methods for generating random ones.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [test](./test) has unit tests for all public methods.
 
 ## Installation and setup
 
-Given that you have Python 3.7 or later, git, and jupyter, 
+Given that you have Python 3.7 or later, git, and jupyter,
 you can download and setup pycid via:
 
 ```shell
@@ -72,5 +72,5 @@ Before committing to the master branch, please ensure that:
 * The script [test/check-code.sh](test/check-code.sh) completes without error (you can add it as a pre-commit hook)
 * Any new requirements are added to `setup.cfg`.
 * Your functions have docstrings and types, and a unit test verifying that they work
-* For notebooks, you have done "restart kernel and run all cells" before saving and committing 
+* For notebooks, you have done "restart kernel and run all cells" before saving and committing
 * Any documentation (such as this file) is up-to-date
