@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
+import logging
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -14,6 +15,9 @@ import numpy as np
 
 
 class TestMACID(unittest.TestCase):
+
+    def setUp(self) -> None:
+        logging.disable()
 
     # @unittest.skip("")
     def test_decs_in_each_maid_subgame(self) -> None:

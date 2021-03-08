@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
+import logging
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -16,6 +17,16 @@ from core.macid_base import MechanismGraph
 
 
 class TestBASE(unittest.TestCase):
+
+    def setUp(self) -> None:
+        logging.disable()
+
+    def test_remove_add_edge(self) -> None:
+        cid = get_3node_cid()
+        cid.remove_edge('S', 'D')
+        self.assertTrue(cid.check_model())
+        cid.add_edge('S', 'D')
+        self.assertTrue(cid.check_model())
 
     # @unittest.skip("")
     def test_assign_cpd(self) -> None:
@@ -81,7 +92,7 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        possible_pure_decision_rules = cid.possible_pure_decision_rules('A')
+        possible_pure_decision_rules = cid.pure_decision_rules('A')
         self.assertEqual(len(possible_pure_decision_rules), 2)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
@@ -91,7 +102,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(set(expected_utilities), {0, 1})
 
         cid = get_3node_cid()
-        possible_pure_decision_rules = cid.possible_pure_decision_rules('D')
+        possible_pure_decision_rules = cid.pure_decision_rules('D')
         self.assertEqual(len(possible_pure_decision_rules), 4)
         expected_utilities = []
         matrices = set()
@@ -104,7 +115,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(len(matrices), 4)
 
         five_node = get_5node_cid()
-        possible_pure_decision_rules = five_node.possible_pure_decision_rules('D')
+        possible_pure_decision_rules = five_node.pure_decision_rules('D')
         self.assertEqual(len(possible_pure_decision_rules), 16)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
@@ -116,21 +127,21 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_optimal_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        optimal_decision_rules = cid.optimal_decision_rules('A')
+        optimal_decision_rules = cid.optimal_pure_decision_rules('A')
         self.assertEqual(len(optimal_decision_rules), 1)
         for cpd in optimal_decision_rules:
             cid.add_cpds(cpd)
             self.assertEqual(cid.expected_utility({}), 1)
 
         cid = get_3node_cid()
-        optimal_decision_rules = cid.optimal_decision_rules('D')
+        optimal_decision_rules = cid.optimal_pure_decision_rules('D')
         self.assertEqual(len(optimal_decision_rules), 1)
         for cpd in optimal_decision_rules:
             cid.add_cpds(cpd)
             self.assertEqual(cid.expected_utility({}), 1)
 
         five_node = get_5node_cid()
-        optimal_decision_rules = five_node.optimal_decision_rules('D')
+        optimal_decision_rules = five_node.optimal_pure_decision_rules('D')
         self.assertEqual(len(optimal_decision_rules), 4)
         five_node.impute_optimal_policy()
         for cpd in optimal_decision_rules:

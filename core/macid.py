@@ -26,6 +26,10 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
+    def joint_pure_strategies(self, decisions: List[str]) -> List[FunctionCPD]:
+        all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
+        return list(itertools.product(*all_dec_decision_rules))
+
     def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[List[str]] = None) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
@@ -43,45 +47,28 @@ class MACID(MACIDBase):
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
 
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
-        all_pure_ne_in_sg: List[List[FunctionCPD]] = []
+        agent_decs_in_sg = {agent: [dec for dec in self.decision_nodes_agent[agent]
+                            if dec in decisions_in_sg] for agent in agents_in_sg}
 
-        # Find all of an agent's pure policies in this subgame.
-        def agent_pure_policies(agent: Union[str, int]) -> List[List[FunctionCPD]]:
-            agent_decs_in_sg = [dec for dec in self.decision_nodes_agent[agent]
-                                if dec in decisions_in_sg]  # type: ignore
-            possible_dec_rules = list(map(self.possible_pure_decision_rules, agent_decs_in_sg))
-            return list(itertools.product(*possible_dec_rules))
-
-        all_agent_pure_policies_in_sg = {agent: agent_pure_policies(agent) for agent in agents_in_sg}
-        all_dec_decision_rules = list(map(self.possible_pure_decision_rules, decisions_in_sg))
-        all_joint_policy_profiles_in_sg = list(itertools.product(*all_dec_decision_rules))
-        decs_not_in_sg = [dec for dec in self.all_decision_nodes if dec not in decisions_in_sg]
-
-        # decision nodes that have already been optimised have FunctionCPDs.
-        decs_already_optimised = [dec for dec in self.all_decision_nodes if not
-                                  isinstance(self.get_cpds(dec), DecisionDomain)]
-        decs_to_be_randomised = [dec for dec in decs_not_in_sg if dec not in decs_already_optimised]
+        # impute random decisions to non-instantiated, irrelevant decision nodes
+        macid = self.copy()
+        for d in macid.all_decision_nodes:
+            if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
+                macid.impute_random_decision(d)
 
         # NE finder
-        for pp in all_joint_policy_profiles_in_sg:
-            found_ne = True
-            for a in agents_in_sg:
+        all_pure_ne_in_sg: List[List[FunctionCPD]] = []
+        for pp in self.joint_pure_strategies(decisions_in_sg):
+            macid.add_cpds(*pp)  # impute the strategy profile
 
-                # create a fully mixed policy profile over the decision nodes not already optimised
-                self.add_cpds(*pp)
-                for d in decs_to_be_randomised:
-                    self.impute_random_decision(d)
+            for a in agents_in_sg:  # check that each agent is happy
+                eu_pp_agent_a = macid.expected_utility({}, agent=a)
+                macid.add_cpds(*macid.optimal_pure_strategies(agent_decs_in_sg[a])[0])
+                max_eu_agent_a = macid.expected_utility({}, agent=a)
 
-                # agent a's expected utility according to this subgame policy profile
-                eu_pp_agent_a = self.expected_utility({}, agent=a)
-                for agent_policy in all_agent_pure_policies_in_sg[a]:
-                    self.add_cpds(*agent_policy)
-
-                    # agent a's expected utility if they deviate
-                    eu_deviation_agent_a = self.expected_utility({}, agent=a)
-                    if eu_deviation_agent_a > eu_pp_agent_a:
-                        found_ne = False
-            if found_ne:
+                if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+                    break
+            else:  # it's an NE
                 all_pure_ne_in_sg.append(list(pp))
 
         return all_pure_ne_in_sg
@@ -98,10 +85,9 @@ class MACID(MACIDBase):
         - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
         spes: List[List[FunctionCPD]] = [[]]
-        crg = CondensedRelevanceGraph(self)
 
         # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
-        for scc in reversed(crg.get_scc_topological_ordering()):
+        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
             extended_spes = []
             for partial_profile in spes:
                 self.add_cpds(*partial_profile)

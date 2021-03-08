@@ -1,6 +1,7 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 # %%
+import logging
 import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
@@ -8,11 +9,14 @@ sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_sequential_cid
+    get_sequential_cid, get_insufficient_recall_cid
 from examples.story_cids import get_introduced_bias
 
 
 class TestCID(unittest.TestCase):
+
+    def setUp(self) -> None:
+        logging.disable()
 
     # @unittest.skip("")
     def test_sufficient_recall(self) -> None:
@@ -43,6 +47,10 @@ class TestCID(unittest.TestCase):
         sequential = get_sequential_cid()
         sequential.solve()
 
+        cid = get_insufficient_recall_cid()
+        cid.impute_optimal_policy()
+        self.assertEqual(cid.expected_utility({}), 1)
+
     # @unittest.skip("")
     def test_scaled_utility(self) -> None:
         cid = get_5node_cid_with_scaled_utility()
@@ -55,11 +63,9 @@ class TestCID(unittest.TestCase):
         cid.impute_conditional_expectation_decision('D', 'Y')
         eu_ce = cid.expected_utility({})
         self.assertAlmostEqual(eu_ce, -0.1666, 2)
-        # TODO: It doesn't always work to impute an optimal policy after imputing a
-        #       conditional expectation one, possibly because the real-valued decision domain?
-        # cid.impute_optimal_policy()
-        # eu_opt = cid.expected_utility({})
-        # self.assertEqual(eu_ce, eu_opt)
+        cid.impute_optimal_policy()
+        eu_opt = cid.expected_utility({})
+        self.assertEqual(eu_ce, eu_opt)
 
 
 if __name__ == "__main__":

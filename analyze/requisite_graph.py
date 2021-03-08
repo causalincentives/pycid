@@ -36,7 +36,7 @@ def requisite_graph(cid: MACIDBase) -> MACIDBase:
     removing from G all nonrequisite observation links.
     ("Representing and Solving Decision Problems with Limited Information", Lauritzen and Nielsen, 2001)
     """
-    requisite_graph = cid.copy_without_cpds()
+    requisite_graph = cid.copy()
     decisions = cid.get_valid_order()
 
     for decision in reversed(decisions):

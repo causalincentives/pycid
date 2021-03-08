@@ -2,7 +2,11 @@
 # agreements; and to You under the Apache License, Version 2.0.
 
 from __future__ import annotations
+
+import random
 from typing import List, Tuple, Dict
+
+from core.cpd import FunctionCPD
 from core.macid_base import MACIDBase
 
 
@@ -16,12 +20,19 @@ class CID(MACIDBase):
         self.utility_nodes = self.utility_nodes_agent[0]
 
     def impute_optimal_policy(self) -> None:
-        """Impute a subgame perfect optimal policy to all decision nodes"""
-        if not self.sufficient_recall():
-            raise Exception("CID lacks sufficient recall, so cannot be solved by backwards induction")
-        decisions = reversed(self.get_valid_order(self.decision_nodes))
-        for d in decisions:
-            self.impute_optimal_decision(d)
+        """Impute an optimal policy to all decision nodes"""
+        if self.sufficient_recall():
+            decisions = self.get_valid_order(self.decision_nodes)
+            for d in reversed(decisions):
+                self.impute_optimal_decision(d)
+        self.add_cpds(*random.choice(self.optimal_policies()))
+
+    def optimal_policies(self) -> List[List[FunctionCPD]]:
+        """
+        Return a list of all deterministic optimal policies.
+        # TODO: Subgame perfectness option
+        """
+        return self.optimal_pure_strategies(self.decision_nodes)  # type: ignore
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes in the CID"""

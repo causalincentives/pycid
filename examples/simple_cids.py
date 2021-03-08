@@ -1,8 +1,6 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
-from pgmpy.factors.discrete import TabularCPD
-import numpy as np
 from core.cid import CID
 from core.cpd import FunctionCPD, DecisionDomain, UniformRandomCPD
 
@@ -117,8 +115,9 @@ def get_sequential_cid() -> CID:
 
 def get_insufficient_recall_cid() -> CID:
     cid = CID([('A', 'U'), ('B', 'U')], decision_nodes=['A', 'B'], utility_nodes=['U'])
-    cpd_u = TabularCPD('U', 2, np.random.randn(2, 4), evidence=['A', 'B'], evidence_card=[2, 2])
-    cid.add_cpds(DecisionDomain('A', [0, 1]), DecisionDomain('B', [0, 1]), cpd_u)
+    cid.add_cpds(DecisionDomain('A', [0, 1]),
+                 DecisionDomain('B', [0, 1]),
+                 FunctionCPD('U', lambda a, b: a * b, evidence=['A', 'B']))
     return cid
 
 

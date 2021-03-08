@@ -55,6 +55,16 @@ class MACIDBase(BayesianModel):
     def agents(self) -> List[Union[str, int]]:
         return list(self.decision_nodes_agent.keys())
 
+    def remove_edge(self, u: str, v: str) -> None:
+        super().remove_edge(u, v)
+        if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
+            self.add_cpds(self.get_cpds(v))
+
+    def add_edge(self, u: str, v: str) -> None:
+        super().add_edge(u, v)
+        if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
+            self.add_cpds(self.get_cpds(v))
+
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
         Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
@@ -136,7 +146,7 @@ class MACIDBase(BayesianModel):
         # revise context so state_names are switched to their state number (overcomes pgmpy's bug)
         revised_context = {variable: self.get_cpds(variable).name_to_no[variable][value]
                            for variable, value in context.items()}
-        factor = bp.query(query, revised_context)
+        factor = bp.query(query, revised_context, show_progress=False)
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 
@@ -195,7 +205,7 @@ class MACIDBase(BayesianModel):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
 
-    def is_s_reachable(self, d1: str, d2: str) -> bool:
+    def is_s_reachable(self, d1: Union[str, List[str]], d2: Union[str, List[str]]) -> bool:
         """
         Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch, 2001)
 
@@ -207,19 +217,26 @@ class MACIDBase(BayesianModel):
         assert d2 in self.all_decision_nodes
         return self.is_r_reachable(d1, d2)
 
-    def is_r_reachable(self, decision: str, node: str) -> bool:
+    def is_r_reachable(self, decisions: Union[str, List[str]], nodes: Union[str, List[str]]) -> bool:
         """
-        Determine whether node is r-reachable from decision in the (MA)CID.
+        Determine whether (a set of) node(s) is r-reachable from decision in the (MA)CID.
         - A node 𝑉 is r-reachable from a decision 𝐷 ∈ 𝑫^𝑖 in a MAID, M = (𝑵, 𝑽, 𝑬),
         if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
         - If a node V is r-reachable from a decision D that means D strategically or probabilisticaly relies on V.
         """
+        if isinstance(decisions, str):
+            decisions = [decisions]
+        if isinstance(nodes, str):
+            nodes = [nodes]
         mg = MechanismGraph(self)
-        agent = mg.whose_node[decision]
-        agent_utilities = mg.utility_nodes_agent[agent]
-        rel_agent_utilities = [util for util in agent_utilities if util in nx.descendants(mg, decision)]
-        con_nodes = [decision] + mg.get_parents(decision)
-        return any([mg.is_active_trail(node + "mec", u_node, con_nodes) for u_node in rel_agent_utilities])
+        for decision in decisions:
+            for node in nodes:
+                con_nodes = [decision] + self.get_parents(decision)
+                agent_utilities = self.utility_nodes_agent[self.whose_node[decision]]
+                for utility in set(agent_utilities).intersection(nx.descendants(self, decision)):
+                    if mg.is_active_trail(node + "mec", utility, con_nodes):
+                        return True
+        return False
 
     def sufficient_recall(self, agent: Union[str, int] = None) -> bool:
         """
@@ -244,7 +261,7 @@ class MACIDBase(BayesianModel):
                 return False
         return True
 
-    def possible_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
+    def pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
         cpd: TabularCPD = self.get_cpds(decision)
@@ -272,18 +289,38 @@ class MACIDBase(BayesianModel):
             function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
         return function_cpds
 
-    def optimal_decision_rules(self, decision: str) -> List[FunctionCPD]:
-        """Return a list of all optimal decision rules for given decision"""
+    def pure_strategies(self, decision_nodes: List[str]) -> List[List[FunctionCPD]]:
+        """
+        Find all of an agent's pure policies in this subgame.
+        """
+        possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
+        return list(itertools.product(*possible_dec_rules))
+
+    def optimal_pure_strategies(self, decisions: List[str]) -> List[List[FunctionCPD]]:
+        """
+        Return a list of all optimal strategies for a given set of decisions
+        """
+        if not decisions:
+            return []
+        agent = self.whose_node[decisions[0]]
+        assert set(decisions).issubset(self.decision_nodes_agent[agent])
         macid = self.copy()
-        for d in self.all_decision_nodes:
-            if not self.is_s_reachable(decision, d):
+        for d in macid.all_decision_nodes:
+            if not macid.is_s_reachable(decisions, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
         expected_utility: List[float] = []
-        for decision_rule in self.possible_pure_decision_rules(decision):
-            macid.add_cpds(decision_rule)
-            expected_utility.append(macid.expected_utility({}, agent=self.whose_node[decision]))
-        return [decision_rule for i, decision_rule in enumerate(self.possible_pure_decision_rules(decision))
+        strategies = macid.pure_strategies(decisions)
+        for strategy in strategies:
+            macid.add_cpds(*strategy)
+            expected_utility.append(macid.expected_utility({}, agent=agent))
+        return [strategy for i, strategy in enumerate(strategies)
                 if expected_utility[i] == max(expected_utility)]
+
+    def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
+        """
+        Return a list of all optimal decision rules for a given decision
+        """
+        return [strategy[0] for strategy in self.optimal_pure_strategies([decision])]
 
     def impute_random_decision(self, d: str) -> None:
         """Impute a random policy to the given decision node"""
@@ -301,7 +338,7 @@ class MACIDBase(BayesianModel):
 
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
-        self.add_cpds(random.choice(self.optimal_decision_rules(d)))
+        self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
         # self.impute_random_decision(d)
         # cpd = self.get_cpds(d)
         # parents = cpd.variables[1:]
