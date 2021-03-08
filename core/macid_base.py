@@ -65,6 +65,29 @@ class MACIDBase(BayesianModel):
         if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
             self.add_cpds(self.get_cpds(v))
 
+    def make_decision(self, node: str, agent: Union[str, int] = 0) -> None:
+        """"Turn a chance or utility node into a decision node."""
+        if hasattr(self, "cpds") and isinstance(self.get_cpds(node), DecisionDomain):
+            pass
+        elif hasattr(self, "cpds") and not isinstance(self.get_cpds(node), DecisionDomain):
+            cpd_new = DecisionDomain(node, self.get_cpds(node).state_names[node])
+            self.decision_nodes_agent[agent].append(node)
+            self.whose_node[node] = agent
+            self.add_cpds(cpd_new)
+        else:
+            raise Exception(f"node {node} has not yet been assigned a domain.")
+
+    def make_chance(self, node: str) -> None:
+        """Turn a decision node into a chance node."""
+        if node in self.all_decision_nodes:
+            agent = self.whose_node[node]
+            self.decision_nodes_agent[agent].remove(node)
+            self.whose_node.pop(node)
+        elif hasattr(self, "cpds") and node not in self.all_decision_nodes:
+            pass
+        elif not hasattr(self, "cpds"):
+            raise Exception("The (MA)CID has not yet been parameterised")
+
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
         Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc

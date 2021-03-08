@@ -21,12 +21,32 @@ class TestBASE(unittest.TestCase):
     def setUp(self) -> None:
         logging.disable()
 
+    # @unittest.skip("")
     def test_remove_add_edge(self) -> None:
         cid = get_3node_cid()
         cid.remove_edge('S', 'D')
         self.assertTrue(cid.check_model())
         cid.add_edge('S', 'D')
         self.assertTrue(cid.check_model())
+
+    def test_make_decision(self) -> None:
+        cid = get_3node_cid()
+        self.assertCountEqual(cid.all_decision_nodes, ['D'])
+        cid.make_decision('S')
+        self.assertCountEqual(cid.all_decision_nodes, ['D', 'S'])
+        self.assertEqual(cid.whose_node['S'], 0)
+        self.assertCountEqual(cid.decision_nodes_agent[0], ['D', 'S'])
+        cid2 = cid.copy_without_cpds()
+        with self.assertRaises(Exception):
+            cid2.make_decision('S')
+
+    def test_make_chance(self) -> None:
+        cid = get_3node_cid()
+        self.assertCountEqual(cid.all_decision_nodes, ['D'])
+        cid.make_decision('S')
+        self.assertCountEqual(cid.all_decision_nodes, ['D', 'S'])
+        cid.make_chance('S')
+        self.assertCountEqual(cid.all_decision_nodes, ['D'])
 
     # @unittest.skip("")
     def test_assign_cpd(self) -> None:
