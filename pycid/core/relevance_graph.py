@@ -7,7 +7,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from core.macid_base import MACIDBase
+    from pycid.core.macid_base import MACIDBase
 
 
 class RelevanceGraph(nx.DiGraph):

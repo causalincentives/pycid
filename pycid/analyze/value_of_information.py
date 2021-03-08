@@ -1,8 +1,8 @@
 from typing import List
 import networkx as nx
 
-from analyze.requisite_graph import requisite_graph
-from core.cid import CID
+from pycid.analyze.requisite_graph import requisite_graph
+from pycid.core.cid import CID
 
 
 def admits_voi(cid: CID, decision: str, node: str) -> bool:

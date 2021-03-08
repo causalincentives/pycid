@@ -5,9 +5,9 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from core.macid import MACID
-from analyze.reasoning_patterns import direct_effect, get_reasoning_patterns, manipulation, revealing_or_denying, \
-    signaling
+from pycid.core.macid import MACID
+from pycid.analyze.reasoning_patterns import direct_effect, get_reasoning_patterns, manipulation, \
+    revealing_or_denying, signaling
 import unittest
 
 

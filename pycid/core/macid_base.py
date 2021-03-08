@@ -11,10 +11,10 @@ from pgmpy.models import BayesianModel  # type: ignore
 from typing import List, Tuple, Dict, Any, Callable, Union, Iterable
 from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
 import networkx as nx
-from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
+from pycid.core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
 import itertools
 import matplotlib.cm as cm
-from core.relevance_graph import RelevanceGraph
+from pycid.core.relevance_graph import RelevanceGraph
 
 
 class MACIDBase(BayesianModel):

@@ -6,8 +6,8 @@ from __future__ import annotations
 import random
 from typing import List, Tuple, Dict
 
-from core.cpd import FunctionCPD
-from core.macid_base import MACIDBase
+from pycid.core.cpd import FunctionCPD
+from pycid.core.macid_base import MACIDBase
 
 
 class CID(MACIDBase):

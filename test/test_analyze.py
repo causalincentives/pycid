@@ -4,18 +4,18 @@ import os
 import unittest
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-from analyze.effects import introduced_total_effect, total_effect
-from analyze.value_of_information import admits_voi, admits_voi_list
-from core.cpd import FunctionCPD
+from pycid.analyze.effects import introduced_total_effect, total_effect
+from pycid.analyze.value_of_information import admits_voi, admits_voi_list
+from pycid.core.cpd import FunctionCPD
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
 from examples.story_cids import get_introduced_bias, get_content_recommender, get_fitness_tracker, \
     get_modified_content_recommender, get_grade_predictor
-from analyze.requisite_graph import requisite, requisite_graph
-from analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_voc, admits_indir_voc_list, \
+from pycid.analyze.requisite_graph import requisite, requisite_graph
+from pycid.analyze.value_of_control import admits_voc, admits_voc_list, admits_indir_voc, admits_indir_voc_list, \
     admits_dir_voc, admits_dir_voc_list
-from analyze.response_incentive import admits_ri, admits_ri_list
-from analyze.instrumental_control_incentive import admits_ici, admits_ici_list
-from core.macid import MACID
+from pycid.analyze.response_incentive import admits_ri, admits_ri_list
+from pycid.analyze.instrumental_control_incentive import admits_ici, admits_ici_list
+from pycid.core.macid import MACID
 
 
 class TestAnalyze(unittest.TestCase):
