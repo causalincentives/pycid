@@ -67,6 +67,13 @@ python3 -m unittest   # check that everything works
 ```
 
 ## Contributing
+Fast checks are set up as git pre-commit hooks.
+To enable them, run:
+```shell
+pip3 install pre-commit
+pre-commit install
+```
+They will run on every commit or can be run manually with `pre-commit run`.
 
 Before committing to the master branch, please ensure that:
 * The script [test/check-code.sh](test/check-code.sh) completes without error (you can add it as a pre-commit hook)
