@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('../'))
 import unittest
 import numpy as np
 from examples.simple_cids import get_3node_cid, get_5node_cid_with_scaled_utility, get_2dec_cid, \
-    get_sequential_cid
+    get_sequential_cid, get_insufficient_recall_cid
 from examples.story_cids import get_introduced_bias
 
 
@@ -46,6 +46,10 @@ class TestCID(unittest.TestCase):
 
         sequential = get_sequential_cid()
         sequential.solve()
+
+        cid = get_insufficient_recall_cid()
+        cid.impute_optimal_policy()
+        self.assertEqual(cid.expected_utility({}), 1)
 
     # @unittest.skip("")
     def test_scaled_utility(self) -> None:
