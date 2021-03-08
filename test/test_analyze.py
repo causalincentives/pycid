@@ -1,10 +1,6 @@
 import logging
-import os
-import sys
 import unittest
 
-sys.path.insert(0, os.path.abspath("."))
-sys.path.insert(0, os.path.abspath("../"))
 from examples.simple_cids import get_minimal_cid, get_trim_example_cid
 from examples.story_cids import (
     get_content_recommender,

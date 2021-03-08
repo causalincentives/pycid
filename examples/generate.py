@@ -1,15 +1,10 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 
-import os
 import random
-import sys
 from typing import List, Tuple
 
 from pycid.core.cid import CID
-
-sys.path.insert(0, os.path.abspath("."))
-sys.path.insert(0, os.path.abspath("../"))
 from pycid.core.cpd import DecisionDomain, RandomlySampledFunctionCPD, UniformRandomCPD
 from pycid.core.get_paths import find_active_path
 

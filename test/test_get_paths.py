@@ -1,12 +1,8 @@
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor license
 # agreements; and to You under the Apache License, Version 2.0.
 import logging
-import os
-import sys
 import unittest
 
-sys.path.insert(0, os.path.abspath("."))
-sys.path.insert(0, os.path.abspath("../"))
 from examples.simple_cids import get_3node_cid
 from examples.simple_macids import get_basic_subgames, get_path_example
 from examples.story_macids import taxi_competition
