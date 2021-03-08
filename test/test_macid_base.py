@@ -5,8 +5,8 @@ import logging
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../"))
 import unittest
 
 import numpy as np
@@ -19,102 +19,101 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 
 class TestBASE(unittest.TestCase):
-
     def setUp(self) -> None:
         logging.disable()
 
     # @unittest.skip("")
     def test_remove_add_edge(self) -> None:
         cid = get_3node_cid()
-        cid.remove_edge('S', 'D')
+        cid.remove_edge("S", "D")
         self.assertTrue(cid.check_model())
-        cid.add_edge('S', 'D')
+        cid.add_edge("S", "D")
         self.assertTrue(cid.check_model())
 
     def test_make_decision(self) -> None:
         cid = get_3node_cid()
-        self.assertCountEqual(cid.all_decision_nodes, ['D'])
-        cid.make_decision('S')
-        self.assertCountEqual(cid.all_decision_nodes, ['D', 'S'])
-        self.assertEqual(cid.whose_node['S'], 0)
-        self.assertCountEqual(cid.decision_nodes_agent[0], ['D', 'S'])
+        self.assertCountEqual(cid.all_decision_nodes, ["D"])
+        cid.make_decision("S")
+        self.assertCountEqual(cid.all_decision_nodes, ["D", "S"])
+        self.assertEqual(cid.whose_node["S"], 0)
+        self.assertCountEqual(cid.decision_nodes_agent[0], ["D", "S"])
         cid2 = cid.copy_without_cpds()
         with self.assertRaises(Exception):
-            cid2.make_decision('S')
+            cid2.make_decision("S")
 
     def test_make_chance(self) -> None:
         cid = get_3node_cid()
-        self.assertCountEqual(cid.all_decision_nodes, ['D'])
-        cid.make_decision('S')
-        self.assertCountEqual(cid.all_decision_nodes, ['D', 'S'])
-        cid.make_chance('S')
-        self.assertCountEqual(cid.all_decision_nodes, ['D'])
+        self.assertCountEqual(cid.all_decision_nodes, ["D"])
+        cid.make_decision("S")
+        self.assertCountEqual(cid.all_decision_nodes, ["D", "S"])
+        cid.make_chance("S")
+        self.assertCountEqual(cid.all_decision_nodes, ["D"])
 
     # @unittest.skip("")
     def test_assign_cpd(self) -> None:
         three_node = get_3node_cid()
-        three_node.add_cpds(TabularCPD('D', 2, np.eye(2), evidence=['S'], evidence_card=[2]))
+        three_node.add_cpds(TabularCPD("D", 2, np.eye(2), evidence=["S"], evidence_card=[2]))
         three_node.check_model()
-        cpd = three_node.get_cpds('D').values
+        cpd = three_node.get_cpds("D").values
         self.assertTrue(np.array_equal(cpd, np.array([[1, 0], [0, 1]])))
 
     # @unittest.skip("")
     def test_query(self) -> None:
         three_node = get_3node_cid()
         with self.assertRaises(Exception):
-            three_node.query(['U'], {})
+            three_node.query(["U"], {})
         with self.assertRaises(Exception):
-            three_node.query(['U'], {'D': 0})
+            three_node.query(["U"], {"D": 0})
         three_node.impute_random_policy()
         with self.assertRaises(Exception):
-            three_node.query(['U'], {'S': 0})
+            three_node.query(["U"], {"S": 0})
 
     # @unittest.skip("")
     def test_expected_utility(self) -> None:
         three_node = get_3node_cid()
         five_node = get_5node_cid()
-        eu00 = three_node.expected_utility({'D': -1, 'S': -1})
+        eu00 = three_node.expected_utility({"D": -1, "S": -1})
         self.assertEqual(eu00, 1)
-        eu10 = three_node.expected_utility({'D': 1, 'S': -1})
+        eu10 = three_node.expected_utility({"D": 1, "S": -1})
         self.assertEqual(eu10, -1)
-        eu000 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 0})
+        eu000 = five_node.expected_utility({"D": 0, "S1": 0, "S2": 0})
         self.assertEqual(eu000, 2)
-        eu001 = five_node.expected_utility({'D': 0, 'S1': 0, 'S2': 1})
+        eu001 = five_node.expected_utility({"D": 0, "S1": 0, "S2": 1})
         self.assertEqual(eu001, 1)
         macid_example = prisoners_dilemma()
-        eu_agent0 = macid_example.expected_utility({'D1': 'd', 'D2': 'c'}, agent=1)
+        eu_agent0 = macid_example.expected_utility({"D1": "d", "D2": "c"}, agent=1)
         self.assertEqual(eu_agent0, 0)
-        eu_agent1 = macid_example.expected_utility({'D1': 'd', 'D2': 'c'}, agent=2)
+        eu_agent1 = macid_example.expected_utility({"D1": "d", "D2": "c"}, agent=2)
         self.assertEqual(eu_agent1, -3)
 
     # @unittest.skip("")
     def test_get_valid_order(self) -> None:
         macid = prisoners_dilemma()
-        self.assertEqual(macid.get_valid_order(), ['D2', 'D1'])
+        self.assertEqual(macid.get_valid_order(), ["D2", "D1"])
         rg = RelevanceGraph(macid)
         with self.assertRaises(Exception):
             rg.get_valid_order()
         with self.assertRaises(Exception):
-            macid.get_valid_order(['D3'])
+            macid.get_valid_order(["D3"])
 
     # @unittest.skip("")
     def test_intervention(self) -> None:
         cid = get_minimal_cid()
         cid.impute_random_policy()
-        self.assertEqual(cid.expected_value(['B'], {})[0], 0.5)
+        self.assertEqual(cid.expected_value(["B"], {})[0], 0.5)
         for a in [0, 1, 2]:
-            cid.intervene({'A': a})
-            self.assertEqual(cid.expected_value(['B'], {})[0], a)
-        self.assertEqual(cid.expected_value(['B'], {}, intervene={'A': 1})[0], 1)
+            cid.intervene({"A": a})
+            self.assertEqual(cid.expected_value(["B"], {})[0], a)
+        self.assertEqual(cid.expected_value(["B"], {}, intervene={"A": 1})[0], 1)
         macid = taxi_competition()
         macid.impute_fully_mixed_policy_profile()
-        self.assertEqual(macid.expected_value(['U1'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 3)
-        self.assertEqual(macid.expected_value(['U2'], {}, intervene={'D1': 'c', 'D2': 'e'})[0], 5)
+        self.assertEqual(macid.expected_value(["U1"], {}, intervene={"D1": "c", "D2": "e"})[0], 3)
+        self.assertEqual(macid.expected_value(["U2"], {}, intervene={"D1": "c", "D2": "e"})[0], 5)
 
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        possible_pure_decision_rules = cid.pure_decision_rules('A')
+        possible_pure_decision_rules = cid.pure_decision_rules("A")
         self.assertEqual(len(possible_pure_decision_rules), 2)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
@@ -124,20 +123,20 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(set(expected_utilities), {0, 1})
 
         cid = get_3node_cid()
-        possible_pure_decision_rules = cid.pure_decision_rules('D')
+        possible_pure_decision_rules = cid.pure_decision_rules("D")
         self.assertEqual(len(possible_pure_decision_rules), 4)
         expected_utilities = []
         matrices = set()
         for decision_rule in possible_pure_decision_rules:
             cid.add_cpds(decision_rule)
-            matrices.add(tuple(cid.get_cpds('D').values.flatten()))
+            matrices.add(tuple(cid.get_cpds("D").values.flatten()))
             cid.check_model()
             expected_utilities.append(cid.expected_utility({}))
         self.assertEqual(set(expected_utilities), {-1, 0, 1})
         self.assertEqual(len(matrices), 4)
 
         five_node = get_5node_cid()
-        possible_pure_decision_rules = five_node.pure_decision_rules('D')
+        possible_pure_decision_rules = five_node.pure_decision_rules("D")
         self.assertEqual(len(possible_pure_decision_rules), 16)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
@@ -149,21 +148,21 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_optimal_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        optimal_decision_rules = cid.optimal_pure_decision_rules('A')
+        optimal_decision_rules = cid.optimal_pure_decision_rules("A")
         self.assertEqual(len(optimal_decision_rules), 1)
         for cpd in optimal_decision_rules:
             cid.add_cpds(cpd)
             self.assertEqual(cid.expected_utility({}), 1)
 
         cid = get_3node_cid()
-        optimal_decision_rules = cid.optimal_pure_decision_rules('D')
+        optimal_decision_rules = cid.optimal_pure_decision_rules("D")
         self.assertEqual(len(optimal_decision_rules), 1)
         for cpd in optimal_decision_rules:
             cid.add_cpds(cpd)
             self.assertEqual(cid.expected_utility({}), 1)
 
         five_node = get_5node_cid()
-        optimal_decision_rules = five_node.optimal_pure_decision_rules('D')
+        optimal_decision_rules = five_node.optimal_pure_decision_rules("D")
         self.assertEqual(len(optimal_decision_rules), 4)
         five_node.impute_optimal_policy()
         for cpd in optimal_decision_rules:
@@ -173,20 +172,20 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_is_s_reachable(self) -> None:
         example = taxi_competition()
-        self.assertTrue(example.is_s_reachable('D1', 'D2'))
-        self.assertFalse(example.is_s_reachable('D2', 'D1'))
+        self.assertTrue(example.is_s_reachable("D1", "D2"))
+        self.assertFalse(example.is_s_reachable("D2", "D1"))
 
         example2 = subgame_difference()
-        self.assertTrue(example2.is_s_reachable('D1', 'D2'))
-        self.assertFalse(example2.is_s_reachable('D2', 'D1'))
+        self.assertTrue(example2.is_s_reachable("D1", "D2"))
+        self.assertFalse(example2.is_s_reachable("D2", "D1"))
 
     # @unittest.skip("")
     def test_is_r_reachable(self) -> None:
         example = subgame_difference()
-        self.assertFalse(example.is_r_reachable('D2', 'D1'))
-        self.assertFalse(example.is_r_reachable('D2', 'N'))
-        self.assertFalse(example.is_r_reachable('D1', 'N'))
-        self.assertTrue(example.is_r_reachable('D1', 'D2'))
+        self.assertFalse(example.is_r_reachable("D2", "D1"))
+        self.assertFalse(example.is_r_reachable("D2", "N"))
+        self.assertFalse(example.is_r_reachable("D1", "N"))
+        self.assertTrue(example.is_r_reachable("D1", "D2"))
 
     # @unittest.skip("")
     def test_relevance_graph(self) -> None:
@@ -197,21 +196,21 @@ class TestBASE(unittest.TestCase):
         rg2 = RelevanceGraph(example2)
         self.assertFalse(rg2.is_acyclic())
         self.assertTrue(len(rg.get_sccs()) == 2)
-        self.assertEqual(rg2.get_sccs(), [{'D1', 'D2'}])
+        self.assertEqual(rg2.get_sccs(), [{"D1", "D2"}])
 
     # @unittest.skip("")
     def test_condensed_relevance_graph(self) -> None:
         example = taxi_competition()
         crg = CondensedRelevanceGraph(example)
-        self.assertEqual(crg.get_scc_topological_ordering(), [['D1'], ['D2']])
-        self.assertEqual(crg.get_decisions_in_scc()[0], ['D2'])
+        self.assertEqual(crg.get_scc_topological_ordering(), [["D1"], ["D2"]])
+        self.assertEqual(crg.get_decisions_in_scc()[0], ["D2"])
 
     # @unittest.skip("")
     def test_mechanism_graph(self) -> None:
         example = taxi_competition()
         mg = MechanismGraph(example)
-        self.assertCountEqual(mg.all_decision_nodes, ['D1', 'D2'])
-        self.assertCountEqual(mg.all_utility_nodes, ['U1', 'U2'])
+        self.assertCountEqual(mg.all_decision_nodes, ["D1", "D2"])
+        self.assertCountEqual(mg.all_utility_nodes, ["U1", "U2"])
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
 
     # @unittest.skip("")

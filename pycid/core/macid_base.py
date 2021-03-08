@@ -20,18 +20,15 @@ from pycid.core.relevance_graph import RelevanceGraph
 
 
 class MACIDBase(BayesianModel):
-
-    def __init__(self,
-                 edges: Iterable[Tuple[Union[str, int], str]],
-                 node_types: Dict[Union[str, int], Dict]):
+    def __init__(self, edges: Iterable[Tuple[Union[str, int], str]], node_types: Dict[Union[str, int], Dict]):
         super().__init__(ebunch=edges)
 
-        self.decision_nodes_agent = {i: node_types[i]['D'] for i in node_types}
+        self.decision_nodes_agent = {i: node_types[i]["D"] for i in node_types}
         for node in self.all_decision_nodes:
             if node not in self.nodes:
                 raise Exception(f"Decision node {node} is not in the (MA)CID.")
 
-        self.utility_nodes_agent = {i: node_types[i]['U'] for i in node_types}
+        self.utility_nodes_agent = {i: node_types[i]["U"] for i in node_types}
         for node in self.all_utility_nodes:
             if node not in self.nodes:
                 raise Exception(f"Utility node {node} is not in the (MA)CID.")
@@ -102,8 +99,11 @@ class MACIDBase(BayesianModel):
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             if isinstance(cpd, FunctionCPD) and set(cpd.evidence) != set(self.get_parents(cpd.variable)):
-                raise Exception(f"parents {cpd.evidence} of {cpd} " + f"don't match graph parents \
-                                {self.get_parents(cpd.variable)}")
+                raise Exception(
+                    f"parents {cpd.evidence} of {cpd} "
+                    + f"don't match graph parents \
+                                {self.get_parents(cpd.variable)}"
+                )
             self.cpds_to_add[cpd.variable] = cpd
 
         # Initialize CPDs in topological order. Call super().add_cpds if initialized
@@ -124,12 +124,13 @@ class MACIDBase(BayesianModel):
                     super().add_cpds(cpd_to_add)
                     del self.cpds_to_add[var]
 
-    def query(self, query: List[str], context: Dict[str, Any],
-              intervention: Dict["str", "Any"] = None) -> BeliefPropagation:
+    def query(
+        self, query: List[str], context: Dict[str, Any], intervention: Dict["str", "Any"] = None
+    ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).
-        Use context={} to get P(query). """
+        Use context={} to get P(query)."""
 
         # Check that strategically relevant decisions have a policy specified
         mech_graph = MechanismGraph(self)
@@ -169,8 +170,9 @@ class MACIDBase(BayesianModel):
         # factor = bp.query(query, filtered_context)
 
         # revise context so state_names are switched to their state number (overcomes pgmpy's bug)
-        revised_context = {variable: self.get_cpds(variable).name_to_no[variable][value]
-                           for variable, value in context.items()}
+        revised_context = {
+            variable: self.get_cpds(variable).name_to_no[variable][value] for variable, value in context.items()
+        }
         factor = bp.query(query, revised_context, show_progress=False)
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
@@ -184,8 +186,12 @@ class MACIDBase(BayesianModel):
             cpd = FunctionCPD(variable, lambda *x: value, evidence=self.get_parents(variable))
             self.add_cpds(cpd)
 
-    def expected_value(self, variables: List[str], context: Dict["str", "Any"],
-                       intervene: Dict["str", "Any"] = None,) -> List[float]:
+    def expected_value(
+        self,
+        variables: List[str],
+        context: Dict["str", "Any"],
+        intervene: Dict["str", "Any"] = None,
+    ) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
         """
@@ -196,15 +202,21 @@ class MACIDBase(BayesianModel):
         for idx, prob in np.ndenumerate(factor.values):
             # idx contains the information about the value each variable takes
             # we use state_names to convert index into the actual value of the variable
-            ev += prob * np.array([factor.state_names[variable][idx[var_idx]]
-                                   for var_idx, variable in enumerate(factor.variables)])
+            ev += prob * np.array(
+                [factor.state_names[variable][idx[var_idx]] for var_idx, variable in enumerate(factor.variables)]
+            )
             if np.isnan(ev).any():
-                raise Exception("query {} | {} generated Nan from idx: {}, prob: {}, \
-                                consider imputing a random decision".format(variables, context, idx, prob))
+                raise Exception(
+                    "query {} | {} generated Nan from idx: {}, prob: {}, \
+                                consider imputing a random decision".format(
+                        variables, context, idx, prob
+                    )
+                )
         return ev.tolist()  # type: ignore
 
-    def expected_utility(self, context: Dict["str", "Any"],
-                         intervene: Dict["str", "Any"] = None, agent: Union[str, int] = 0) -> float:
+    def expected_utility(
+        self, context: Dict["str", "Any"], intervene: Dict["str", "Any"] = None, agent: Union[str, int] = 0
+    ) -> float:
         """Compute the expected utility for a given context and optional intervention
 
         For example:
@@ -309,8 +321,10 @@ class MACIDBase(BayesianModel):
 
         function_cpds: List[FunctionCPD] = []
         for func_list in functions_as_lists:
+
             def function(*parent_values: tuple, early_eval_func_list: tuple = func_list) -> Any:
                 return early_eval_func_list[arg2idx(parent_values)]
+
             function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
         return function_cpds
 
@@ -331,17 +345,18 @@ class MACIDBase(BayesianModel):
         assert set(decisions).issubset(self.decision_nodes_agent[agent])
         macid = self.copy()
         for d in macid.all_decision_nodes:
-            if isinstance(macid.get_cpds(d), DecisionDomain) and \
-                    not macid.is_s_reachable(decisions, d) and \
-                    d not in decisions:
+            if (
+                isinstance(macid.get_cpds(d), DecisionDomain)
+                and not macid.is_s_reachable(decisions, d)
+                and d not in decisions
+            ):
                 macid.impute_random_decision(d)
         expected_utility: List[float] = []
         strategies = macid.pure_strategies(decisions)
         for strategy in strategies:
             macid.add_cpds(*strategy)
             expected_utility.append(macid.expected_utility({}, agent=agent))
-        return [strategy for i, strategy in enumerate(strategies)
-                if expected_utility[i] == max(expected_utility)]
+        return [strategy for i, strategy in enumerate(strategies) if expected_utility[i] == max(expected_utility)]
 
     def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """
@@ -401,10 +416,13 @@ class MACIDBase(BayesianModel):
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
-        return MACIDBase(self.edges(),
-                         {agent: {'D': list(self.decision_nodes_agent[agent]),
-                                  'U': list(self.utility_nodes_agent[agent])}
-                          for agent in self.agents})
+        return MACIDBase(
+            self.edges(),
+            {
+                agent: {"D": list(self.decision_nodes_agent[agent]), "U": list(self.utility_nodes_agent[agent])}
+                for agent in self.agents
+            },
+        )
 
     def copy(self) -> MACIDBase:
         """copy the MACIDBase object"""
@@ -421,15 +439,15 @@ class MACIDBase(BayesianModel):
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
             return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
         else:
-            return 'lightgray'  # chance node
+            return "lightgray"  # chance node
 
     def _get_shape(self, node: str) -> str:
         if node in self.all_decision_nodes:
-            return 's'
+            return "s"
         elif node in self.all_utility_nodes:
-            return 'D'
+            return "D"
         else:
-            return 'o'
+            return "o"
 
     def _get_label(self, node: str) -> Any:
         cpd = self.get_cpds(node)
@@ -440,10 +458,12 @@ class MACIDBase(BayesianModel):
         else:
             return ""
 
-    def draw(self,
-             node_color: Callable[[str], str] = None,
-             node_shape: Callable[[str], str] = None,
-             node_label: Callable[[str], str] = None) -> None:
+    def draw(
+        self,
+        node_color: Callable[[str], str] = None,
+        node_shape: Callable[[str], str] = None,
+        node_label: Callable[[str], str] = None,
+    ) -> None:
         """
         Draw the MACID or CID.
         """
@@ -461,12 +481,17 @@ class MACIDBase(BayesianModel):
         nx.draw_networkx(self, pos=layout, node_size=800, arrowsize=20)
         nx.draw_networkx_labels(self, pos_higher, label_dict)
         for node in self.nodes:
-            nx.draw_networkx(self.to_directed().subgraph([node]), pos=layout, node_size=800, arrowsize=20,
-                             node_color=color(node),
-                             node_shape=shape(node))
+            nx.draw_networkx(
+                self.to_directed().subgraph([node]),
+                pos=layout,
+                node_size=800,
+                arrowsize=20,
+                node_color=color(node),
+                node_shape=shape(node),
+            )
         plt.show()
 
-    def draw_property(self, node_property: Callable[[str], bool], color: str = 'red') -> None:
+    def draw_property(self, node_property: Callable[[str], bool], color: str = "red") -> None:
         """Draw a CID with the nodes satisfying node_property highlighted"""
 
         def node_color(node: str) -> Any:
@@ -482,10 +507,13 @@ class MechanismGraph(MACIDBase):
     """A mechanism graph has an extra parent node+"mec" for each node"""
 
     def __init__(self, cid: MACIDBase):
-        super().__init__(cid.edges(),
-                         {agent: {'D': list(cid.decision_nodes_agent[agent]),
-                                  'U': list(cid.utility_nodes_agent[agent])}
-                          for agent in cid.agents})
+        super().__init__(
+            cid.edges(),
+            {
+                agent: {"D": list(cid.decision_nodes_agent[agent]), "U": list(cid.utility_nodes_agent[agent])}
+                for agent in cid.agents
+            },
+        )
         for node in cid.nodes:
             if node[:-3] == "mec":
                 raise Exception("can't create a mechanism graph when node {node} already ends with mec")

@@ -64,8 +64,9 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str])
         return False
 
 
-def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish: str,
-                                               effective_set: List[str], y: List[str] = []) -> bool:
+def _directed_effective_path_not_through_set_y(
+    mb: MACIDBase, start: str, finish: str, effective_set: List[str], y: List[str] = []
+) -> bool:
     """
     checks whether a directed effective path exists that doesn't pass through any of the nodes in the set y.
     """
@@ -78,8 +79,9 @@ def _directed_effective_path_not_through_set_y(mb: MACIDBase, start: str, finish
         return False
 
 
-def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str, effective_set: List[str],
-                                                  w: List[str] = []) -> List[str]:
+def _effective_backdoor_path_not_blocked_by_set_w(
+    mb: MACIDBase, start: str, finish: str, effective_set: List[str], w: List[str] = []
+) -> List[str]:
     """
     Returns the effective backdoor path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
@@ -93,8 +95,9 @@ def _effective_backdoor_path_not_blocked_by_set_w(mb: MACIDBase, start: str, fin
     return []
 
 
-def _effective_undir_path_not_blocked_by_set_w(mb: MACIDBase, start: str, finish: str,
-                                               effective_set: List[str], w: List[str] = []) -> Union[List[str], None]:
+def _effective_undir_path_not_blocked_by_set_w(
+    mb: MACIDBase, start: str, finish: str, effective_set: List[str], w: List[str] = []
+) -> Union[List[str], None]:
     """
     Returns an effective undirected path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
@@ -141,7 +144,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
 
     agent = macid.whose_node[decision]
     agent_utils = macid.utility_nodes_agent[agent]
-    reachable_decisions = []    # set of possible D_B
+    reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
@@ -181,7 +184,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
 
     agent = macid.whose_node[decision]
     agent_utils = macid.utility_nodes_agent[agent]
-    reachable_decisions = []    # set of possible D_B
+    reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
@@ -196,19 +199,26 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
                 for u_b in agent_b_utils:
 
-                    decision_b_parents_not_desc_decision = [node for node in macid.get_parents(decision_b)
-                                                            if node not in set(nx.descendants(macid, decision))]
+                    decision_b_parents_not_desc_decision = [
+                        node
+                        for node in macid.get_parents(decision_b)
+                        if node not in set(nx.descendants(macid, decision))
+                    ]
                     cond_nodes = [decision_b] + decision_b_parents_not_desc_decision
 
                     if _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set, cond_nodes):
-                        path = _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set,
-                                                                             cond_nodes)
+                        path = _effective_backdoor_path_not_blocked_by_set_w(
+                            macid, decision, u_b, effective_set, cond_nodes
+                        )
                         if _get_key_node(macid, path):
                             key_node = _get_key_node(macid, path)
                         else:
                             return False
-                        decision_parents_not_desc_key_node = [node for node in macid.get_parents(decision)
-                                                              if node not in set(nx.descendants(macid, key_node))]
+                        decision_parents_not_desc_key_node = [
+                            node
+                            for node in macid.get_parents(decision)
+                            if node not in set(nx.descendants(macid, key_node))
+                        ]
                         cond_nodes2 = [decision] + decision_parents_not_desc_key_node
 
                         if _effective_undir_path_not_blocked_by_set_w(macid, key_node, u, effective_set, cond_nodes2):
@@ -233,7 +243,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
 
     agent = macid.whose_node[decision]
     agent_utils = macid.utility_nodes_agent[agent]
-    reachable_decisions = []    # set of possible D_B
+    reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
@@ -249,8 +259,11 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
 
                 for u_b in agent_b_utils:
-                    decision_b_parents_not_desc_decision = [node for node in macid.get_parents(decision_b)
-                                                            if node not in set(nx.descendants(macid, decision))]
+                    decision_b_parents_not_desc_decision = [
+                        node
+                        for node in macid.get_parents(decision_b)
+                        if node not in set(nx.descendants(macid, decision))
+                    ]
                     cond_nodes = [decision_b] + decision_b_parents_not_desc_decision
                     if is_active_indirect_frontdoor_trail(macid, decision, u_b, cond_nodes):
                         return True
@@ -259,16 +272,22 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
 
 
 def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
-    """ Return a dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
+    """Return a dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
     This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over
     another, when all other agents are playing WD strategies.
     (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
-    motivations: Dict[str, List[str]] = {'dir_effect': [], 'sig': [], 'manip': [], 'rev_den': []}
+    motivations: Dict[str, List[str]] = {"dir_effect": [], "sig": [], "manip": [], "rev_den": []}
     effective_set = list(mb.all_decision_nodes)
     while True:
-        new_set = [dec for dec in effective_set if direct_effect(mb, dec) or manipulation(mb, dec, effective_set)
-                   or signaling(mb, dec, effective_set) or revealing_or_denying(mb, dec, effective_set)]
+        new_set = [
+            dec
+            for dec in effective_set
+            if direct_effect(mb, dec)
+            or manipulation(mb, dec, effective_set)
+            or signaling(mb, dec, effective_set)
+            or revealing_or_denying(mb, dec, effective_set)
+        ]
 
         if len(new_set) == len(effective_set):
             break
@@ -276,12 +295,12 @@ def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
 
     for decision in effective_set:
         if direct_effect(mb, decision):
-            motivations['dir_effect'].append(decision)
+            motivations["dir_effect"].append(decision)
         elif signaling(mb, decision, effective_set):
-            motivations['sig'].append(decision)
+            motivations["sig"].append(decision)
         elif manipulation(mb, decision, effective_set):
-            motivations['manip'].append(decision)
+            motivations["manip"].append(decision)
         elif revealing_or_denying(mb, decision, effective_set):
-            motivations['rev_den'].append(decision)
+            motivations["rev_den"].append(decision)
 
     return motivations

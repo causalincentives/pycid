@@ -45,8 +45,9 @@ class UniformRandomCPD(TabularCPD):
                 return False
         parents_card = [cid.get_cardinality(p) for p in parents]
         transition_matrix = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
-        super().__init__(self.variable, self.variable_card, transition_matrix,
-                         parents, parents_card, state_names=self.state_names)
+        super().__init__(
+            self.variable, self.variable_card, transition_matrix, parents, parents_card, state_names=self.state_names
+        )
         return True
 
 
@@ -59,8 +60,9 @@ class FunctionCPD(TabularCPD):
     of the parents have been computed, since the state names depends on the values of the parents.
     """
 
-    def __init__(self, variable: str, f: Callable, evidence: List[str],
-                 state_names: Dict = None, label: str = None) -> None:
+    def __init__(
+        self, variable: str, f: Callable, evidence: List[str], state_names: Dict = None, label: str = None
+    ) -> None:
         """Initialize FunctionCPD with a variable name and a function
 
         state_names can optionally be provided, to force the domain of the distribution.
@@ -80,11 +82,11 @@ class FunctionCPD(TabularCPD):
             self.label = label
         else:
             sl = getsourcelines(self.f)[0][0]
-            lambda_pos = sl.find('lambda')
+            lambda_pos = sl.find("lambda")
             if lambda_pos > -1:  # can't infer label if not defined by lambda expression
-                colon = sl.find(':', lambda_pos, len(sl))
-                end = sl.find(',', colon, len(sl))  # TODO this only works for simple expressions with no commas
-                self.label = sl[colon + 2: end]
+                colon = sl.find(":", lambda_pos, len(sl))
+                end = sl.find(",", colon, len(sl))  # TODO this only works for simple expressions with no commas
+                self.label = sl[colon + 2 : end]
             elif hasattr(self.f, "__name__"):
                 self.label = self.f.__name__
             else:
@@ -108,7 +110,7 @@ class FunctionCPD(TabularCPD):
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
         for p in self.evidence:
             p_cpd = cid.get_cpds(p)
-            if not (p_cpd and hasattr(p_cpd, 'state_names')):
+            if not (p_cpd and hasattr(p_cpd, "state_names")):
                 return False
         return True
 
@@ -118,7 +120,7 @@ class FunctionCPD(TabularCPD):
         parent_values = []
         for p in self.evidence:
             p_cpd = cid.get_cpds(p)
-            if p_cpd and hasattr(p_cpd, 'state_names'):
+            if p_cpd and hasattr(p_cpd, "state_names"):
                 parent_values.append(p_cpd.state_names[p])
         return parent_values
 
@@ -146,14 +148,12 @@ class FunctionCPD(TabularCPD):
         card = len(state_names_list)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
-        matrix = np.array([[int(self.f(*i) == t)
-                            for i in itertools.product(*self.parent_values(cid))]
-                           for t in state_names_list])
+        matrix = np.array(
+            [[int(self.f(*i) == t) for i in itertools.product(*self.parent_values(cid))] for t in state_names_list]
+        )
         state_names = {self.variable: state_names_list}
 
-        super().__init__(self.variable, card,
-                         matrix, evidence, evidence_card,
-                         state_names=state_names)
+        super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=state_names)
         return True
 
 

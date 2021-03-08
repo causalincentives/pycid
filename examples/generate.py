@@ -8,8 +8,8 @@ from typing import List, Tuple
 
 from pycid.core.cid import CID
 
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../"))
 from pycid.core.cpd import DecisionDomain, RandomlySampledFunctionCPD, UniformRandomCPD
 from pycid.core.get_paths import find_active_path
 
@@ -17,13 +17,14 @@ from pycid.core.get_paths import find_active_path
 
 
 def random_cid(
-        n_all: int,
-        n_decisions: int,
-        n_utilities: int,
-        edge_density: float = 0.4,
-        add_sr_edges: bool = True,
-        add_cpds: bool = True,
-        seed: int = None) -> CID:
+    n_all: int,
+    n_decisions: int,
+    n_utilities: int,
+    edge_density: float = 0.4,
+    add_sr_edges: bool = True,
+    add_cpds: bool = True,
+    seed: int = None,
+) -> CID:
     """Generates a random Cid with the specified number of nodes and edges"""
 
     all_names, decision_names, utility_names = get_node_names(n_all, n_decisions, n_utilities)
@@ -35,7 +36,7 @@ def random_cid(
             assert uname != edge[0]
 
     for i, d1 in enumerate(decision_names):
-        for j, d2 in enumerate(decision_names[i + 1:]):
+        for j, d2 in enumerate(decision_names[i + 1 :]):
             assert d2 not in cid._get_ancestors_of(d1)
 
     if add_sr_edges:
@@ -53,13 +54,14 @@ def random_cid(
 
 
 def random_cids(
-        ns_range: Tuple[int, int] = (14, 20),
-        nd_range: Tuple[int, int] = (4, 7),
-        nu_range: Tuple[int, int] = (4, 7),
-        edge_density: float = .4,
-        n_cids: int = 10,
-        seed: int = None,
-        add_sr_edges: bool = True) -> List[CID]:
+    ns_range: Tuple[int, int] = (14, 20),
+    nd_range: Tuple[int, int] = (4, 7),
+    nu_range: Tuple[int, int] = (4, 7),
+    edge_density: float = 0.4,
+    n_cids: int = 10,
+    seed: int = None,
+    add_sr_edges: bool = True,
+) -> List[CID]:
     """generates a bunch of CIDs with sufficient recall
 
     if add_sr_edges=True, then sufficient recall is ensured by adding edges
@@ -71,8 +73,7 @@ def random_cids(
         n_decisions = random.randint(*nd_range)
         n_utilities = random.randint(*nu_range)
 
-        cid = random_cid(n_all, n_decisions, n_utilities, edge_density,
-                         add_sr_edges=add_sr_edges, seed=seed)
+        cid = random_cid(n_all, n_decisions, n_utilities, edge_density, add_sr_edges=add_sr_edges, seed=seed)
 
         for uname in cid.all_utility_nodes:
             for edge in cid.edges:
@@ -86,9 +87,9 @@ def random_cids(
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int) -> Tuple[List[str], List[str], List[str]]:
     """examples lists of node names for decision, utility, and chance nodes"""
     n_structural = n_all - n_decisions - n_utilities
-    structure_names = ['S{}'.format(i) for i in range(n_structural)]
-    decision_names = ['D{}'.format(i) for i in range(n_decisions)]
-    utility_names = ['U{}'.format(i) for i in range(n_utilities)]
+    structure_names = ["S{}".format(i) for i in range(n_structural)]
+    decision_names = ["D{}".format(i) for i in range(n_decisions)]
+    utility_names = ["U{}".format(i) for i in range(n_utilities)]
 
     # scramble decision and structure nodes, without upsetting internal orders
     non_utility_names = []
@@ -106,16 +107,13 @@ def get_node_names(n_all: int, n_decisions: int, n_utilities: int) -> Tuple[List
 
 
 def get_edges(
-        names: List[str],
-        utility_names: List[str],
-        edge_density: float,
-        seed: int = None,
-        allow_u_edges: bool = False) -> List[Tuple[str, str]]:
+    names: List[str], utility_names: List[str], edge_density: float, seed: int = None, allow_u_edges: bool = False
+) -> List[Tuple[str, str]]:
     random.seed(seed)
     edges = []
     nodes_with_edges = set()
     for i, name1 in enumerate(names):
-        for name2 in names[i + 1:]:
+        for name2 in names[i + 1 :]:
             if random.random() < edge_density:
                 if allow_u_edges or name1 not in utility_names:
                     edges.append((name1, name2))
@@ -143,13 +141,13 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
     """
 
     if dec2 in cid._get_ancestors_of(dec1):
-        raise ValueError('{} is an ancestor of {}'.format(dec2, dec1))
+        raise ValueError("{} is an ancestor of {}".format(dec2, dec1))
 
     cid2 = cid.copy()
-    cid2.add_edge('pi', dec1)
+    cid2.add_edge("pi", dec1)
 
-    while cid2.is_active_trail('pi', utility_node, observed=cid.get_parents(dec2) + [dec2]):
-        path = find_active_path(cid2, 'pi', utility_node, cid.get_parents(dec2) + [dec2])
+    while cid2.is_active_trail("pi", utility_node, observed=cid.get_parents(dec2) + [dec2]):
+        path = find_active_path(cid2, "pi", utility_node, cid.get_parents(dec2) + [dec2])
         if path is None:
             raise Exception("couldn't find path even though there should be an active trail")
         while True:
@@ -169,7 +167,7 @@ def add_sufficient_recalls(cid: CID) -> None:
     for utility_node in cid.all_utility_nodes:
         # decisions = cid._get_valid_order(cid.decision_nodes)  # cannot be trusted...
         for i, dec1 in enumerate(cid.all_decision_nodes):
-            for dec2 in cid.all_decision_nodes[i + 1:]:
+            for dec2 in cid.all_decision_nodes[i + 1 :]:
                 if dec1 in cid._get_ancestors_of(dec2):
                     _add_sufficient_recall(cid, dec1, dec2, utility_node)
                 else:

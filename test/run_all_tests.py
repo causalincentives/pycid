@@ -9,16 +9,18 @@ from test.test_macid_base import TestBASE
 from test.test_notebooks import TestNotebooks
 from test.test_reasoning_patterns import TestReasoning
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # All tests can also be run with python3 -m unittest
-    suite_list = [unittest.defaultTestLoader.loadTestsFromTestCase(TestCID),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestExamples),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestPATHS),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestReasoning),
-                  unittest.defaultTestLoader.loadTestsFromTestCase(TestBASE)]
+    suite_list = [
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestCID),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestExamples),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestPATHS),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestReasoning),
+        unittest.defaultTestLoader.loadTestsFromTestCase(TestBASE),
+    ]
     combo_suite = unittest.TestSuite(suite_list)
     unittest.TextTestRunner(verbosity=0).run(combo_suite)

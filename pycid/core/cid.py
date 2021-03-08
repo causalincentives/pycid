@@ -11,11 +11,8 @@ from pycid.core.macid_base import MACIDBase
 
 
 class CID(MACIDBase):
-
-    def __init__(self, edges: List[Tuple[str, str]],
-                 decision_nodes: List[str],
-                 utility_nodes: List[str]):
-        super().__init__(edges, {0: {'D': decision_nodes, 'U': utility_nodes}})
+    def __init__(self, edges: List[Tuple[str, str]], decision_nodes: List[str], utility_nodes: List[str]):
+        super().__init__(edges, {0: {"D": decision_nodes, "U": utility_nodes}})
         self.decision_nodes = self.decision_nodes_agent[0]
         self.utility_nodes = self.utility_nodes_agent[0]
 
@@ -58,8 +55,8 @@ class CID(MACIDBase):
 
     def _get_color(self, node: str) -> str:
         if node in self.decision_nodes:
-            return 'lightblue'
+            return "lightblue"
         elif node in self.utility_nodes:
-            return 'yellow'
+            return "yellow"
         else:
-            return 'lightgray'
+            return "lightgray"

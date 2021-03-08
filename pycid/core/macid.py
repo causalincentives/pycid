@@ -16,10 +16,7 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph
 
 
 class MACID(MACIDBase):
-
-    def __init__(self,
-                 edges: List[Tuple[Union[str, int], str]],
-                 node_types: Dict[Union[str, int], Dict]):
+    def __init__(self, edges: List[Tuple[Union[str, int], str]], node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
@@ -50,8 +47,9 @@ class MACID(MACIDBase):
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
 
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
-        agent_decs_in_sg = {agent: [dec for dec in self.decision_nodes_agent[agent]
-                            if dec in decisions_in_sg] for agent in agents_in_sg}
+        agent_decs_in_sg = {
+            agent: [dec for dec in self.decision_nodes_agent[agent] if dec in decisions_in_sg] for agent in agents_in_sg
+        }
 
         # impute random decisions to non-instantiated, irrelevant decision nodes
         macid = self.copy()
@@ -106,25 +104,32 @@ class MACID(MACIDBase):
         """
         con_rel = CondensedRelevanceGraph(self)
         con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
-        powerset = list(itertools.chain.from_iterable(itertools.combinations(con_rel_sccs, r)
-                                                      for r in range(1, len(con_rel_sccs) + 1)))
+        powerset = list(
+            itertools.chain.from_iterable(
+                itertools.combinations(con_rel_sccs, r) for r in range(1, len(con_rel_sccs) + 1)
+            )
+        )
         con_rel_subgames = copy.deepcopy(powerset)
         for subset in powerset:
             for node in subset:
                 if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
                     con_rel_subgames.remove(subset)
 
-        dec_subgames = [[con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame]
-                        for con_rel_subgame in con_rel_subgames]
+        dec_subgames = [
+            [con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame] for con_rel_subgame in con_rel_subgames
+        ]
 
         return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
 
     def copy_without_cpds(self) -> MACID:
         """copy the MACID structure"""
-        return MACID(self.edges(),
-                     {agent: {'D': list(self.decision_nodes_agent[agent]),
-                              'U': list(self.utility_nodes_agent[agent])}
-                     for agent in self.agents})
+        return MACID(
+            self.edges(),
+            {
+                agent: {"D": list(self.decision_nodes_agent[agent]), "U": list(self.utility_nodes_agent[agent])}
+                for agent in self.agents
+            },
+        )
 
     def _get_color(self, node: str) -> Union[str, np.ndarray]:
         """
@@ -134,4 +139,4 @@ class MACID(MACIDBase):
         if node in self.all_decision_nodes or node in self.all_utility_nodes:
             return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
         else:
-            return 'lightgray'  # chance node
+            return "lightgray"  # chance node

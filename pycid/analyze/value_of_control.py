@@ -15,8 +15,10 @@ def admits_voc(cid: CID, node: str) -> bool:
     in the reduced graph G∗.
     """
     if len(cid.agents) > 1:
-        raise Exception(f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent.")
+        raise Exception(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
+                        valid for CIDs with one agent."
+        )
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
@@ -54,8 +56,10 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     active when conditioning on Fa_D \ {X}
     """
     if len(cid.agents) > 1:
-        raise Exception(f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent.")
+        raise Exception(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
+                        valid for CIDs with one agent."
+        )
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
@@ -100,8 +104,10 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
     active when conditioning on Fa_D \ {X}
     """
     if len(cid.agents) > 1:
-        raise Exception(f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent.")
+        raise Exception(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
+                        valid for CIDs with one agent."
+        )
 
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")

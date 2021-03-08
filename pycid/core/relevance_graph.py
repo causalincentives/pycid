@@ -42,7 +42,7 @@ class RelevanceGraph(nx.DiGraph):
         Return a list with the maximal strongly connected components of the MACID's
         full strategic relevance graph.
         Uses Tarjan’s algorithm with Nuutila’s modifications
-        - complexity is linear in the number of edges and nodes """
+        - complexity is linear in the number of edges and nodes"""
         return list(nx.strongly_connected_components(self))
 
     def _set_color_scc(self, node: str, sccs: List[Any]) -> np.ndarray:
@@ -62,7 +62,7 @@ class RelevanceGraph(nx.DiGraph):
         sccs = list(nx.strongly_connected_components(self))
         layout = nx.kamada_kawai_layout(self)
         colors = [self._set_color_scc(node, sccs) for node in self.nodes]
-        nx.draw_networkx(self, pos=layout, node_size=400, arrowsize=20, edge_color='g', node_color=colors)
+        nx.draw_networkx(self, pos=layout, node_size=400, arrowsize=20, edge_color="g", node_color=colors)
         plt.show()
 
     def draw(self) -> None:
@@ -70,8 +70,9 @@ class RelevanceGraph(nx.DiGraph):
         Draw the MACID's relevance graph for the given set of decision nodes.
         Default: draw the relevance graph for all decision nodes in the MACID.
         """
-        nx.draw_networkx(self, node_size=400, arrowsize=20, node_color='k', font_color='w',
-                         edge_color='k', with_labels=True)
+        nx.draw_networkx(
+            self, node_size=400, arrowsize=20, node_color="k", font_color="w", edge_color="k", with_labels=True
+        )
         plt.show()
 
 
@@ -91,7 +92,7 @@ class CondensedRelevanceGraph(nx.DiGraph):
         self.add_edges_from(con_rel.edges)
         # this generates a dictionary matching each decision node
         # in rg to the node of con_rel that it's in.
-        self.graph['mapping'] = con_rel.graph['mapping']
+        self.graph["mapping"] = con_rel.graph["mapping"]
 
     def draw(self) -> None:
         """
@@ -112,6 +113,6 @@ class CondensedRelevanceGraph(nx.DiGraph):
         """ Return a dictionary matching each SCC with a list of decision nodes that it contains"""
         scc_dec_mapping: Dict[int, List[str]] = {}
         # invert the dictionary to match each scc with the decision nodes in it
-        for k, v in self.graph['mapping'].items():
+        for k, v in self.graph["mapping"].items():
             scc_dec_mapping[v] = scc_dec_mapping.get(v, []) + [k]
         return scc_dec_mapping

@@ -21,8 +21,7 @@ def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
     descended_agent_utilities = set(agent_utilities).intersection(nx.descendants(cid, decision))
     family_d = [decision] + cid.get_parents(decision)
     conditioning_nodes = [i for i in family_d if i != node]
-    return any([cid.is_active_trail(node, u_node, conditioning_nodes)
-                for u_node in descended_agent_utilities])
+    return any([cid.is_active_trail(node, u_node, conditioning_nodes) for u_node in descended_agent_utilities])
 
 
 def requisite_list(cid: MACIDBase, decision: str) -> List[str]:

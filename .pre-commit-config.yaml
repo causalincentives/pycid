@@ -1,4 +1,9 @@
 repos:
+  - repo: https://github.com/ambv/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        args: [--safe]
   - repo: https://github.com/asottile/seed-isort-config
     rev: v2.2.0
     hooks:

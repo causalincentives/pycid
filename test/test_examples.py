@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../"))
 import unittest
 
 from examples.generate import random_cid, random_cids
@@ -57,7 +57,6 @@ from examples.story_macids import (
 
 
 class TestExamples(unittest.TestCase):
-
     def setUp(self) -> None:
         logging.disable()
 
