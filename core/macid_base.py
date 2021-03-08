@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pgmpy.models import BayesianModel  # type: ignore
-from typing import List, Tuple, Dict, Any, Callable, Union
+from typing import List, Tuple, Dict, Any, Callable, Union, Iterable
 from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
 import networkx as nx
 from core.cpd import UniformRandomCPD, FunctionCPD, DecisionDomain
@@ -20,7 +20,7 @@ from core.relevance_graph import RelevanceGraph
 class MACIDBase(BayesianModel):
 
     def __init__(self,
-                 edges: List[Tuple[str, str]],
+                 edges: Iterable[Tuple[Union[str, int], str]],
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(ebunch=edges)
 
@@ -312,14 +312,14 @@ class MACIDBase(BayesianModel):
             function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
         return function_cpds
 
-    def pure_strategies(self, decision_nodes: List[str]) -> List[List[FunctionCPD]]:
+    def pure_strategies(self, decision_nodes: List[str]) -> List[Tuple[FunctionCPD, ...]]:
         """
         Find all of an agent's pure policies in this subgame.
         """
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return list(itertools.product(*possible_dec_rules))
 
-    def optimal_pure_strategies(self, decisions: List[str]) -> List[List[FunctionCPD]]:
+    def optimal_pure_strategies(self, decisions: List[str]) -> List[Tuple[FunctionCPD, ...]]:
         """
         Return a list of all optimal strategies for a given set of decisions
         """

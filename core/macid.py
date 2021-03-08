@@ -15,7 +15,8 @@ from core.cpd import DecisionDomain
 
 class MACID(MACIDBase):
 
-    def __init__(self, edges: List[Tuple[Union[str, int], str]],
+    def __init__(self,
+                 edges: List[Tuple[Union[str, int], str]],
                  node_types: Dict[Union[str, int], Dict]):
         super().__init__(edges, node_types)
 
@@ -26,7 +27,7 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
-    def joint_pure_strategies(self, decisions: List[str]) -> List[FunctionCPD]:
+    def joint_pure_strategies(self, decisions: List[str]) -> List[Tuple[FunctionCPD, ...]]:
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
