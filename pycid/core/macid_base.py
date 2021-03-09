@@ -3,35 +3,49 @@ from __future__ import annotations
 import itertools
 import random
 from functools import lru_cache
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from pgmpy.inference.ExactInference import BeliefPropagation  # type: ignore
-from pgmpy.models import BayesianModel  # type: ignore
+from pgmpy.factors.discrete import TabularCPD
+from pgmpy.inference.ExactInference import BeliefPropagation
+from pgmpy.models import BayesianModel
 
 from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
+AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
+
 
 class MACIDBase(BayesianModel):
-    def __init__(self, edges: Iterable[Tuple[Union[str, int], str]], node_types: Dict[Union[str, int], Dict]):
+    """Base structure of a Multi-Agent Causal Influence Diagram."""
+
+    def __init__(self, edges: Iterable[Tuple[str, str]], node_types: Dict[AgentLabel, Dict[str, Iterable[str]]]):
+        """Initialize a new MACIDBase instance.
+
+        Parameters
+        ----------
+        edges: A set of directed edges. Each is a pair of labels (tail, head).
+
+        node_types: The decision and utility nodes of each agent.
+            A mapping of agent_name => 'D'|'U' => Sequence of decision / utility nodes for that agent.
+        """
         super().__init__(ebunch=edges)
 
-        self.decision_nodes_agent = {i: node_types[i]["D"] for i in node_types}
+        self.decision_nodes_agent = {agent: list(types["D"]) for agent, types in node_types.items()}
         for node in self.all_decision_nodes:
             if node not in self.nodes:
                 raise Exception(f"Decision node {node} is not in the (MA)CID.")
 
-        self.utility_nodes_agent = {i: node_types[i]["U"] for i in node_types}
+        self.utility_nodes_agent = {agent: list(types["U"]) for agent, types in node_types.items()}
         for node in self.all_utility_nodes:
             if node not in self.nodes:
                 raise Exception(f"Utility node {node} is not in the (MA)CID.")
 
         self.whose_node = {}
+
         for agent in self.agents:
             for node in self.decision_nodes_agent[agent]:
                 self.whose_node[node] = agent
@@ -42,14 +56,18 @@ class MACIDBase(BayesianModel):
 
     @property
     def all_decision_nodes(self) -> List[str]:
-        return list(set().union(*list(self.decision_nodes_agent.values())))
+        # See https://github.com/python/mypy/issues/2013
+        empty_set: Set[str] = set()
+        return list(empty_set.union(*self.decision_nodes_agent.values()))
 
     @property
     def all_utility_nodes(self) -> List[str]:
-        return list(set().union(*list(self.utility_nodes_agent.values())))
+        # See https://github.com/python/mypy/issues/2013
+        empty_set: Set[str] = set()
+        return list(empty_set.union(*self.utility_nodes_agent.values()))
 
     @property
-    def agents(self) -> List[Union[str, int]]:
+    def agents(self) -> List[AgentLabel]:
         return list(self.decision_nodes_agent.keys())
 
     def remove_edge(self, u: str, v: str) -> None:
@@ -62,7 +80,7 @@ class MACIDBase(BayesianModel):
         if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
             self.add_cpds(self.get_cpds(v))
 
-    def make_decision(self, node: str, agent: Union[str, int] = 0) -> None:
+    def make_decision(self, node: str, agent: AgentLabel = 0) -> None:
         """"Turn a chance or utility node into a decision node."""
         if hasattr(self, "cpds") and isinstance(self.get_cpds(node), DecisionDomain):
             pass
@@ -123,12 +141,21 @@ class MACIDBase(BayesianModel):
                     del self.cpds_to_add[var]
 
     def query(
-        self, query: List[str], context: Dict[str, Any], intervention: Dict["str", "Any"] = None
+        self, query: Iterable[str], context: Dict[str, Any], intervention: Dict[str, Any] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
         Use factor.normalize to get p(query|context, do(intervention)).
-        Use context={} to get P(query)."""
+        Use context={} to get P(query).
+
+        Parameters
+        ----------
+        query: A set of nodes to query.
+
+        context: Node values to condition upon. A dictionary mapping of node => value.
+
+        intervention: Interventions to apply. A dictionary mapping node => value.
+        """
 
         # Check that strategically relevant decisions have a policy specified
         mech_graph = MechanismGraph(self)
@@ -175,10 +202,14 @@ class MACIDBase(BayesianModel):
         factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
         return factor
 
-    def intervene(self, intervention: Dict["str", "Any"]) -> None:
+    def intervene(self, intervention: Dict[str, Any]) -> None:
         """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
 
         Soft interventions can be achieved by using add_cpds directly.
+
+        Parameters
+        ----------
+        intervention: Interventions to apply. A dictionary mapping node => value.
         """
         for variable, value in intervention.items():
             cpd = FunctionCPD(variable, lambda *x: value, evidence=self.get_parents(variable))
@@ -186,12 +217,20 @@ class MACIDBase(BayesianModel):
 
     def expected_value(
         self,
-        variables: List[str],
-        context: Dict["str", "Any"],
-        intervene: Dict["str", "Any"] = None,
+        variables: Iterable[str],
+        context: Dict[str, Any],
+        intervene: Dict[str, Any] = None,
     ) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
+
+        Parameters
+        ----------
+        variables: A set of variables to evaluate.
+
+        context: Node values to condition upon. A dictionary mapping of node => value.
+
+        intervention: Interventions to apply. A dictionary mapping node => value.
         """
         factor = self.query(variables, context, intervention=intervene)
         factor.normalize()  # make probs add to one
@@ -213,13 +252,21 @@ class MACIDBase(BayesianModel):
         return ev.tolist()  # type: ignore
 
     def expected_utility(
-        self, context: Dict["str", "Any"], intervene: Dict["str", "Any"] = None, agent: Union[str, int] = 0
+        self, context: Dict[str, Any], intervene: Dict[str, Any] = None, agent: AgentLabel = 0
     ) -> float:
-        """Compute the expected utility for a given context and optional intervention
+        """Compute the expected utility of an agent for a given context and optional intervention
 
         For example:
         cid = get_minimal_cid()
         out = self.expected_utility({'D':1}) #TODO: give example that uses context
+
+        Parameters
+        ----------
+        context: Node values to condition upon. A dictionary mapping of node => value.
+
+        intervention: Interventions to apply. A dictionary mapping node => value.
+
+        agent: Evaluate the utility of this agent.
         """
         return sum(self.expected_value(self.utility_nodes_agent[agent], context, intervene=intervene))
 
@@ -240,7 +287,7 @@ class MACIDBase(BayesianModel):
         srt = [i for i in nx.topological_sort(self) if i in nodes]
         return srt
 
-    def is_s_reachable(self, d1: Union[str, List[str]], d2: Union[str, List[str]]) -> bool:
+    def is_s_reachable(self, d1: Union[str, Iterable[str]], d2: Union[str, Iterable[str]]) -> bool:
         """
         Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch, 2001)
 
@@ -252,9 +299,10 @@ class MACIDBase(BayesianModel):
         assert d2 in self.all_decision_nodes
         return self.is_r_reachable(d1, d2)
 
-    def is_r_reachable(self, decisions: Union[str, List[str]], nodes: Union[str, List[str]]) -> bool:
+    def is_r_reachable(self, decisions: Union[str, Iterable[str]], nodes: Union[str, Iterable[str]]) -> bool:
         """
         Determine whether (a set of) node(s) is r-reachable from decision in the (MA)CID.
+
         - A node 𝑉 is r-reachable from a decision 𝐷 ∈ 𝑫^𝑖 in a MAID, M = (𝑵, 𝑽, 𝑬),
         if a newly added parent 𝑉ˆ of 𝑉 satisfies 𝑉ˆ ̸⊥ 𝑼^𝑖 ∩ Desc_𝐷 | Fa_𝐷 .
         - If a node V is r-reachable from a decision D that means D strategically or probabilisticaly relies on V.
@@ -273,7 +321,7 @@ class MACIDBase(BayesianModel):
                         return True
         return False
 
-    def sufficient_recall(self, agent: Union[str, int] = None) -> bool:
+    def sufficient_recall(self, agent: Optional[AgentLabel] = None) -> bool:
         """
         Finds whether a (MA)CID has sufficient recall.
 
@@ -283,10 +331,10 @@ class MACIDBase(BayesianModel):
         If an agent is specified, sufficient recall is checked only for that agent.
         Otherwise, the check is done for all agents.
         """
-        if not agent:
+        if agent is None:
             agents = self.agents
         elif agent not in self.agents:
-            raise Exception(f"There is no agent {agent}, in this (MA)CID")
+            raise ValueError(f"There is no agent {agent}, in this (MA)CID")
         else:
             agents = [agent]
 
@@ -326,14 +374,14 @@ class MACIDBase(BayesianModel):
             function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
         return function_cpds
 
-    def pure_strategies(self, decision_nodes: List[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def pure_strategies(self, decision_nodes: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
         """
         Find all of an agent's pure policies in this subgame.
         """
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return list(itertools.product(*possible_dec_rules))
 
-    def optimal_pure_strategies(self, decisions: List[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def optimal_pure_strategies(self, decisions: Sequence[str]) -> List[Tuple[FunctionCPD, ...]]:
         """
         Return a list of all optimal strategies for a given set of decisions
         """

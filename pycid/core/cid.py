@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import random
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid_base import MACIDBase
 
 
 class CID(MACIDBase):
-    def __init__(self, edges: List[Tuple[str, str]], decision_nodes: List[str], utility_nodes: List[str]):
+    def __init__(self, edges: Iterable[Tuple[str, str]], decision_nodes: Iterable[str], utility_nodes: Iterable[str]):
         super().__init__(edges, {0: {"D": decision_nodes, "U": utility_nodes}})
         self.decision_nodes = self.decision_nodes_agent[0]
         self.utility_nodes = self.utility_nodes_agent[0]

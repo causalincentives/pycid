@@ -3,11 +3,13 @@ from __future__ import annotations
 import itertools
 import random
 from inspect import getsourcelines
-from typing import Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pgmpy.models import BayesianModel  # type: ignore
+
+State = Any
 
 
 class UniformRandomCPD(TabularCPD):
@@ -17,11 +19,23 @@ class UniformRandomCPD(TabularCPD):
     is run.
     """
 
-    def __init__(self, variable: str, state_names: List, label: str = None):
+    def __init__(self, variable: str, state_names: Sequence[State], label: Optional[str] = None):
+        """Create a UniformRandomCPD
+
+        Call `initialize_tabular_cpd` to complete the initialization.
+
+        Parameters
+        ----------
+        variable: The variable name.
+
+        state_names: The possible outcomes of the variable.
+
+        label: An optional label used to describe this distribution.
+        """
         self.variable = variable
         self.variable_card = len(state_names)
         self.state_names = {variable: state_names}
-        self.label = label if label else f"DiscUni({state_names})"
+        self.label = label if label is not None else f"DiscUni({state_names})"
         # we call super().__init__() in initialize_tabular_cpd instead
 
     def copy(self) -> UniformRandomCPD:
@@ -58,24 +72,40 @@ class FunctionCPD(TabularCPD):
     """
 
     def __init__(
-        self, variable: str, f: Callable, evidence: List[str], state_names: Dict = None, label: str = None
+        self,
+        variable: str,
+        f: Callable[..., State],
+        evidence: Sequence[str],
+        state_names: Optional[Dict[str, Sequence[State]]] = None,
+        label: str = None,
     ) -> None:
         """Initialize FunctionCPD with a variable name and a function
 
-        state_names can optionally be provided, to force the domain of the distribution.
-        These state_names must include the values the variable can take as a result of its
-        function.
+
+        Parameters
+        ----------
+        variable: The variable name.
+
+        f: A function mapping evidence observations to an outcome for this variable.
+            Observations are passed by position according to the order of `evidence`.
+
+        evidence: The variables used as inputs to `f`.
+
+        state_names: An optional specification of the variable's domain.
+            Must include all values this variable can take as a result of its function.
+
+        label: An optional label used to describe this distribution.
         """
         self.variable = variable
         self.f = f
         self.evidence = evidence
-        if state_names:
+        if state_names is not None:
             assert isinstance(state_names, dict)
             assert isinstance(state_names[variable], list)
-            self.force_state_names = state_names[variable]
+            self.force_state_names: Optional[Sequence[State]] = state_names[variable]
         else:
             self.force_state_names = None
-        if label:
+        if label is not None:
             self.label = label
         else:
             sl = getsourcelines(self.f)[0][0]
@@ -159,7 +189,7 @@ class RandomlySampledFunctionCPD(FunctionCPD):
     Instantiates a randomly chosen FunctionCPD for the variable
     """
 
-    def __init__(self, variable: str, evidence: List[str]) -> None:
+    def __init__(self, variable: str, evidence: Sequence[str]) -> None:
         possible_functions = [
             lambda *pv: np.prod(pv),
             lambda *pv: np.sum(pv),
@@ -175,7 +205,7 @@ class DecisionDomain(UniformRandomCPD):
     Under the hood it becomes a UniformRandomCPD
     """
 
-    def __init__(self, variable: str, state_names: List):
+    def __init__(self, variable: str, state_names: Sequence[State]):
         super().__init__(variable, state_names, label=f"Dec({state_names})")
 
     def copy(self) -> DecisionDomain:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import matplotlib.cm as cm
 import networkx as nx
@@ -14,9 +14,6 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph
 
 
 class MACID(MACIDBase):
-    def __init__(self, edges: List[Tuple[Union[str, int], str]], node_types: Dict[Union[str, int], Dict]):
-        super().__init__(edges, node_types)
-
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in the MACID.
@@ -24,13 +21,14 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
-    def joint_pure_strategies(self, decisions: List[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def joint_pure_strategies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[List[str]] = None) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[Sequence[str]] = None) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
+
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
         - If the MACID being operated on already has function CPDs for some decision nodes, it is
@@ -72,7 +70,7 @@ class MACID(MACIDBase):
 
         return all_pure_ne_in_sg
 
-    def policy_profile_assignment(self, partial_policy: List[FunctionCPD]) -> Dict:
+    def policy_profile_assignment(self, partial_policy: Iterable[FunctionCPD]) -> Dict:
         """Return a dictionary with the joint or partial policy profile assigned -
         ie a decision rule for each of the MACIM's decision nodes."""
         new_macid = self.copy_without_cpds()
