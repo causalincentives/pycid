@@ -7,7 +7,8 @@ from pycid.core.cid import CID
 
 
 def admits_voi(cid: CID, decision: str, node: str) -> bool:
-    """Return True if cid admits value of information for node.
+    r"""Return True if cid admits value of information for node.
+
     - A CID admits value of information for a node X if:
     i) X is not a descendant of the decision node, D.
     ii) X is d-connected to U given Fa_D \ {X}, where U ∈ U ∩ Desc(D)

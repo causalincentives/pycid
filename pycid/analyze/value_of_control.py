@@ -45,8 +45,9 @@ def admits_voc_list(cid: CID) -> List[str]:
 
 
 def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
-    """
+    r"""
     Return True if a single-decision cid admits indirect positive value of control for node.
+
     - A single-decision CID G admits positive value of control for a node X ∈ V \ {D} if and
     only if there is a directed path X --> U in the reduced graph G∗.
     - The path X --> U may or may not pass through D.
@@ -93,8 +94,9 @@ def admits_indir_voc_list(cid: CID, decision: str) -> List[str]:
 
 
 def admits_dir_voc(cid: CID, node: str) -> bool:
-    """
+    r"""
     Return True if cid admits direct positive value of control for node.
+
     - A CID G admits positive value of control for a node X ∈ V \ {D} if and
     only if there is a directed path X --> U in the requisite graph G∗.
     - The path X --> U may or may not pass through decisions.

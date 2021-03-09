@@ -6,7 +6,7 @@ from pycid.core.macid_base import MACIDBase
 
 
 def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
-    """Return True if cid node is requisite observation for decision (i.e. possibly material).
+    r"""Return True if cid node is requisite observation for decision (i.e. possibly material).
     - A node can be material if:
     i) it is a parent of D.
     ii) X is d-connected to (U ∩ Desc(D)) given Fa_D \ {X}
