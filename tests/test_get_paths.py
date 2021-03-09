@@ -1,5 +1,8 @@
 import logging
+import sys
 import unittest
+
+import pytest
 
 from pycid.core.get_paths import (
     directed_decision_free_path,
@@ -144,7 +147,6 @@ class TestPATHS(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPATHS)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)
 
 # %%

@@ -1,7 +1,9 @@
 import logging
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
 from pycid.examples.simple_cids import (
     get_2dec_cid,
@@ -68,5 +70,4 @@ class TestCID(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCID)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)

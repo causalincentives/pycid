@@ -1,7 +1,9 @@
 import logging
+import sys
 import unittest
 
 import numpy as np
+import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
 from pycid.core.macid_base import MechanismGraph
@@ -225,7 +227,4 @@ class TestBASE(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestBASE)
-    unittest.TextTestRunner().run(suite)
-
-# %%
+    pytest.main(sys.argv)

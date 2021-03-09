@@ -1,4 +1,7 @@
+import sys
 import unittest
+
+import pytest
 
 from pycid.analyze.reasoning_patterns import (
     direct_effect,
@@ -101,5 +104,4 @@ class TestReasoning(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestReasoning)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)

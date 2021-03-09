@@ -1,5 +1,8 @@
 import logging
+import sys
 import unittest
+
+import pytest
 
 from pycid.examples.generate import random_cid, random_cids
 from pycid.examples.simple_cids import (
@@ -110,7 +113,4 @@ class TestExamples(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestExamples)
-    unittest.TextTestRunner().run(suite)
-
-# %%
+    pytest.main(sys.argv)

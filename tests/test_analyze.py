@@ -1,5 +1,8 @@
 import logging
+import sys
 import unittest
+
+import pytest
 
 from pycid.analyze.effects import introduced_total_effect, total_effect
 from pycid.analyze.instrumental_control_incentive import admits_ici, admits_ici_list
@@ -191,7 +194,4 @@ class TestAnalyze(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAnalyze)
-    unittest.TextTestRunner().run(suite)
-
-# %%
+    pytest.main(sys.argv)

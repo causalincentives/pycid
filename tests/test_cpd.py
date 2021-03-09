@@ -1,7 +1,9 @@
 import logging
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
 from pycid.core.cpd import FunctionCPD, UniformRandomCPD
 from pycid.examples.simple_cids import get_minimal_cid
@@ -50,5 +52,4 @@ class TestCPD(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCPD)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)

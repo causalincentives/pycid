@@ -1,9 +1,11 @@
 import logging
 import os
+import sys
 import unittest
 from typing import Any, List, Tuple
 
 import nbformat
+import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -60,5 +62,4 @@ class TestNotebooks(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestNotebooks)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)

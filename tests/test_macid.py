@@ -1,7 +1,9 @@
 import logging
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
 from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
@@ -116,5 +118,4 @@ class TestMACID(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMACID)
-    unittest.TextTestRunner().run(suite)
+    pytest.main(sys.argv)
