@@ -1,8 +1,8 @@
 import logging
 import unittest
 
-from examples.generate import random_cid, random_cids
-from examples.simple_cids import (
+from pycid.examples.generate import random_cid, random_cids
+from pycid.examples.simple_cids import (
     get_2dec_cid,
     get_3node_cid,
     get_5node_cid,
@@ -12,7 +12,7 @@ from examples.simple_cids import (
     get_sequential_cid,
     get_trim_example_cid,
 )
-from examples.simple_macids import (
+from pycid.examples.simple_macids import (
     basic2agent_tie_break,
     basic_different_dec_cardinality,
     get_basic_subgames,
@@ -24,7 +24,7 @@ from examples.simple_macids import (
     two_agent_two_pne,
     two_agents_three_actions,
 )
-from examples.story_cids import (
+from pycid.examples.story_cids import (
     get_car_accident_predictor,
     get_content_recommender,
     get_content_recommender2,
@@ -33,7 +33,7 @@ from examples.story_cids import (
     get_introduced_bias,
     get_modified_content_recommender,
 )
-from examples.story_macids import (
+from pycid.examples.story_macids import (
     battle_of_the_sexes,
     forgetful_movie_star,
     matching_pennies,

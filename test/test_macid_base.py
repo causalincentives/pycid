@@ -4,10 +4,10 @@ import unittest
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
-from examples.story_macids import forgetful_movie_star, prisoners_dilemma, subgame_difference, taxi_competition
 from pycid.core.macid_base import MechanismGraph
 from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
+from pycid.examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
+from pycid.examples.story_macids import forgetful_movie_star, prisoners_dilemma, subgame_difference, taxi_competition
 
 
 class TestBASE(unittest.TestCase):

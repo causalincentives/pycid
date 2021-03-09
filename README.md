@@ -49,7 +49,7 @@ The code is structured into the following folders:
   computing optimal policies and Nash equilibria.
 * [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
-* [examples](./examples) has a range of pre-specified CIDs and MACIDs,
+* [pycid/examples](./pycid/examples) has a range of pre-specified CIDs and MACIDs,
   as well as methods for generating random ones.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [test](./test) has unit tests for all public methods.

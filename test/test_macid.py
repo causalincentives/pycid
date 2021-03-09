@@ -3,13 +3,13 @@ import unittest
 
 import numpy as np
 
-from examples.simple_macids import (
+from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
     get_basic_subgames,
     get_basic_subgames3,
     two_agents_three_actions,
 )
-from examples.story_macids import (
+from pycid.examples.story_macids import (
     battle_of_the_sexes,
     matching_pennies,
     modified_taxi_competition,

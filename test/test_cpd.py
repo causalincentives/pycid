@@ -3,9 +3,9 @@ import unittest
 
 import numpy as np
 
-from examples.simple_cids import get_minimal_cid
-from examples.story_cids import get_introduced_bias
 from pycid.core.cpd import FunctionCPD, UniformRandomCPD
+from pycid.examples.simple_cids import get_minimal_cid
+from pycid.examples.story_cids import get_introduced_bias
 
 
 class TestCPD(unittest.TestCase):

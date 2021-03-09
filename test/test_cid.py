@@ -3,14 +3,14 @@ import unittest
 
 import numpy as np
 
-from examples.simple_cids import (
+from pycid.examples.simple_cids import (
     get_2dec_cid,
     get_3node_cid,
     get_5node_cid_with_scaled_utility,
     get_insufficient_recall_cid,
     get_sequential_cid,
 )
-from examples.story_cids import get_introduced_bias
+from pycid.examples.story_cids import get_introduced_bias
 
 
 class TestCID(unittest.TestCase):
