@@ -2,7 +2,7 @@
 
 set -e
 
-cd `git rev-parse --show-toplevel`   # go to root directory
+cd "$(git rev-parse --show-toplevel)"   # go to root directory
 
 python3 -m mypy .
 echo "passed type test"
