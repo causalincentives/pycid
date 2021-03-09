@@ -61,7 +61,7 @@ class MACIDBase(BayesianModel):
         self.whose_node = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
         self.whose_node.update({node: agent for agent, nodes in self.agent_utilities.items() for node in nodes})
 
-        self.cpds_to_add: Dict[str, TabularCPD] = {}
+        self._cpds_to_add: Dict[str, TabularCPD] = {}
 
     @property
     def all_decision_nodes(self) -> List[str]:
@@ -113,7 +113,7 @@ class MACIDBase(BayesianModel):
         Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
         """
 
-        # Add each cpd to self.cpds_to_add after doing some checks
+        # Add each cpd to self._cpds_to_add after doing some checks
         for cpd in cpds:
             assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
@@ -125,13 +125,13 @@ class MACIDBase(BayesianModel):
                     + f"don't match graph parents \
                                 {self.get_parents(cpd.variable)}"
                 )
-            self.cpds_to_add[cpd.variable] = cpd
+            self._cpds_to_add[cpd.variable] = cpd
 
         # Initialize CPDs in topological order. Call super().add_cpds if initialized
-        # successfully. Otherwise leave in self.cpds_to_add.
+        # successfully. Otherwise leave in self._cpds_to_add.
         for var in nx.topological_sort(self):
-            if var in self.cpds_to_add:
-                cpd_to_add = self.cpds_to_add[var]
+            if var in self._cpds_to_add:
+                cpd_to_add = self._cpds_to_add[var]
                 if hasattr(cpd_to_add, "initialize_tabular_cpd"):
                     cpd_to_add.initialize_tabular_cpd(self)
                 if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
@@ -139,10 +139,10 @@ class MACIDBase(BayesianModel):
                     previous_cpd = self.get_cpds(var)
                     if previous_cpd and previous_cpd.state_names[var] != cpd_to_add.state_names[var]:
                         for descendant in nx.descendants(self, var):
-                            if descendant not in self.cpds_to_add and self.get_cpds(descendant):
-                                self.cpds_to_add[descendant] = self.get_cpds(descendant)
+                            if descendant not in self._cpds_to_add and self.get_cpds(descendant):
+                                self._cpds_to_add[descendant] = self.get_cpds(descendant)
 
-                    # add cpd to BayesianModel, and remove it from cpds_to_add
+                    # add cpd to BayesianModel, and remove it from _cpds_to_add
                     #
                     # pgmpy produces warnings when overwriting an existing CPD
                     # It writes warnings directly to the 'root' context so
@@ -150,7 +150,7 @@ class MACIDBase(BayesianModel):
                     logging.disable(logging.WARN)
                     super().add_cpds(cpd_to_add)
                     logging.disable(logging.NOTSET)  # Unset
-                    del self.cpds_to_add[var]
+                    del self._cpds_to_add[var]
 
     def query(
         self, query: Iterable[str], context: Dict[str, Any], intervention: Dict[str, Any] = None
