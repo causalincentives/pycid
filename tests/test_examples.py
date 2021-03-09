@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -55,9 +54,6 @@ from pycid.examples.story_macids import (
 
 
 class TestExamples(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     def test_random_cid(self) -> None:
         random_cid(4, 1, 1)
         random_cid(8, 2, 2)

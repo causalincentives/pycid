@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 import random
 from functools import lru_cache
 from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
@@ -140,8 +141,15 @@ class MACIDBase(BayesianModel):
                         for descendant in nx.descendants(self, var):
                             if descendant not in self.cpds_to_add and self.get_cpds(descendant):
                                 self.cpds_to_add[descendant] = self.get_cpds(descendant)
+
                     # add cpd to BayesianModel, and remove it from cpds_to_add
+                    #
+                    # pgmpy produces warnings when overwriting an existing CPD
+                    # It writes warnings directly to the 'root' context so
+                    # to suppress those we disable warnings for all loggers
+                    logging.disable(logging.WARN)
                     super().add_cpds(cpd_to_add)
+                    logging.disable(logging.NOTSET)  # Unset
                     del self.cpds_to_add[var]
 
     def query(

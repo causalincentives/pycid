@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -22,9 +21,6 @@ from pycid.examples.story_macids import taxi_competition
 
 
 class TestPATHS(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     # @unittest.skip("")
     def test_find_active_path(self) -> None:
         example = taxi_competition()

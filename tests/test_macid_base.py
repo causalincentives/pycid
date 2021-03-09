@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -13,9 +12,6 @@ from pycid.examples.story_macids import forgetful_movie_star, prisoners_dilemma,
 
 
 class TestBASE(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     # @unittest.skip("")
     def test_remove_add_edge(self) -> None:
         cid = get_3node_cid()

@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -16,9 +15,6 @@ from pycid.examples.story_cids import get_introduced_bias
 
 
 class TestCID(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     # @unittest.skip("")
     def test_sufficient_recall(self) -> None:
         two_decisions = get_2dec_cid()

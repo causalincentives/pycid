@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -11,9 +10,6 @@ from pycid.examples.story_cids import get_introduced_bias
 
 
 class TestCPD(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     def test_initialize_uniform_random_cpd(self) -> None:
         cid = get_minimal_cid()
         cpd_a = UniformRandomCPD("A", [0, 2])

@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -21,9 +20,6 @@ from pycid.examples.story_macids import (
 
 
 class TestMACID(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     # @unittest.skip("")
     def test_decs_in_each_maid_subgame(self) -> None:
         macid = prisoners_dilemma()

@@ -1,4 +1,3 @@
-import logging
 import sys
 import unittest
 
@@ -30,9 +29,6 @@ from pycid.examples.story_cids import (
 
 
 class TestAnalyze(unittest.TestCase):
-    def setUp(self) -> None:
-        logging.disable()
-
     # @unittest.skip("")
     def test_value_of_information(self) -> None:
         cid = get_introduced_bias()
