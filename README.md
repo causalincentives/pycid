@@ -76,7 +76,7 @@ pre-commit install
 They will run on every commit or can be run manually with `pre-commit run`.
 
 Before committing to the master branch, please ensure that:
-* The script [test/check-code.sh](test/check-code.sh) completes without error (you can add it as a pre-commit hook)
+* The script [tests/check-code.sh](tests/check-code.sh) completes without error (you can add it as a pre-commit hook)
 * Any new requirements are added to `setup.cfg`.
 * Your functions have docstrings and types, and a unit test verifying that they work
 * For notebooks, you have done "restart kernel and run all cells" before saving and committing
