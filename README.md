@@ -63,7 +63,7 @@ you can download and setup pycid via:
 git clone https://github.com/causalincentives/pycid  # download the code
 cd pycid
 pip3 install --editable .[test]
-python3 -m unittest   # check that everything works
+python3 -m pytest   # check that everything works
 ```
 
 ## Contributing
