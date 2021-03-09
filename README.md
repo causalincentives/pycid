@@ -52,7 +52,7 @@ as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [pycid/examples](./pycid/examples) has a range of pre-specified CIDs and MACIDs,
   as well as methods for generating random ones.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
-* [test](./test) has unit tests for all public methods.
+* [tests](./tests) has unit tests for all public methods.
 
 ## Installation and setup
 
