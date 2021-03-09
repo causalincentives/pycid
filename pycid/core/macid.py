@@ -14,6 +14,8 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph
 
 
 class MACID(MACIDBase):
+    """A Multi-Agent Causal Influence Diagram"""
+
     def get_all_pure_ne(self) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in the MACID.
@@ -44,7 +46,7 @@ class MACID(MACIDBase):
 
         agents_in_sg = list({self.whose_node[dec] for dec in decisions_in_sg})
         agent_decs_in_sg = {
-            agent: [dec for dec in self.decision_nodes_agent[agent] if dec in decisions_in_sg] for agent in agents_in_sg
+            agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
         }
 
         # impute random decisions to non-instantiated, irrelevant decision nodes
@@ -120,11 +122,9 @@ class MACID(MACIDBase):
     def copy_without_cpds(self) -> MACID:
         """copy the MACID structure"""
         return MACID(
-            self.edges(),
-            {
-                agent: {"D": list(self.decision_nodes_agent[agent]), "U": list(self.utility_nodes_agent[agent])}
-                for agent in self.agents
-            },
+            edges=self.edges(),
+            agent_decisions=self.agent_decisions,
+            agent_utilities=self.agent_utilities,
         )
 
     def _get_color(self, node: str) -> Union[str, np.ndarray]:

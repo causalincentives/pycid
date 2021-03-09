@@ -6,12 +6,12 @@ from pycid.core.macid import MACID
 
 
 def prisoners_dilemma() -> MACID:
-    """This macim is a representation of the canonical
-    prisoner's dilemma. It is a simultaneous
-    symmetric two-player game with payoffs
-    corresponding to the following normal
-    form game - the row player is agent 1 and the
-    column player is agent 2:
+    """MACIM representation of the canonical prisoner's dilemma.
+
+    The prisoner's dilemma is a simultaneous symmetric two-player game
+    with payoffs corresponding to the following normal form game -
+    the row player is agent 1 and the column player is agent 2:
+
         +----------+----------+----------+
         |          |Cooperate | Defect   |
         +----------+----------+----------+
@@ -19,11 +19,13 @@ def prisoners_dilemma() -> MACID:
         +----------+----------+----------+
         |  Defect  | 0, -3    | -2, -2   |
         +----------+----------+----------+
-    - This game has one pure NE: (defect, defect)
+
+    This game has one pure NE: (defect, defect)
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     d1_domain = ["c", "d"]
@@ -46,12 +48,13 @@ def prisoners_dilemma() -> MACID:
 
 
 def battle_of_the_sexes() -> MACID:
-    """This macim is a representation of the
-    battle of the sexes game (also known as Bach or Stravinsky).
-    It is a simultaneous symmetric two-player game with payoffs
-    corresponding to the following normal
-    form game - the row player is Female and the
-    column player is Male:
+    """MACIM representation of the battle of the sexes game.
+
+    The battle of the sexes game (also known as Bach or Stravinsky)
+    is a simultaneous symmetric two-player game with payoffs
+    corresponding to the following normal form game -
+    the row player is Female and the column player is Male:
+
         +----------+----------+----------+
         |          |Opera     | Football |
         +----------+----------+----------+
@@ -59,11 +62,13 @@ def battle_of_the_sexes() -> MACID:
         +----------+----------+----------+
         | Football | 0, 0     | 2, 3     |
         +----------+----------+----------+
-    - This game has two pure NE: (Opera, Football) and (Football, Opera)
+
+    This game has two pure NE: (Opera, Football) and (Football, Opera)
     """
     macid = MACID(
         [("D_F", "U_F"), ("D_F", "U_M"), ("D_M", "U_M"), ("D_M", "U_F")],
-        {"M": {"D": ["D_F"], "U": ["U_F"]}, "F": {"D": ["D_M"], "U": ["U_M"]}},
+        agent_decisions={"M": ["D_F"], "F": ["D_M"]},
+        agent_utilities={"M": ["U_F"], "F": ["U_M"]},
     )
 
     d_f_domain = ["O", "F"]
@@ -86,25 +91,27 @@ def battle_of_the_sexes() -> MACID:
 
 
 def matching_pennies() -> MACID:
-    """This macim is a representation of the
-    matching pennies game.
-    It is symmetric two-player game with payoffs
-    corresponding to the following normal
-    form game - the row player is agent 1 and the
-    column player is agent 2:
+    """MACIM representation of the matching pennies game.
+
+    The matching pennies game is a symmetric two-player game
+    with payoffs corresponding to the following normal form game -
+    the row player is agent 1 and the column player is agent 2:
+
         +----------+----------+----------+
         |          |Heads     | Tails    |
         +----------+----------+----------+
         |  Heads   | +1, -1   | -1, +1   |
         +----------+----------+----------+
-        | Tails    | -1, +1   | +1, -1   |
+        |  Tails   | -1, +1   | +1, -1   |
         +----------+----------+----------+
-    - This game has no pure NE, but has a mixed NE where
+
+    This game has no pure NE, but has a mixed NE where
     each player chooses Heads or Tails with equal probability.
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     d1_domain = ["H", "T"]
@@ -127,10 +134,11 @@ def matching_pennies() -> MACID:
 
 
 def taxi_competition() -> MACID:
-    """A MACIM for the "Taxi Competition" example
-    introduced in "Equilibrium Refinements for Multi-Agent
-    Influence Diagrams: Theory and Practice" by Hammond, Fox,
-    Everitt, Abate & Wooldridge, 2021:
+    """MACIM representation of the Taxi Competition game.
+
+    "Taxi Competition" is an example introduced in
+    "Equilibrium Refinements for Multi-Agent Influence Diagrams: Theory and Practice"
+    by Hammond, Fox, Everitt, Abate & Wooldridge, 2021:
 
                               D1
         +----------+----------+----------+
@@ -150,11 +158,12 @@ def taxi_competition() -> MACID:
         | cheap    |     3    |   1      |
         +----------+----------+----------+
 
-    - There are 3 pure startegy NE and 1 pure SPE.
+    There are 3 pure startegy NE and 1 pure SPE.
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     d1_domain = ["e", "c"]
@@ -205,7 +214,8 @@ def modified_taxi_competition() -> MACID:
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     d1_domain = ["e", "c"]
@@ -242,7 +252,8 @@ def tree_doctor() -> MACID:
             ("TDoc", "BP"),
             ("BP", "V"),
         ],
-        {0: {"D": ["PT", "BP"], "U": ["E", "V"]}, 1: {"D": ["TDoc"], "U": ["Tree", "Cost"]}},
+        agent_decisions={0: ["PT", "BP"], 1: ["TDoc"]},
+        agent_utilities={0: ["E", "V"], 1: ["Tree", "Cost"]},
     )
 
     return macid
@@ -260,7 +271,8 @@ def forgetful_movie_star() -> MACID:
             ("D11", "U12"),
             ("D12", "U12"),
         ],
-        {1: {"D": ["D11", "D12"], "U": ["U11", "U12"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D11", "D12"], 2: ["D2"]},
+        agent_utilities={1: ["U11", "U12"], 2: ["U2"]},
     )
     return macid
 
@@ -279,7 +291,8 @@ def subgame_difference() -> MACID:
             ("D2", "U1_B"),
             ("D2", "U2_B"),
         ],
-        {1: {"D": ["D1"], "U": ["U1_A", "U1_B"]}, 2: {"D": ["D2"], "U": ["U2_A", "U2_B"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1_A", "U1_B"], 2: ["U2_A", "U2_B"]},
     )
     return macid
 
@@ -328,13 +341,21 @@ def road_example() -> MACID:
             ("B3E", "U3W"),
             ("B3E", "U2E"),
         ],
-        {
-            "1W": {"D": ["B1W"], "U": ["U1W"]},
-            "1E": {"D": ["B1E"], "U": ["U1E"]},
-            "2W": {"D": ["B2W"], "U": ["U2W"]},
-            "2E": {"D": ["B2E"], "U": ["U2E"]},
-            "3W": {"D": ["B3W"], "U": ["U3W"]},
-            "3E": {"D": ["B3E"], "U": ["U3E"]},
+        agent_decisions={
+            "1W": ["B1W"],
+            "1E": ["B1E"],
+            "2W": ["B2W"],
+            "2E": ["B2E"],
+            "3W": ["B3W"],
+            "3E": ["B3E"],
+        },
+        agent_utilities={
+            "1W": ["U1W"],
+            "1E": ["U1E"],
+            "2W": ["U2W"],
+            "2E": ["U2E"],
+            "3W": ["U3W"],
+            "3E": ["U3E"],
         },
     )
 
@@ -344,13 +365,18 @@ def road_example() -> MACID:
 def politician() -> MACID:
     macid = MACID(
         [("D1", "I"), ("T", "I"), ("T", "U2"), ("I", "D2"), ("R", "D2"), ("D2", "U1"), ("D2", "U2")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
     return macid
 
 
 def umbrella() -> MACID:
-    macid = MACID([("W", "F"), ("W", "A"), ("F", "UM"), ("UM", "A")], {1: {"D": ["UM"], "U": ["A"]}})
+    macid = MACID(
+        [("W", "F"), ("W", "A"), ("F", "UM"), ("UM", "A")],
+        agent_decisions={1: ["UM"]},
+        agent_utilities={1: ["A"]},
+    )
 
     cpd_w = TabularCPD("W", 2, np.array([[0.6], [0.4]]))
     cpd_f = TabularCPD("F", 2, np.array([[0.8, 0.3], [0.2, 0.7]]), evidence=["W"], evidence_card=[2])
@@ -365,7 +391,8 @@ def umbrella() -> MACID:
 def sequential() -> MACID:
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D1", "D2"), ("D2", "U1"), ("D2", "U2")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
     return macid
 
@@ -373,7 +400,8 @@ def sequential() -> MACID:
 def signal() -> MACID:
     macid = MACID(
         [("X", "D1"), ("X", "U2"), ("X", "U1"), ("D1", "U2"), ("D1", "U1"), ("D1", "D2"), ("D2", "U1"), ("D2", "U2")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
     cpd_x = TabularCPD("X", 2, np.array([[0.5], [0.5]]))
     cpd_d1 = DecisionDomain("D1", [0, 1])
@@ -473,13 +501,21 @@ def triage() -> MACID:
             ("D6", "U5"),
             ("D6", "U6"),
         ],
-        {
-            1: {"D": ["D1"], "U": ["U1"]},
-            2: {"D": ["D2"], "U": ["U2"]},
-            3: {"D": ["D3"], "U": ["U3"]},
-            4: {"D": ["D4"], "U": ["U4"]},
-            5: {"D": ["D5"], "U": ["U5"]},
-            6: {"D": ["D6"], "U": ["U6"]},
+        agent_decisions={
+            1: ["D1"],
+            2: ["D2"],
+            3: ["D3"],
+            4: ["D4"],
+            5: ["D5"],
+            6: ["D6"],
+        },
+        agent_utilities={
+            1: ["U1"],
+            2: ["U2"],
+            3: ["U3"],
+            4: ["U4"],
+            5: ["U5"],
+            6: ["U6"],
         },
     )
 

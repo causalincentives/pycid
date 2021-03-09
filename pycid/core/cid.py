@@ -8,30 +8,48 @@ from pycid.core.macid_base import MACIDBase
 
 
 class CID(MACIDBase):
-    def __init__(self, edges: Iterable[Tuple[str, str]], decision_nodes: Iterable[str], utility_nodes: Iterable[str]):
-        super().__init__(edges, {0: {"D": decision_nodes, "U": utility_nodes}})
-        self.decision_nodes = self.decision_nodes_agent[0]
-        self.utility_nodes = self.utility_nodes_agent[0]
+    """A Causal Influence Diagram"""
+
+    def __init__(
+        self,
+        edges: Iterable[Tuple[str, str]],
+        decisions: Iterable[str],
+        utilities: Iterable[str],
+    ):
+        """Initialize a Causal Influence Diagram
+
+        Parameters
+        ----------
+        edges: A set of directed edges. Each is a pair of node labels (tail, head).
+
+        decisions: The decision nodes of the agent.
+
+        utilities: The utility nodes of the agent.
+        """
+        # Initialize a MACID with a single agent labelled `0`
+        super().__init__(edges=edges, agent_decisions={0: decisions}, agent_utilities={0: utilities})
+        self.decisions = self.agent_decisions[0]
+        self.utilities = self.agent_utilities[0]
 
     def impute_optimal_policy(self) -> None:
         """Impute an optimal policy to all decision nodes"""
         if self.sufficient_recall():
-            decisions = self.get_valid_order(self.decision_nodes)
+            decisions = self.get_valid_order(self.decisions)
             for d in reversed(decisions):
                 self.impute_optimal_decision(d)
         else:
             self.add_cpds(*random.choice(self.optimal_policies()))
 
-    def optimal_policies(self) -> List[List[FunctionCPD]]:
+    def optimal_policies(self) -> List[Tuple[FunctionCPD, ...]]:
         """
         Return a list of all deterministic optimal policies.
         # TODO: Subgame perfectness option
         """
-        return self.optimal_pure_strategies(self.decision_nodes)  # type: ignore
+        return self.optimal_pure_strategies(self.decisions)
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes in the CID"""
-        for d in self.decision_nodes:
+        for d in self.decisions:
             self.impute_random_decision(d)
 
     def solve(self) -> Dict:
@@ -42,18 +60,18 @@ class CID(MACIDBase):
         """
         new_cid = self.copy()
         new_cid.impute_optimal_policy()
-        return {d: new_cid.get_cpds(d) for d in new_cid.decision_nodes}
+        return {d: new_cid.get_cpds(d) for d in new_cid.decisions}
 
     def copy_without_cpds(self) -> CID:
         """
         Return a copy of the CID without the CPDs.
         """
-        return CID(self.edges(), list(self.decision_nodes), list(self.utility_nodes))
+        return CID(self.edges(), self.decisions, self.utilities)
 
     def _get_color(self, node: str) -> str:
-        if node in self.decision_nodes:
+        if node in self.decisions:
             return "lightblue"
-        elif node in self.utility_nodes:
+        elif node in self.utilities:
             return "yellow"
         else:
             return "lightgray"

@@ -6,18 +6,22 @@ from pycid.core.macid_base import MACIDBase
 
 
 def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
-    r"""Return True if cid node is requisite observation for decision (i.e. possibly material).
-    - A node can be material if:
-    i) it is a parent of D.
-    ii) X is d-connected to (U ∩ Desc(D)) given Fa_D \ {X}
+    r"""Check if a CID node is a requisite observation for a decision.
+
+    A node is a requisite observation if it is possibly material.
+    A node can be material if:
+        i) it is a parent of D.
+        ii) X is d-connected to (U ∩ Desc(D)) given Fa_D \ {X}
     "A note about redundancy in influence diagrams" Fagiuoli and Zaffalon, 1998.
+
+    Returns True if the node is requisite.
     """
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
     if node not in cid.get_parents(decision):
         raise Exception(f"{node} is not a parent of {decision}")
 
-    agent_utilities = cid.utility_nodes_agent[cid.whose_node[decision]]
+    agent_utilities = cid.agent_utilities[cid.whose_node[decision]]
     descended_agent_utilities = set(agent_utilities).intersection(nx.descendants(cid, decision))
     family_d = [decision] + cid.get_parents(decision)
     conditioning_nodes = [i for i in family_d if i != node]
@@ -30,9 +34,11 @@ def requisite_list(cid: MACIDBase, decision: str) -> List[str]:
 
 
 def requisite_graph(cid: MACIDBase) -> MACIDBase:
-    """Return the requisite graph of the original CID, also called
-    a minimal_reduction, d_reduction, or the trimmed graph.
-    - The requisite graph G∗ of a multi-decision CID G is the result of repeatedely
+    """The requiste graph of the original CID.
+
+    The requisite graph is also called a minimal reduction, d reduction, or the trimmed graph.
+
+    The requisite graph G∗ of a multi-decision CID G is the result of repeatedely
     removing from G all nonrequisite observation links.
     ("Representing and Solving Decision Problems with Limited Information", Lauritzen and Nielsen, 2001)
     """

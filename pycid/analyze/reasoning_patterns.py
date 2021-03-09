@@ -120,7 +120,7 @@ def direct_effect(macid: MACID, decision: str) -> bool:
         raise Exception(f"{decision} is not present in the macid")
 
     agent = macid.whose_node[decision]
-    agent_utils = macid.utility_nodes_agent[agent]
+    agent_utils = macid.agent_utilities[agent]
     for u in agent_utils:
         if directed_decision_free_path(macid, decision, u):
             return True
@@ -143,7 +143,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.whose_node[decision]
-    agent_utils = macid.utility_nodes_agent[agent]
+    agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
@@ -154,7 +154,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
 
     for decision_b in reachable_decisions:
         agent_b = macid.whose_node[decision_b]
-        agent_b_utils = macid.utility_nodes_agent[agent_b]
+        agent_b_utils = macid.agent_utilities[agent_b]
 
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
@@ -183,7 +183,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.whose_node[decision]
-    agent_utils = macid.utility_nodes_agent[agent]
+    agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
@@ -194,7 +194,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
 
     for decision_b in reachable_decisions:
         agent_b = macid.whose_node[decision_b]
-        agent_b_utils = macid.utility_nodes_agent[agent_b]
+        agent_b_utils = macid.agent_utilities[agent_b]
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
                 for u_b in agent_b_utils:
@@ -228,7 +228,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
 
 
 def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) -> bool:
-    """checks to see whether this decision is motivated by an incentive for revealing or denying
+    """Check whether a decision is motivated by an incentive for revealing or denying
 
     Graphical Criterion:
     1) There is a directed decision-free path from D_A to an effective decision node D_B.
@@ -242,7 +242,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.whose_node[decision]
-    agent_utils = macid.utility_nodes_agent[agent]
+    agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = copy.deepcopy(macid.all_decision_nodes)
     list_decs.remove(decision)
@@ -253,7 +253,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
 
     for decision_b in reachable_decisions:
         agent_b = macid.whose_node[decision_b]
-        agent_b_utils = macid.utility_nodes_agent[agent_b]
+        agent_b_utils = macid.agent_utilities[agent_b]
 
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
@@ -272,7 +272,8 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
 
 
 def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
-    """Return a dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
+    """A dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
+
     This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over
     another, when all other agents are playing WD strategies.
     (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).

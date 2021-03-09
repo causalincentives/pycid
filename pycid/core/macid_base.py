@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import random
 from functools import lru_cache
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -20,55 +20,59 @@ AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
 
 
 class MACIDBase(BayesianModel):
-    """Base structure of a Multi-Agent Causal Influence Diagram."""
+    """Base structure of a Multi-Agent Causal Influence Diagram.
 
-    def __init__(self, edges: Iterable[Tuple[str, str]], node_types: Dict[AgentLabel, Dict[str, Iterable[str]]]):
+    Attributes
+    ----------
+    agent_decisions: The decision nodes of each agent.
+        A dictionary mapping agent label => nodes labels.
+
+    agent_utilities: The utility nodes of each agent.
+        A dictionary mapping agent label => node labels.
+
+    whose_node: A mapping from node label to agent.
+        Only decision and utility nodes are included.
+    """
+
+    def __init__(
+        self,
+        edges: Iterable[Tuple[str, str]],
+        agent_decisions: Mapping[AgentLabel, Iterable[str]],
+        agent_utilities: Mapping[AgentLabel, Iterable[str]],
+    ):
         """Initialize a new MACIDBase instance.
 
         Parameters
         ----------
-        edges: A set of directed edges. Each is a pair of labels (tail, head).
+        edges: A set of directed edges. Each is a pair of node labels (tail, head).
 
-        node_types: The decision and utility nodes of each agent.
-            A mapping of agent_name => 'D'|'U' => Sequence of decision / utility nodes for that agent.
+        agent_decisions: The decision nodes of each agent.
+            A mapping of agent label => nodes labels.
+
+        agent_utilities: The utility nodes of each agent.
+            A mapping of agent label => node labels.
         """
         super().__init__(ebunch=edges)
 
-        self.decision_nodes_agent = {agent: list(types["D"]) for agent, types in node_types.items()}
-        for node in self.all_decision_nodes:
-            if node not in self.nodes:
-                raise Exception(f"Decision node {node} is not in the (MA)CID.")
+        self.agent_decisions = {agent: list(nodes) for agent, nodes in agent_decisions.items()}
+        self.agent_utilities = {agent: list(nodes) for agent, nodes in agent_utilities.items()}
 
-        self.utility_nodes_agent = {agent: list(types["U"]) for agent, types in node_types.items()}
-        for node in self.all_utility_nodes:
-            if node not in self.nodes:
-                raise Exception(f"Utility node {node} is not in the (MA)CID.")
-
-        self.whose_node = {}
-
-        for agent in self.agents:
-            for node in self.decision_nodes_agent[agent]:
-                self.whose_node[node] = agent
-            for node in self.utility_nodes_agent[agent]:
-                self.whose_node[node] = agent
+        self.whose_node = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
+        self.whose_node.update({node: agent for agent, nodes in self.agent_utilities.items() for node in nodes})
 
         self.cpds_to_add: Dict[str, TabularCPD] = {}
 
     @property
     def all_decision_nodes(self) -> List[str]:
-        # See https://github.com/python/mypy/issues/2013
-        empty_set: Set[str] = set()
-        return list(empty_set.union(*self.decision_nodes_agent.values()))
+        return list(set(itertools.chain.from_iterable(self.agent_decisions.values())))
 
     @property
     def all_utility_nodes(self) -> List[str]:
-        # See https://github.com/python/mypy/issues/2013
-        empty_set: Set[str] = set()
-        return list(empty_set.union(*self.utility_nodes_agent.values()))
+        return list(set(itertools.chain.from_iterable(self.agent_utilities.values())))
 
     @property
     def agents(self) -> List[AgentLabel]:
-        return list(self.decision_nodes_agent.keys())
+        return list(self.agent_utilities.keys())
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
@@ -86,7 +90,7 @@ class MACIDBase(BayesianModel):
             pass
         elif hasattr(self, "cpds") and not isinstance(self.get_cpds(node), DecisionDomain):
             cpd_new = DecisionDomain(node, self.get_cpds(node).state_names[node])
-            self.decision_nodes_agent[agent].append(node)
+            self.agent_decisions[agent].append(node)
             self.whose_node[node] = agent
             self.add_cpds(cpd_new)
         else:
@@ -96,7 +100,7 @@ class MACIDBase(BayesianModel):
         """Turn a decision node into a chance node."""
         if node in self.all_decision_nodes:
             agent = self.whose_node[node]
-            self.decision_nodes_agent[agent].remove(node)
+            self.agent_decisions[agent].remove(node)
             self.whose_node.pop(node)
         elif hasattr(self, "cpds") and node not in self.all_decision_nodes:
             pass
@@ -268,7 +272,7 @@ class MACIDBase(BayesianModel):
 
         agent: Evaluate the utility of this agent.
         """
-        return sum(self.expected_value(self.utility_nodes_agent[agent], context, intervene=intervene))
+        return sum(self.expected_value(self.agent_utilities[agent], context, intervene=intervene))
 
     def get_valid_order(self, nodes: List[str] = None) -> List[str]:
         """Get a topological order of the specified set of nodes (this may not be unique).
@@ -315,7 +319,7 @@ class MACIDBase(BayesianModel):
         for decision in decisions:
             for node in nodes:
                 con_nodes = [decision] + self.get_parents(decision)
-                agent_utilities = self.utility_nodes_agent[self.whose_node[decision]]
+                agent_utilities = self.agent_utilities[self.whose_node[decision]]
                 for utility in set(agent_utilities).intersection(nx.descendants(self, decision)):
                     if mg.is_active_trail(node + "mec", utility, con_nodes):
                         return True
@@ -339,7 +343,7 @@ class MACIDBase(BayesianModel):
             agents = [agent]
 
         for a in agents:
-            rg = RelevanceGraph(self, self.decision_nodes_agent[a])
+            rg = RelevanceGraph(self, self.agent_decisions[a])
             if not rg.is_acyclic():
                 return False
         return True
@@ -388,7 +392,7 @@ class MACIDBase(BayesianModel):
         if not decisions:
             return []
         agent = self.whose_node[decisions[0]]
-        assert set(decisions).issubset(self.decision_nodes_agent[agent])
+        assert set(decisions).issubset(self.agent_decisions[agent])
         macid = self.copy()
         for d in macid.all_decision_nodes:
             if (
@@ -431,7 +435,7 @@ class MACIDBase(BayesianModel):
         # cpd = self.get_cpds(d)
         # parents = cpd.variables[1:]
         # idx2name = cpd.no_to_name[d]
-        # utility_nodes = self.utility_nodes_agent[self.whose_node[d]]
+        # utility_nodes = self.agent_utilities[self.whose_node[d]]
         # descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
         # new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
         #
@@ -463,11 +467,9 @@ class MACIDBase(BayesianModel):
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
         return MACIDBase(
-            self.edges(),
-            {
-                agent: {"D": list(self.decision_nodes_agent[agent]), "U": list(self.utility_nodes_agent[agent])}
-                for agent in self.agents
-            },
+            edges=self.edges(),
+            agent_decisions=self.agent_decisions,
+            agent_utilities=self.agent_utilities,
         )
 
     def copy(self) -> MACIDBase:
@@ -554,12 +556,11 @@ class MechanismGraph(MACIDBase):
 
     def __init__(self, cid: MACIDBase):
         super().__init__(
-            cid.edges(),
-            {
-                agent: {"D": list(cid.decision_nodes_agent[agent]), "U": list(cid.utility_nodes_agent[agent])}
-                for agent in cid.agents
-            },
+            edges=cid.edges(),
+            agent_decisions=cid.agent_decisions,
+            agent_utilities=cid.agent_utilities,
         )
+
         for node in cid.nodes:
             if node[:-3] == "mec":
                 raise Exception("can't create a mechanism graph when node {node} already ends with mec")

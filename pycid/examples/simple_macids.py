@@ -25,7 +25,16 @@ def get_basic_subgames() -> MACID:
             ("X2", "U22"),
             ("X2", "D12"),
         ],
-        {0: {"D": ["D11", "D12"], "U": ["U11"]}, 1: {"D": ["D2"], "U": ["U2", "U22"]}, 2: {"D": ["D3"], "U": ["U3"]}},
+        agent_decisions={
+            0: ["D11", "D12"],
+            1: ["D2"],
+            2: ["D3"],
+        },
+        agent_utilities={
+            0: ["U11"],
+            1: ["U2", "U22"],
+            2: ["U3"],
+        },
     )
 
     return macid
@@ -48,11 +57,17 @@ def get_basic_subgames2() -> MACID:
             ("X1", "D4"),
             ("X1", "U4"),
         ],
-        {
-            1: {"D": ["D1"], "U": ["U1"]},
-            2: {"D": ["D2"], "U": ["U2"]},
-            3: {"D": ["D3"], "U": ["U3"]},
-            4: {"D": ["D4"], "U": ["U4"]},
+        agent_decisions={
+            1: ["D1"],
+            2: ["D2"],
+            3: ["D3"],
+            4: ["D4"],
+        },
+        agent_utilities={
+            1: ["U1"],
+            2: ["U2"],
+            3: ["U3"],
+            4: ["U4"],
         },
     )
 
@@ -71,11 +86,17 @@ def get_basic_subgames3() -> MACID:
             ("D1", "U3"),
             ("D1", "U1"),
         ],
-        {
-            1: {"D": ["D1"], "U": ["U1"]},
-            2: {"D": ["D2"], "U": ["U2"]},
-            3: {"D": ["D3"], "U": ["U3"]},
-            4: {"D": ["D4"], "U": ["U4"]},
+        agent_decisions={
+            1: ["D1"],
+            2: ["D2"],
+            3: ["D3"],
+            4: ["D4"],
+        },
+        agent_utilities={
+            1: ["U1"],
+            2: ["U2"],
+            3: ["U3"],
+            4: ["U4"],
         },
     )
 
@@ -83,14 +104,19 @@ def get_basic_subgames3() -> MACID:
 
 
 def get_path_example() -> MACID:
-    macid = MACID([("X1", "X3"), ("X1", "D"), ("X2", "D"), ("X2", "U"), ("D", "U")], {1: {"D": ["D"], "U": ["U"]}})
+    macid = MACID(
+        [("X1", "X3"), ("X1", "D"), ("X2", "D"), ("X2", "U"), ("D", "U")],
+        agent_decisions={1: ["D"]},
+        agent_utilities={1: ["U"]},
+    )
     return macid
 
 
 def basic2agent_tie_break() -> MACID:
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
     cpd_d1 = DecisionDomain("D1", [0, 1])
@@ -131,7 +157,8 @@ def two_agent_one_pne() -> MACID:
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     cpd_d1 = DecisionDomain("D1", [0, 1])
@@ -163,7 +190,8 @@ def two_agent_two_pne() -> MACID:
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
     cpd_d1 = DecisionDomain("D1", [0, 1])
@@ -204,7 +232,8 @@ def two_agent_no_pne() -> MACID:
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
     cpd_d1 = DecisionDomain("D1", [0, 1])
@@ -237,7 +266,8 @@ def two_agents_three_actions() -> MACID:
     """
     macid = MACID(
         [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {1: {"D": ["D1"], "U": ["U1"]}, 2: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
     d1_domain = ["T", "M", "B"]
@@ -265,7 +295,8 @@ def basic_different_dec_cardinality() -> MACID:
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
     cpd_d1 = DecisionDomain("D1", [0, 1])

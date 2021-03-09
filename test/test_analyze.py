@@ -105,7 +105,8 @@ class TestAnalyze(unittest.TestCase):
             admits_voc(cid2, "J")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
         )
         with self.assertRaises(Exception):
             admits_voc(macid, "D2")
@@ -123,7 +124,8 @@ class TestAnalyze(unittest.TestCase):
             admits_ici(cid, "B", "O")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
         )
         with self.assertRaises(Exception):
             admits_ici(macid, "D2", "D1")
@@ -143,7 +145,8 @@ class TestAnalyze(unittest.TestCase):
             admits_ri(cid, "B", "E")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
         )
         with self.assertRaises(Exception):
             admits_ri(macid, "D2", "D1")
@@ -161,7 +164,8 @@ class TestAnalyze(unittest.TestCase):
             admits_indir_voc(cid, "B", "TF")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
         )
         with self.assertRaises(Exception):
             admits_indir_voc(macid, "D2", "D1")
@@ -177,7 +181,8 @@ class TestAnalyze(unittest.TestCase):
             admits_dir_voc(cid, "B")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            {0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
         )
         with self.assertRaises(Exception):
             admits_dir_voc(macid, "D2")

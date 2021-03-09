@@ -58,7 +58,9 @@ class TestPATHS(unittest.TestCase):
     # @unittest.skip("")
     def test_find_all_dir_paths(self) -> None:
         example = MACID(
-            [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("B", "F"), ("F", "E")], {1: {"D": ["D"], "U": ["E"]}}
+            [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("B", "F"), ("F", "E")],
+            agent_decisions={1: ["D"]},
+            agent_utilities={1: ["E"]},
         )
         self.assertEqual(find_all_dir_paths(example, "A", "E"), [["A", "B", "C", "D", "E"], ["A", "B", "F", "E"]])
         self.assertEqual(find_all_dir_paths(example, "C", "E"), [["C", "D", "E"]])
@@ -74,11 +76,17 @@ class TestPATHS(unittest.TestCase):
         with self.assertRaises(Exception):
             find_all_undir_paths(example, "S", "A")
 
-        example2 = MACID([("X1", "D"), ("X2", "U")], {1: {"D": ["D"], "U": ["U"]}})
+        example2 = MACID(
+            [("X1", "D"), ("X2", "U")],
+            agent_decisions={1: ["D"]},
+            agent_utilities={1: ["U"]},
+        )
         self.assertEqual(find_all_undir_paths(example2, "X1", "D"), [["X1", "D"]])
         self.assertFalse(find_all_undir_paths(example2, "X1", "U"))
         example3 = MACID(
-            [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("B", "F"), ("F", "E")], {1: {"D": ["D"], "U": ["E"]}}
+            [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("B", "F"), ("F", "E")],
+            agent_decisions={1: ["D"]},
+            agent_utilities={1: ["E"]},
         )
         self.assertCountEqual(
             find_all_undir_paths(example3, "F", "A"), [["F", "E", "D", "C", "B", "A"], ["F", "B", "A"]]

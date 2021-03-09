@@ -20,8 +20,8 @@ from pycid.core.cpd import UniformRandomCPD, DecisionDomain, FunctionCPD
 cid = CID([('S', 'D'),   # add nodes S and D, and a link S -> D
            ('S', 'U'),   # add node U, and a link S -> U
            ('D', 'U')],  # add a link D -> U
-          decision_nodes=['D'],  # D is a decision node
-          utility_nodes=['U'])   # U is a utility node
+          decisions=['D'],  # D is a decision node
+          utilities=['U'])   # U is a utility node
 
 # specify the causal relationships
 cid.add_cpds(

@@ -157,7 +157,7 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
 def add_sufficient_recalls(cid: CID) -> None:
     """add edges to a cid until all decisions have sufficient recall of all prior decisions"""
     for utility_node in cid.all_utility_nodes:
-        # decisions = cid._get_valid_order(cid.decision_nodes)  # cannot be trusted...
+        # decisions = cid._get_valid_order(cid.decisions)  # cannot be trusted...
         for i, dec1 in enumerate(cid.all_decision_nodes):
             for dec2 in cid.all_decision_nodes[i + 1 :]:
                 if dec1 in cid._get_ancestors_of(dec2):
