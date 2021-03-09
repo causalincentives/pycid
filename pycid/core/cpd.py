@@ -99,17 +99,23 @@ class FunctionCPD(TabularCPD):
         self.variable = variable
         self.f = f
         self.evidence = evidence
+
         if state_names is not None:
             assert isinstance(state_names, dict)
             assert isinstance(state_names[variable], list)
             self.force_state_names: Optional[Sequence[State]] = state_names[variable]
         else:
             self.force_state_names = None
+
         if label is not None:
             self.label = label
         else:
-            sl = getsourcelines(self.f)[0][0]
-            lambda_pos = sl.find("lambda")
+            try:
+                sl = getsourcelines(self.f)[0][0]
+            except OSError:
+                lambda_pos = -1  # Could not find source
+            else:
+                lambda_pos = sl.find("lambda")
             if lambda_pos > -1:  # can't infer label if not defined by lambda expression
                 colon = sl.find(":", lambda_pos, len(sl))
                 end = sl.find(",", colon, len(sl))  # TODO this only works for simple expressions with no commas
