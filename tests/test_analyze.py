@@ -18,8 +18,8 @@ from pycid.analyze.value_of_control import (
 from pycid.analyze.value_of_information import admits_voi, admits_voi_list
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid import MACID
-from pycid.examples.simple_cids import get_minimal_cid, get_trim_example_cid
-from pycid.examples.story_cids import (
+from examples.simple_cids import get_minimal_cid, get_trim_example_cid
+from examples.story_cids import (
     get_content_recommender,
     get_fitness_tracker,
     get_grade_predictor,

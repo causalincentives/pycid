@@ -15,9 +15,9 @@ from pycid.core.get_paths import (
     is_active_path,
 )
 from pycid.core.macid import MACID
-from pycid.examples.simple_cids import get_3node_cid
-from pycid.examples.simple_macids import get_basic_subgames, get_path_example
-from pycid.examples.story_macids import taxi_competition
+from examples.simple_cids import get_3node_cid
+from examples.simple_macids import get_basic_subgames, get_path_example
+from examples.story_macids import taxi_competition
 
 
 class TestPATHS(unittest.TestCase):

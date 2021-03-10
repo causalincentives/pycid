@@ -77,7 +77,7 @@ def random_cids(
 
 
 def get_node_names(n_all: int, n_decisions: int, n_utilities: int) -> Tuple[List[str], List[str], List[str]]:
-    """examples lists of node names for decision, utility, and chance nodes"""
+    """random lists of node names for decision, utility, and chance nodes"""
     n_structural = n_all - n_decisions - n_utilities
     structure_names = ["S{}".format(i) for i in range(n_structural)]
     decision_names = ["D{}".format(i) for i in range(n_decisions)]
