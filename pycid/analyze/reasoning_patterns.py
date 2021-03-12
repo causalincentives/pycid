@@ -112,7 +112,8 @@ def _effective_undir_path_not_blocked_by_set_w(
 
 
 def direct_effect(macid: MACID, decision: str) -> bool:
-    """checks to see whether this decision is motivated by a direct effect reasoning patter.
+    """Check whether a decision in motivated by a direct effect reasoning pattern.
+
     Graphical Criterion:
     1) There is a directed decision free path from D_A to a utility node U_A
     """
@@ -129,7 +130,8 @@ def direct_effect(macid: MACID, decision: str) -> bool:
 
 
 def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
-    """checks to see whether this decision is motivated by an incentive for manipulation
+    """Check whether a decision is motivated by an incentive for manipulation.
+
     Graphical Criterion:
     1) There is a directed decision-free path from D_A to an effective decision node D_B.
     2) There is a directed, effective path from D_B to U_A (an effective path is a path in which all

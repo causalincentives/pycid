@@ -8,9 +8,9 @@ from pycid.core.get_paths import find_all_dir_paths, is_active_backdoor_trail
 
 
 def admits_voc(cid: CID, node: str) -> bool:
-    """
-    Return True if cid admits positive value of control for a node.
-    - A  CID G admits positive value of control for a node X ∈ V
+    """Check if a CID admits postiive value of control for a node.
+
+    A CID G admits positive value of control for a node X ∈ V
     if and only if X is not a decision node and there is a directed path X --> U
     in the reduced graph G∗.
     """
@@ -45,8 +45,7 @@ def admits_voc_list(cid: CID) -> List[str]:
 
 
 def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
-    r"""
-    Return True if a single-decision cid admits indirect positive value of control for node.
+    r"""Check if a single-decision CID admits indirect positive value of control for a node.
 
     - A single-decision CID G admits positive value of control for a node X ∈ V \ {D} if and
     only if there is a directed path X --> U in the reduced graph G∗.
@@ -94,8 +93,7 @@ def admits_indir_voc_list(cid: CID, decision: str) -> List[str]:
 
 
 def admits_dir_voc(cid: CID, node: str) -> bool:
-    r"""
-    Return True if cid admits direct positive value of control for node.
+    r"""Check if a CID admits direct positive value of control for a node.
 
     - A CID G admits positive value of control for a node X ∈ V \ {D} if and
     only if there is a directed path X --> U in the requisite graph G∗.
