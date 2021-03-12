@@ -41,6 +41,8 @@ a [CID Basics Tutorial](./notebooks/CID_Basics_Tutorial.ipynb),
 a [MACID Basics Tutorial](./notebooks/MACID_Basics_Tutorial.ipynb), and
 a [CID Incentives Tutorial](./notebooks/CID_Incentives_Tutorial.ipynb).
 
+To quickly get started using colab, make a copy of [this notebook](https://colab.research.google.com/drive/1QsITqn02c8zBfdOxaR0gVFcLQA_2UROu#scrollTo=GfupUXwM77Ti).
+
 ## Code overview
 
 The code is structured into the following folders:
@@ -57,8 +59,7 @@ as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 
 ## Installation and setup
 
-Given that you have Python 3.7 or later, git, and jupyter,
-you can download and setup pycid via:
+Requirements: Python 3.7 or later
 
 ```shell
 git clone https://github.com/causalincentives/pycid  # download the code
