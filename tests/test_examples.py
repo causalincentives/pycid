@@ -53,7 +53,6 @@ from examples.story_macids import (
 
 
 class TestExamples(unittest.TestCase):
-
     def test_simple_cid_examples(self) -> None:
         get_minimal_cid()
         get_3node_cid()
