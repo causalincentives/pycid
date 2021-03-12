@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import itertools
 import logging
 import random
@@ -119,12 +120,22 @@ class MACIDBase(BayesianModel):
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
-            if isinstance(cpd, FunctionCPD) and set(cpd.evidence) != set(self.get_parents(cpd.variable)):
-                raise Exception(
-                    f"parents {cpd.evidence} of {cpd} "
-                    + f"don't match graph parents \
-                                {self.get_parents(cpd.variable)}"
-                )
+            if isinstance(cpd, FunctionCPD):
+                sig = inspect.signature(cpd.function).parameters
+                arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
+                args = set(sig)
+                lower_case_parents = {p.lower() for p in self.get_parents(cpd.variable)}
+                if "VAR_KEYWORD" in arg_kinds:
+                    pass
+                    # if not lower_case_parents.issubset(args):
+                    #     raise ValueError(f"function for {cpd.variable} accepts {lower_case_parents - args}, "
+                    #                      f"which doesn't match parents {self.get_parents(cpd.variable)}")
+                else:
+                    if set(args) != lower_case_parents:
+                        raise ValueError(
+                            f"function for {cpd.variable} mismatch parents on"
+                            f" {args.symmetric_difference(lower_case_parents)}, "
+                        )
             self._cpds_to_add[cpd.variable] = cpd
 
         # Initialize CPDs in topological order. Call super().add_cpds if initialized
@@ -227,8 +238,11 @@ class MACIDBase(BayesianModel):
         ----------
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
+        for v in intervention.keys():
+            for p in self.get_parents(v):
+                self.remove_edge(p, v)
         for variable, value in intervention.items():
-            cpd = FunctionCPD(variable, lambda *x: value, evidence=self.get_parents(variable))
+            cpd = FunctionCPD(variable, lambda: value, evidence=self.get_parents(variable))
             self.add_cpds(cpd)
 
     def expected_value(
@@ -368,26 +382,35 @@ class MACIDBase(BayesianModel):
         parents = cpd.variables[1:]
         state_names = cpd.state_names[decision]
 
+        parent_values = []
+        for p in parents:
+            p_cpd = self.get_cpds(p)
+            parent_values.append(p_cpd.state_names[p])
+        pv_list = list(itertools.product(*parent_values))
+        possible_arguments = [{p.lower(): pv[i] for i, p in enumerate(parents)} for pv in pv_list]
+
         # We begin by representing each possible decision as a list values, with length
         # equal the number of decision contexts
-        functions_as_lists = list(itertools.product(state_names, repeat=np.product(evidence_card)))
+        functions_as_lists = list(itertools.product(state_names, repeat=np.product(len(possible_arguments))))
 
-        def arg2idx(parent_values: tuple) -> int:
+        def arg2idx(parent_values: Dict[str, Any]) -> int:
             """Convert a decision context into an index for the function list"""
             idx = 0
-            for i, pv in enumerate(parent_values):
-                name_to_no: Dict[Any, int] = self.get_cpds(parents[i]).name_to_no[parents[i]]
-                idx += name_to_no[pv] * np.product(evidence_card[:i])
+            for i, p in enumerate(parents):
+                name_to_no: Dict[Any, int] = self.get_cpds(p).name_to_no[p]
+                idx += name_to_no[parent_values[p.lower()]] * np.product(evidence_card[:i])
             assert 0 <= idx <= len(functions_as_lists)
             return idx
 
         function_cpds: List[FunctionCPD] = []
         for func_list in functions_as_lists:
 
-            def function(*parent_values: tuple, early_eval_func_list: tuple = func_list) -> Any:
-                return early_eval_func_list[arg2idx(parent_values)]
+            def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
+                return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            function_cpds.append(FunctionCPD(decision, function, cpd.variables[1:], state_names=cpd.state_names))
+            function_cpds.append(
+                FunctionCPD(decision, produce_function(), cpd.variables[1:], state_names=cpd.state_names)
+            )
         return function_cpds
 
     def pure_strategies(self, decision_nodes: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
@@ -470,8 +493,8 @@ class MACIDBase(BayesianModel):
         new = self.copy()
 
         @lru_cache(maxsize=1000)
-        def cond_exp_policy(*pv: tuple) -> float:
-            context = {p: pv[i] for i, p in enumerate(parents)}
+        def cond_exp_policy(**pv: tuple) -> float:
+            context = {p: pv[p.lower()] for p in parents}
             return new.expected_value([y], context)[0]
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))

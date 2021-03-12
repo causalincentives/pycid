@@ -4,9 +4,9 @@ import unittest
 import numpy as np
 import pytest
 
-from pycid.core.cpd import FunctionCPD, UniformRandomCPD
 from examples.simple_cids import get_minimal_cid
 from examples.story_cids import get_introduced_bias
+from pycid.core.cpd import FunctionCPD, UniformRandomCPD
 
 
 class TestCPD(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestCPD(unittest.TestCase):
         self.assertTrue(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
         self.assertEqual(cpd_a.get_state_names("A", 0), 2)
-        cpd_b = FunctionCPD("B", lambda x: x, evidence=["A"])
+        cpd_b = FunctionCPD("B", lambda a: a, evidence=["A"])
         cpd_b.initialize_tabular_cpd(cid)
         self.assertTrue(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)

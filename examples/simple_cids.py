@@ -58,7 +58,7 @@ def get_2dec_cid() -> CID:
     cpd_s1 = UniformRandomCPD("S1", [0, 1])
     cpd_d1 = DecisionDomain("D1", [0, 1])
     cpd_d2 = DecisionDomain("D2", [0, 1])
-    cpd_s2 = FunctionCPD("S2", lambda s2, d1: int(s2 == d1), evidence=["S1", "D1"])
+    cpd_s2 = FunctionCPD("S2", lambda s1, d1: int(s1 == d1), evidence=["S1", "D1"])
     cpd_u = FunctionCPD("U", lambda s2, d2: int(s2 == d2), evidence=["S2", "D2"])
     cid.add_cpds(cpd_s1, cpd_d1, cpd_s2, cpd_d2, cpd_u)
     return cid

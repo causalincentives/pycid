@@ -74,7 +74,7 @@ class FunctionCPD(TabularCPD):
     def __init__(
         self,
         variable: str,
-        f: Callable[..., State],
+        function: Callable[..., State],
         evidence: Sequence[str],
         state_names: Optional[Dict[str, Sequence[State]]] = None,
         label: str = None,
@@ -97,7 +97,7 @@ class FunctionCPD(TabularCPD):
         label: An optional label used to describe this distribution.
         """
         self.variable = variable
-        self.f = f
+        self.function = function
         self.evidence = evidence
         self.cid: BayesianModel = None
 
@@ -112,7 +112,7 @@ class FunctionCPD(TabularCPD):
             self.label = label
         else:
             try:
-                sl = getsourcelines(self.f)[0][0]
+                sl = getsourcelines(self.function)[0][0]
             except OSError:
                 lambda_pos = -1  # Could not find source
             else:
@@ -121,34 +121,35 @@ class FunctionCPD(TabularCPD):
                 colon = sl.find(":", lambda_pos, len(sl))
                 end = sl.find(",", colon, len(sl))  # TODO this only works for simple expressions with no commas
                 self.label = sl[colon + 2 : end]
-            elif hasattr(self.f, "__name__"):
-                self.label = self.f.__name__
+            elif hasattr(self.function, "__name__"):
+                self.label = self.function.__name__
             else:
                 self.label = ""
         # we call super().__init__() in initialize_tabular_cpd instead
 
     def parents_instantiated(self, cid: BayesianModel) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
-        for p in self.evidence:
+        for p in cid.get_parents(self.variable):
             p_cpd = cid.get_cpds(p)
             if not (p_cpd and hasattr(p_cpd, "state_names")):
                 return False
         return True
 
-    def parent_values(self, cid: BayesianModel) -> List[List]:
+    def parent_values(self, cid: BayesianModel) -> List[Dict[str, Any]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         assert self.parents_instantiated(cid)
         parent_values = []
-        for p in self.evidence:
+        for p in cid.get_parents(self.variable):
             p_cpd = cid.get_cpds(p)
             if p_cpd and hasattr(p_cpd, "state_names"):
                 parent_values.append(p_cpd.state_names[p])
-        return list(itertools.product(*parent_values))
+        pv_list = list(itertools.product(*parent_values))
+        return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
 
     def possible_values(self, cid: BayesianModel) -> List[List]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
-        return sorted(set([self.f(*x) for x in self.parent_values(cid)]))
+        return sorted(set([self.function(**x) for x in self.parent_values(cid)]))
 
     def initialize_tabular_cpd(self, cid: BayesianModel) -> None:
         """Initialize the probability table for the inherited TabularCPD.
@@ -158,18 +159,17 @@ class FunctionCPD(TabularCPD):
         if not self.parents_instantiated(cid):
             raise ValueError(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid
-        poss_values = self.possible_values(cid)
         if self.force_state_names:
             state_names_list = self.force_state_names
-            if not set(poss_values).issubset(state_names_list):
+            if not set(self.possible_values(cid)).issubset(state_names_list):
                 raise Exception("variable {} can take value outside given state_names".format(self.variable))
         else:
-            state_names_list = poss_values
+            state_names_list = self.possible_values(cid)
 
         card = len(state_names_list)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
-        matrix = np.array([[int(self.f(*i) == t) for i in self.parent_values(cid)] for t in state_names_list])
+        matrix = np.array([[int(self.function(**i) == t) for i in self.parent_values(cid)] for t in state_names_list])
         state_names = {self.variable: state_names_list}
 
         super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=state_names)
@@ -179,10 +179,10 @@ class FunctionCPD(TabularCPD):
 
     def copy(self) -> FunctionCPD:
         state_names = {self.variable: self.force_state_names} if self.force_state_names else None
-        return FunctionCPD(self.variable, self.f, self.evidence, state_names=state_names)
+        return FunctionCPD(self.variable, self.function, self.evidence, state_names=state_names)
 
     def dictionary(self) -> Dict[str, str]:
-        return {str(pv): str(self.f(*pv)) for pv in self.parent_values(self.cid)}
+        return {str(pv): str(self.function(**pv)) for pv in self.parent_values(self.cid)}
 
     def __repr__(self) -> str:
         mapping = ""
@@ -192,7 +192,7 @@ class FunctionCPD(TabularCPD):
             data += [[key, dictionary[key]] for key in sorted(list(dictionary.keys()))]
             for row in data:
                 mapping += "\n" + "{: >15} {: >15}".format(*row)
-        return f"<FunctionCPD {self.variable}:{self.f}> {mapping}"
+        return f"<FunctionCPD {self.variable}:{self.function}> {mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -205,10 +205,10 @@ class RandomlySampledFunctionCPD(FunctionCPD):
 
     def __init__(self, variable: str, evidence: Sequence[str]) -> None:
         possible_functions = [
-            lambda *pv: np.prod(pv),
-            lambda *pv: np.sum(pv),
-            lambda *pv: 1 - np.prod(pv),
-            lambda *pv: 1 - np.sum(pv),
+            lambda **pv: np.prod(list(pv.values())),
+            lambda **pv: np.sum(list(pv.values())),
+            lambda **pv: 1 - np.prod(list(pv.values())),
+            lambda **pv: 1 - np.sum(list(pv.values())),
         ]
         super().__init__(variable, random.choice(possible_functions), evidence)
 
