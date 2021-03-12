@@ -76,7 +76,7 @@ class MACID(MACIDBase):
         """Return a dictionary with the joint or partial policy profile assigned -
         ie a decision rule for each of the MACIM's decision nodes."""
         new_macid = self.copy_without_cpds()
-        new_macid.add_cpds(*partial_policy)
+        new_macid.add_cpds(*partial_policy)  # TODO: James, why does it add them to a new MACID? (Tom wonders)
         return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
 
     def get_all_pure_spe(self) -> List[List[FunctionCPD]]:

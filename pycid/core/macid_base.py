@@ -133,7 +133,10 @@ class MACIDBase(BayesianModel):
             if var in self._cpds_to_add:
                 cpd_to_add = self._cpds_to_add[var]
                 if hasattr(cpd_to_add, "initialize_tabular_cpd"):
-                    cpd_to_add.initialize_tabular_cpd(self)
+                    try:
+                        cpd_to_add.initialize_tabular_cpd(self)
+                    except ValueError:
+                        pass
                 if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
                     # if the state_names have changed, remember to update all descendants:
                     previous_cpd = self.get_cpds(var)

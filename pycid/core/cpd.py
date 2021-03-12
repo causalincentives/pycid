@@ -99,6 +99,7 @@ class FunctionCPD(TabularCPD):
         self.variable = variable
         self.f = f
         self.evidence = evidence
+        self.cid: BayesianModel = None
 
         if state_names is not None:
             assert isinstance(state_names, dict)
@@ -126,19 +127,6 @@ class FunctionCPD(TabularCPD):
                 self.label = ""
         # we call super().__init__() in initialize_tabular_cpd instead
 
-    def scope(self) -> List[str]:
-        return [self.variable]
-
-    def copy(self) -> FunctionCPD:
-        state_names = {self.variable: self.force_state_names} if self.force_state_names else None
-        return FunctionCPD(self.variable, self.f, self.evidence, state_names=state_names)
-
-    def __repr__(self) -> str:
-        return "<FunctionCPD {}:{}>".format(self.variable, self.f)
-
-    def __str__(self) -> str:
-        return "<FunctionCPD {}:{}>".format(self.variable, self.f)
-
     def parents_instantiated(self, cid: BayesianModel) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
         for p in self.evidence:
@@ -155,21 +143,21 @@ class FunctionCPD(TabularCPD):
             p_cpd = cid.get_cpds(p)
             if p_cpd and hasattr(p_cpd, "state_names"):
                 parent_values.append(p_cpd.state_names[p])
-        return parent_values
+        return list(itertools.product(*parent_values))
 
     def possible_values(self, cid: BayesianModel) -> List[List]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
-        parent_values = self.parent_values(cid)
-        return sorted(set([self.f(*x) for x in itertools.product(*parent_values)]))
+        return sorted(set([self.f(*x) for x in self.parent_values(cid)]))
 
-    def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
-        """Initialize the probability table for the inherited TabularCPD
+    def initialize_tabular_cpd(self, cid: BayesianModel) -> None:
+        """Initialize the probability table for the inherited TabularCPD.
 
-        Returns True if successful, False otherwise
+        Requires that all parents in the CID have already been instantiated.
         """
         if not self.parents_instantiated(cid):
-            return False
+            raise ValueError(f"Parents of {self.variable} are not yet instantiated.")
+        self.cid = cid
         poss_values = self.possible_values(cid)
         if self.force_state_names:
             state_names_list = self.force_state_names
@@ -181,13 +169,33 @@ class FunctionCPD(TabularCPD):
         card = len(state_names_list)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
-        matrix = np.array(
-            [[int(self.f(*i) == t) for i in itertools.product(*self.parent_values(cid))] for t in state_names_list]
-        )
+        matrix = np.array([[int(self.f(*i) == t) for i in self.parent_values(cid)] for t in state_names_list])
         state_names = {self.variable: state_names_list}
 
         super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=state_names)
-        return True
+
+    def scope(self) -> List[str]:
+        return [self.variable]
+
+    def copy(self) -> FunctionCPD:
+        state_names = {self.variable: self.force_state_names} if self.force_state_names else None
+        return FunctionCPD(self.variable, self.f, self.evidence, state_names=state_names)
+
+    def dictionary(self) -> Dict[str, str]:
+        return {str(pv): str(self.f(*pv)) for pv in self.parent_values(self.cid)}
+
+    def __repr__(self) -> str:
+        mapping = ""
+        if self.cid and self.parents_instantiated(self.cid):
+            dictionary = self.dictionary()
+            data = [["Input:         ", "Output:        "]]
+            data += [[key, dictionary[key]] for key in sorted(list(dictionary.keys()))]
+            for row in data:
+                mapping += "\n" + "{: >15} {: >15}".format(*row)
+        return f"<FunctionCPD {self.variable}:{self.f}> {mapping}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 class RandomlySampledFunctionCPD(FunctionCPD):
