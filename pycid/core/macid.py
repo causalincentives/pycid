@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.cm as cm
 import networkx as nx
@@ -27,7 +27,7 @@ class MACID(MACIDBase):
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
-    def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[Sequence[str]] = None) -> List[List[FunctionCPD]]:
+    def get_all_pure_ne_in_sg(self, decisions_in_sg: Optional[Iterable[str]] = None) -> List[List[FunctionCPD]]:
         """
         Return a list of all pure Nash equilbiria in a MACID subgame.
 
@@ -35,10 +35,12 @@ class MACID(MACIDBase):
         - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
         - If the MACID being operated on already has function CPDs for some decision nodes, it is
         assumed that these have already been optimised and so these are not changed.
-        TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         """
+        # TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         if decisions_in_sg is None:
             decisions_in_sg = self.all_decision_nodes
+        else:
+            decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
 
         for dec in decisions_in_sg:
             if dec not in self.all_decision_nodes:
