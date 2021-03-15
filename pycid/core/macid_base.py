@@ -5,21 +5,7 @@ import itertools
 import logging
 import random
 from functools import lru_cache
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    Hashable,
-    Iterable,
-    KeysView,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Collection, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Tuple, Union
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -450,14 +436,19 @@ class MACIDBase(BayesianModel):
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return list(itertools.product(*possible_dec_rules))
 
-    def optimal_pure_strategies(self, decisions: Sequence[str]) -> List[Tuple[FunctionCPD, ...]]:
-        """
-        Return a list of all optimal strategies for a given set of decisions
+    def optimal_pure_strategies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
+        """Find all optimal strategies for a given set of decisions.
+
+        All decisions must belong to the same agent.
         """
         if not decisions:
             return []
-        agent = self.decision_agent[decisions[0]]
-        assert set(decisions).issubset(self.agent_decisions[agent])
+        decisions = set(decisions)
+        try:
+            (agent,) = {self.decision_agent[d] for d in decisions}
+        except ValueError:
+            raise ValueError("Decisions not all from the same agent")
+
         macid = self.copy()
         for d in macid.all_decision_nodes:
             if (
