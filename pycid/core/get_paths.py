@@ -5,15 +5,15 @@ import networkx as nx
 from pycid.core.macid_base import MACIDBase
 
 
-def _active_neighbours(mb: MACIDBase, path: Sequence[str], observed: Sequence[str]) -> Set[str]:
+def _active_neighbours(mb: MACIDBase, path: Sequence[str], observed: Set[str]) -> Set[str]:
     """Find possibly active extensions of path conditional on the `observed' set of nodes."""
     end_of_path = path[-1]
     last_forward = len(path) > 1 and end_of_path in mb.get_children(path[-2])
     possible_colliders: Set[str] = set().union(*[set(mb._get_ancestors_of(e)) for e in observed])  # type: ignore
 
     # if going upward or at a possible collider, it's possible to continue to a parent
-    if end_of_path in possible_colliders or not last_forward:
-        active_parents = set(mb.get_parents(end_of_path)) - set(observed)
+    if not last_forward or end_of_path in possible_colliders:
+        active_parents = set(mb.get_parents(end_of_path)) - observed
     else:
         active_parents = set()
 
@@ -28,7 +28,7 @@ def _active_neighbours(mb: MACIDBase, path: Sequence[str], observed: Sequence[st
     return new_active_neighbours
 
 
-def _find_active_path_recurse(mb: MACIDBase, path: List[str], end_node: str, observed: Sequence[str]) -> List[str]:
+def _find_active_path_recurse(mb: MACIDBase, path: List[str], end_node: str, observed: Set[str]) -> List[str]:
     """Find active path from `path' to `end_node' given the `observed' set of nodes."""
     if path[-1] == end_node and end_node not in observed:
         return path
@@ -41,11 +41,11 @@ def _find_active_path_recurse(mb: MACIDBase, path: List[str], end_node: str, obs
     return []  # should never happen
 
 
-def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Sequence[str] = None) -> List[str]:
+def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Set[str] = None) -> List[str]:
     """Find active path from `start_node' to `end_node' given the `observed' set of nodes."""
     if observed is None:
-        observed = []
-    considered_nodes = set(observed).union({start_node}, {end_node})
+        observed = set()
+    considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
@@ -182,11 +182,13 @@ def _get_path_edges(mb: MACIDBase, path: Sequence[str]) -> List[Tuple[str, str]]
     return structure
 
 
-def is_active_path(mb: MACIDBase, path: Sequence[str], observed: Sequence[str] = []) -> bool:
+def is_active_path(mb: MACIDBase, path: Sequence[str], observed: Set[str] = None) -> bool:
     """
     Check if a specifc path remains active given the 'observed' set of variables.
     """
-    considered_nodes = set(path).union(set(observed))
+    if observed is None:
+        observed = set()
+    considered_nodes = set(path).union(observed)
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
@@ -202,14 +204,14 @@ def is_active_path(mb: MACIDBase, path: Sequence[str], observed: Sequence[str] =
 
         if structure == "collider":
             descendants = nx.descendants(mb, b).union({b})
-            if not descendants.intersection(set(observed)):
+            if not descendants.intersection(observed):
                 return False
 
     return True
 
 
 def is_active_indirect_frontdoor_trail(
-    mb: MACIDBase, start_node: str, end_node: str, observed: Sequence[str] = []
+    mb: MACIDBase, start_node: str, end_node: str, observed: Set[str] = None
 ) -> bool:
     """
     checks whether an active indirect frontdoor path exists given the 'observed' set of variables.
@@ -217,7 +219,9 @@ def is_active_indirect_frontdoor_trail(
     out of the first node (X→···Z).
     - An indirect path contains at least one collider at some node from start_node to end_node.
     """
-    considered_nodes = set(observed).union({start_node}, {end_node})
+    if observed is None:
+        observed = set()
+    considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")
@@ -234,12 +238,14 @@ def is_active_indirect_frontdoor_trail(
         return False
 
 
-def is_active_backdoor_trail(mb: MACIDBase, start_node: str, end_node: str, observed: Sequence[str] = []) -> bool:
+def is_active_backdoor_trail(mb: MACIDBase, start_node: str, end_node: str, observed: Set[str] = None) -> bool:
     """
     Returns true if there is a backdoor path that's active given the 'observed' set of nodes.
     - A backdoor path between X and Z is an (undirected) path in which the first edge goes into the first node (X←···Z)
     """
-    considered_nodes = set(observed).union({start_node}, {end_node})
+    if observed is None:
+        observed = set()
+    considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
             raise Exception(f"The node {node} is not in the (MA)CID")

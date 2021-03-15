@@ -5,7 +5,21 @@ import itertools
 import logging
 import random
 from functools import lru_cache
-from typing import Any, Callable, Collection, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    Hashable,
+    Iterable,
+    KeysView,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -519,6 +533,14 @@ class MACIDBase(BayesianModel):
             return new.expected_value([y], context)[0]
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, label="cond_exp({})".format(y)))
+
+    # Wrapper around DAG.active_trail_nodes to accept arbitrary iterables for observed.
+    # Really, DAG.active_trail_nodes should accept Sets, especially since it does
+    # inefficient membership checks on observed as a list.
+    def active_trail_nodes(
+        self, variables: Union[str, List[str], Tuple[str, ...]], observed: Optional[Iterable[str]] = None
+    ) -> Dict[str, Set[str]]:
+        return super().active_trail_nodes(variables, list(observed))  # type: ignore
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""

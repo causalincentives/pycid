@@ -138,10 +138,11 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
     cid2 = cid.copy()
     cid2.add_edge("pi", dec1)
 
+    # pygmpy is_active_trail does not accept a set (and then it does membership checks on the list...)
     while cid2.is_active_trail("pi", utility_node, observed=cid.get_parents(dec2) + [dec2]):
-        path = find_active_path(cid2, "pi", utility_node, cid.get_parents(dec2) + [dec2])
+        path = find_active_path(cid2, "pi", utility_node, {dec2, *cid.get_parents(dec2)})
         if path is None:
-            raise Exception("couldn't find path even though there should be an active trail")
+            raise RuntimeError("couldn't find path even though there should be an active trail")
         while True:
             i = random.randrange(1, len(path) - 1)
             # print('consider {}--{}--{}'.format(path[i-1], path[i], path[i+1]),end='')

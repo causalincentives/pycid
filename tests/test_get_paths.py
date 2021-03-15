@@ -3,6 +3,9 @@ import unittest
 
 import pytest
 
+from examples.simple_cids import get_3node_cid
+from examples.simple_macids import get_basic_subgames, get_path_example
+from examples.story_macids import taxi_competition
 from pycid.core.get_paths import (
     directed_decision_free_path,
     find_active_path,
@@ -15,23 +18,20 @@ from pycid.core.get_paths import (
     is_active_path,
 )
 from pycid.core.macid import MACID
-from examples.simple_cids import get_3node_cid
-from examples.simple_macids import get_basic_subgames, get_path_example
-from examples.story_macids import taxi_competition
 
 
 class TestPATHS(unittest.TestCase):
     # @unittest.skip("")
     def test_find_active_path(self) -> None:
         example = taxi_competition()
-        self.assertEqual(find_active_path(example, "D1", "U1", ["D2"]), ["D1", "U1"])
-        self.assertFalse(find_active_path(example, "D1", "U1", ["D2", "U1"]))
+        self.assertEqual(find_active_path(example, "D1", "U1", {"D2"}), ["D1", "U1"])
+        self.assertFalse(find_active_path(example, "D1", "U1", {"D2", "U1"}))
         with self.assertRaises(Exception):
-            find_active_path(example, "D1", "U1", ["D3"])
+            find_active_path(example, "D1", "U1", {"D3"})
         with self.assertRaises(Exception):
-            find_active_path(example, "D3", "U1", ["D2"])
+            find_active_path(example, "D3", "U1", {"D2"})
         with self.assertRaises(Exception):
-            find_active_path(example, "D1", "U3", ["D2"])
+            find_active_path(example, "D1", "U3", {"D2"})
 
     # @unittest.skip("")
     def test_get_motif(self) -> None:
@@ -106,40 +106,40 @@ class TestPATHS(unittest.TestCase):
     def test_is_active_path(self) -> None:
         example = get_path_example()
         self.assertTrue(is_active_path(example, ["X1", "D", "U"]))
-        self.assertFalse(is_active_path(example, ["X1", "D", "U"], ["D"]))
+        self.assertFalse(is_active_path(example, ["X1", "D", "U"], {"D"}))
         self.assertFalse(is_active_path(example, ["X1", "D", "X2"]))
-        self.assertTrue(is_active_path(example, ["X1", "D", "X2"], ["D"]))
-        self.assertTrue(is_active_path(example, ["X1", "D", "X2"], ["U"]))
+        self.assertTrue(is_active_path(example, ["X1", "D", "X2"], {"D"}))
+        self.assertTrue(is_active_path(example, ["X1", "D", "X2"], {"U"}))
         with self.assertRaises(Exception):
-            is_active_path(example, ["X1", "D", "A"], ["U"])
+            is_active_path(example, ["X1", "D", "A"], {"U"})
         with self.assertRaises(Exception):
-            is_active_path(example, ["X1", "D", "X2"], ["A"])
+            is_active_path(example, ["X1", "D", "X2"], {"A"})
 
     # @unittest.skip("")
     def test_is_active_indirect_frontdoor_trail(self) -> None:
         example = get_path_example()
-        self.assertTrue(is_active_indirect_frontdoor_trail(example, "X2", "X1", ["D"]))
+        self.assertTrue(is_active_indirect_frontdoor_trail(example, "X2", "X1", {"D"}))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X2", "X1"))
-        self.assertFalse(is_active_indirect_frontdoor_trail(example, "X3", "X1", ["D"]))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, "X3", "X1", {"D"}))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X3", "X1"))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X1", "U"))
-        self.assertFalse(is_active_indirect_frontdoor_trail(example, "X1", "U", ["D", "X2"]))
+        self.assertFalse(is_active_indirect_frontdoor_trail(example, "X1", "U", {"D", "X2"}))
         with self.assertRaises(Exception):
-            is_active_indirect_frontdoor_trail(example, "A", "U", ["D", "X2"])
+            is_active_indirect_frontdoor_trail(example, "A", "U", {"D", "X2"})
         with self.assertRaises(Exception):
-            is_active_indirect_frontdoor_trail(example, "X1", "U", ["A", "X2"])
+            is_active_indirect_frontdoor_trail(example, "X1", "U", {"A", "X2"})
 
     # @unittest.skip("")
     def test_is_active_backdoor_trail(self) -> None:
         example = get_path_example()
         self.assertFalse(is_active_backdoor_trail(example, "X3", "X2"))
-        self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", ["D"]))
+        self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", {"D"}))
         self.assertFalse(is_active_backdoor_trail(example, "X1", "X2"))
-        self.assertFalse(is_active_backdoor_trail(example, "X1", "X2", ["D"]))
+        self.assertFalse(is_active_backdoor_trail(example, "X1", "X2", {"D"}))
         with self.assertRaises(Exception):
-            self.assertTrue(is_active_backdoor_trail(example, "A", "X2", ["D"]))
+            self.assertTrue(is_active_backdoor_trail(example, "A", "X2", {"D"}))
         with self.assertRaises(Exception):
-            self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", ["A"]))
+            self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", {"A"}))
 
 
 if __name__ == "__main__":

@@ -71,7 +71,7 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)
     d_family = [decision] + cid.get_parents(decision)
-    con_nodes = [i for i in d_family if i != node]
+    con_nodes = {i for i in d_family if i != node}
     if not admits_voc(cid, node):
         return False
 

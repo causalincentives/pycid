@@ -31,12 +31,12 @@ class TestReasoning(unittest.TestCase):
             agent_decisions={1: ["D1"], 2: ["D2"]},
             agent_utilities={1: ["U1"], 2: ["U2"]},
         )
-        effective_set = ["D2"]  # by direct effect
+        effective_set = {"D2"}  # by direct effect
         self.assertTrue(manipulation(macid, "D1", effective_set))
         self.assertFalse(manipulation(macid, "D2", effective_set))
         with self.assertRaises(Exception):
             manipulation(macid, "D3", effective_set)
-        effective_set2 = ["A"]
+        effective_set2 = {"A"}
         with self.assertRaises(Exception):
             manipulation(macid, "D1", effective_set2)
 
@@ -46,12 +46,12 @@ class TestReasoning(unittest.TestCase):
             agent_decisions={1: ["D1"], 2: ["D2"]},
             agent_utilities={1: ["U1"], 2: ["U2"]},
         )
-        effective_set = ["D2"]  # by direct effect
+        effective_set = {"D2"}  # by direct effect
         self.assertTrue(signaling(macid, "D1", effective_set))
         self.assertFalse(signaling(macid, "D2", effective_set))
         with self.assertRaises(Exception):
             signaling(macid, "D3", effective_set)
-        effective_set2 = ["A"]
+        effective_set2 = {"A"}
         with self.assertRaises(Exception):
             signaling(macid, "D1", effective_set2)
 
@@ -61,12 +61,12 @@ class TestReasoning(unittest.TestCase):
             agent_decisions={1: ["D1"], 2: ["D2"]},
             agent_utilities={1: ["U1"], 2: ["U2"]},
         )
-        effective_set = ["D2"]  # by direct effect
+        effective_set = {"D2"}  # by direct effect
         self.assertTrue(revealing_or_denying(macid, "D1", effective_set))
         self.assertFalse(revealing_or_denying(macid, "D2", effective_set))
         with self.assertRaises(Exception):
             revealing_or_denying(macid, "D3", effective_set)
-        effective_set2 = ["A"]
+        effective_set2 = {"A"}
         with self.assertRaises(Exception):
             revealing_or_denying(macid, "D1", effective_set2)
 
