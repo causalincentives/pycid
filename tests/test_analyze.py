@@ -116,7 +116,7 @@ class TestAnalyze(unittest.TestCase):
         cid = get_content_recommender()
         self.assertTrue(admits_ici(cid, "P", "I"))
         self.assertFalse(admits_ici(cid, "P", "O"))
-        self.assertCountEqual(admits_ici_list(cid, "P"), ["I", "C"])
+        self.assertCountEqual(admits_ici_list(cid, "P"), ["I", "P", "C"])
         with self.assertRaises(Exception):
             admits_ici(cid, "P", "A")
         with self.assertRaises(Exception):

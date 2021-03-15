@@ -24,7 +24,7 @@ def admits_ici(cid: CID, decision: str, node: str) -> bool:
 
     agent_utilities = cid.all_utility_nodes
     d_u_paths = [path for util in agent_utilities for path in find_all_dir_paths(cid, decision, util)]
-    if any(node in path[1:] for path in d_u_paths):
+    if any(node in path for path in d_u_paths):
         return True
 
     return False
