@@ -28,6 +28,8 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
             for output in cell["outputs"]:
                 if output.output_type == "error":
                     errors.append(output)
+                    # Print traceback so that it appears in the test log
+                    print("".join(output["traceback"]), file=sys.stderr)
     return nb, errors
 
 
