@@ -21,7 +21,7 @@ def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
     if node not in cid.get_parents(decision):
         raise Exception(f"{node} is not a parent of {decision}")
 
-    agent_utilities = cid.agent_utilities[cid.whose_node[decision]]
+    agent_utilities = cid.agent_utilities[cid.decision_agent[decision]]
     descended_agent_utilities = set(agent_utilities).intersection(nx.descendants(cid, decision))
     family_d = [decision] + cid.get_parents(decision)
     conditioning_nodes = [i for i in family_d if i != node]

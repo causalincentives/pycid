@@ -119,7 +119,7 @@ def direct_effect(macid: MACID, decision: str) -> bool:
     if decision not in macid.nodes:
         raise Exception(f"{decision} is not present in the macid")
 
-    agent = macid.whose_node[decision]
+    agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     for u in agent_utils:
         if directed_decision_free_path(macid, decision, u):
@@ -143,7 +143,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     if not all([node in macid.nodes for node in effective_set]):
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
-    agent = macid.whose_node[decision]
+    agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = list(macid.all_decision_nodes)
@@ -154,7 +154,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
                 reachable_decisions.append(dec_reach)
 
     for decision_b in reachable_decisions:
-        agent_b = macid.whose_node[decision_b]
+        agent_b = macid.decision_agent[decision_b]
         agent_b_utils = macid.agent_utilities[agent_b]
 
         for u in agent_utils:
@@ -183,7 +183,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     if not all([node in macid.nodes for node in effective_set]):
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
-    agent = macid.whose_node[decision]
+    agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = list(macid.all_decision_nodes)
@@ -194,7 +194,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
                 reachable_decisions.append(dec_reach)
 
     for decision_b in reachable_decisions:
-        agent_b = macid.whose_node[decision_b]
+        agent_b = macid.decision_agent[decision_b]
         agent_b_utils = macid.agent_utilities[agent_b]
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
@@ -242,7 +242,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
     if not all([node in macid.nodes for node in effective_set]):
         raise Exception("One or many of the nodes in the effective_set are not present in the macid.")
 
-    agent = macid.whose_node[decision]
+    agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
     list_decs = list(macid.all_decision_nodes)
@@ -253,7 +253,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
                 reachable_decisions.append(dec_reach)
 
     for decision_b in reachable_decisions:
-        agent_b = macid.whose_node[decision_b]
+        agent_b = macid.decision_agent[decision_b]
         agent_b_utils = macid.agent_utilities[agent_b]
 
         for u in agent_utils:

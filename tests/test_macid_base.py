@@ -25,7 +25,7 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(cid.all_decision_nodes, ["D"])
         cid.make_decision("S")
         self.assertCountEqual(cid.all_decision_nodes, ["D", "S"])
-        self.assertEqual(cid.whose_node["S"], 0)
+        self.assertEqual(cid.decision_agent["S"], 0)
         self.assertCountEqual(cid.agent_decisions[0], ["D", "S"])
         cid2 = cid.copy_without_cpds()
         with self.assertRaises(Exception):

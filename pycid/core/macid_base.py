@@ -5,7 +5,21 @@ import itertools
 import logging
 import random
 from functools import lru_cache
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    Hashable,
+    Iterable,
+    KeysView,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -32,8 +46,11 @@ class MACIDBase(BayesianModel):
     agent_utilities: The utility nodes of each agent.
         A dictionary mapping agent label => node labels.
 
-    whose_node: A mapping from node label to agent.
-        Only decision and utility nodes are included.
+    decision_agent: The agent owner of each decision node.
+        A dictionary mapping decision node label => agent label.
+
+    utility_agent: The agent owner of each utility node.
+        A dictionary mapping utility node label => agent label.
     """
 
     def __init__(
@@ -59,22 +76,25 @@ class MACIDBase(BayesianModel):
         self.agent_decisions = {agent: list(nodes) for agent, nodes in agent_decisions.items()}
         self.agent_utilities = {agent: list(nodes) for agent, nodes in agent_utilities.items()}
 
-        self.whose_node = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
-        self.whose_node.update({node: agent for agent, nodes in self.agent_utilities.items() for node in nodes})
+        self.decision_agent = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
+        self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
 
         self._cpds_to_add: Dict[str, TabularCPD] = {}
 
     @property
-    def all_decision_nodes(self) -> Set[str]:
-        return set(itertools.chain.from_iterable(self.agent_decisions.values()))
+    def all_decision_nodes(self) -> KeysView[str]:
+        """The set of all decision nodes"""
+        return self.decision_agent.keys()
 
     @property
-    def all_utility_nodes(self) -> Set[str]:
-        return set(itertools.chain.from_iterable(self.agent_utilities.values()))
+    def all_utility_nodes(self) -> KeysView[str]:
+        """The set of all utility nodes"""
+        return self.utility_agent.keys()
 
     @property
-    def agents(self) -> List[AgentLabel]:
-        return list(self.agent_utilities.keys())
+    def agents(self) -> KeysView[AgentLabel]:
+        """The set of all agents"""
+        return self.agent_utilities.keys()
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
@@ -93,18 +113,17 @@ class MACIDBase(BayesianModel):
         elif hasattr(self, "cpds") and not isinstance(self.get_cpds(node), DecisionDomain):
             cpd_new = DecisionDomain(node, self.get_cpds(node).state_names[node])
             self.agent_decisions[agent].append(node)
-            self.whose_node[node] = agent
+            self.decision_agent[node] = agent
             self.add_cpds(cpd_new)
         else:
             raise Exception(f"node {node} has not yet been assigned a domain.")
 
     def make_chance(self, node: str) -> None:
         """Turn a decision node into a chance node."""
-        if node in self.all_decision_nodes:
-            agent = self.whose_node[node]
+        if node in self.decisions:
+            agent = self.decision_agent.pop(node)
             self.agent_decisions[agent].remove(node)
-            self.whose_node.pop(node)
-        elif hasattr(self, "cpds") and node not in self.all_decision_nodes:
+        elif hasattr(self, "cpds") and node not in self.all_decision_nodes:  # TODO: fix redundancy
             pass
         elif not hasattr(self, "cpds"):
             raise Exception("The (MA)CID has not yet been parameterised")
@@ -358,7 +377,7 @@ class MACIDBase(BayesianModel):
         for decision in decisions:
             for node in nodes:
                 con_nodes = [decision] + self.get_parents(decision)
-                agent_utilities = self.agent_utilities[self.whose_node[decision]]
+                agent_utilities = self.agent_utilities[self.decision_agent[decision]]
                 for utility in set(agent_utilities).intersection(nx.descendants(self, decision)):
                     if mg.is_active_trail(node + "mec", utility, con_nodes):
                         return True
@@ -375,7 +394,7 @@ class MACIDBase(BayesianModel):
         Otherwise, the check is done for all agents.
         """
         if agent is None:
-            agents = self.agents
+            agents: Collection = self.agents
         elif agent not in self.agents:
             raise ValueError(f"There is no agent {agent}, in this (MA)CID")
         else:
@@ -437,7 +456,7 @@ class MACIDBase(BayesianModel):
         """
         if not decisions:
             return []
-        agent = self.whose_node[decisions[0]]
+        agent = self.decision_agent[decisions[0]]
         assert set(decisions).issubset(self.agent_decisions[agent])
         macid = self.copy()
         for d in macid.all_decision_nodes:
@@ -481,7 +500,7 @@ class MACIDBase(BayesianModel):
         # cpd = self.get_cpds(d)
         # parents = cpd.variables[1:]
         # idx2name = cpd.no_to_name[d]
-        # utility_nodes = self.agent_utilities[self.whose_node[d]]
+        # utility_nodes = self.agent_utilities[self.decision_agent[d]]
         # descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
         # new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
         #
@@ -529,9 +548,18 @@ class MACIDBase(BayesianModel):
         """
         Assign a unique colour to each new agent's decision and utility nodes
         """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
+        agents = list(self.agents)
+        colors = cm.rainbow(np.linspace(0, 1, len(agents)))
+        try:
+            agent = self.decision_agent[node]
+        except KeyError:
+            try:
+                agent = self.utility_agent[node]
+            except KeyError:
+                agent = None
+        if agent is not None:
+            color: np.ndarray = colors[agents.index(agent)]
+            return color
         else:
             return "lightgray"  # chance node
 
