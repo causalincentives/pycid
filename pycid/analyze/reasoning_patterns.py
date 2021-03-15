@@ -197,33 +197,30 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
         agent_b = macid.decision_agent[decision_b]
         agent_b_utils = macid.agent_utilities[agent_b]
         for u in agent_utils:
-            if _effective_dir_path_exists(macid, decision_b, u, effective_set):
-                for u_b in agent_b_utils:
+            if not _effective_dir_path_exists(macid, decision_b, u, effective_set):
+                continue
 
-                    decision_b_parents_not_desc_decision = [
-                        node
-                        for node in macid.get_parents(decision_b)
-                        if node not in set(nx.descendants(macid, decision))
-                    ]
-                    cond_nodes = [decision_b] + decision_b_parents_not_desc_decision
+            for u_b in agent_b_utils:
+                decision_b_parents_not_desc_decision = [
+                    node for node in macid.get_parents(decision_b) if node not in set(nx.descendants(macid, decision))
+                ]
+                cond_nodes = [decision_b] + decision_b_parents_not_desc_decision
 
-                    if _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set, cond_nodes):
-                        path = _effective_backdoor_path_not_blocked_by_set_w(
-                            macid, decision, u_b, effective_set, cond_nodes
-                        )
-                        if _get_key_node(macid, path):
-                            key_node = _get_key_node(macid, path)
-                        else:
-                            return False
-                        decision_parents_not_desc_key_node = [
-                            node
-                            for node in macid.get_parents(decision)
-                            if node not in set(nx.descendants(macid, key_node))
-                        ]
-                        cond_nodes2 = [decision] + decision_parents_not_desc_key_node
+                path = _effective_backdoor_path_not_blocked_by_set_w(macid, decision, u_b, effective_set, cond_nodes)
+                if not path:
+                    continue
 
-                        if _effective_undir_path_not_blocked_by_set_w(macid, key_node, u, effective_set, cond_nodes2):
-                            return True
+                if _get_key_node(macid, path):
+                    key_node = _get_key_node(macid, path)
+                else:
+                    return False
+                decision_parents_not_desc_key_node = [
+                    node for node in macid.get_parents(decision) if node not in set(nx.descendants(macid, key_node))
+                ]
+                cond_nodes2 = [decision] + decision_parents_not_desc_key_node
+
+                if _effective_undir_path_not_blocked_by_set_w(macid, key_node, u, effective_set, cond_nodes2):
+                    return True
     else:
         return False
 
