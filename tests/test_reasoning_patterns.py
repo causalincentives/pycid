@@ -22,7 +22,7 @@ class TestReasoning(unittest.TestCase):
         )
         self.assertTrue(direct_effect(macid, "D1"))
         self.assertFalse(direct_effect(macid, "D2"))
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             direct_effect(macid, "D3")
 
     def test_manipulation(self) -> None:
@@ -34,10 +34,10 @@ class TestReasoning(unittest.TestCase):
         effective_set = {"D2"}  # by direct effect
         self.assertTrue(manipulation(macid, "D1", effective_set))
         self.assertFalse(manipulation(macid, "D2", effective_set))
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             manipulation(macid, "D3", effective_set)
         effective_set2 = {"A"}
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             manipulation(macid, "D1", effective_set2)
 
     def test_signaling(self) -> None:
@@ -49,10 +49,10 @@ class TestReasoning(unittest.TestCase):
         effective_set = {"D2"}  # by direct effect
         self.assertTrue(signaling(macid, "D1", effective_set))
         self.assertFalse(signaling(macid, "D2", effective_set))
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             signaling(macid, "D3", effective_set)
         effective_set2 = {"A"}
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             signaling(macid, "D1", effective_set2)
 
     def test_revealing_or_denying(self) -> None:
@@ -64,10 +64,10 @@ class TestReasoning(unittest.TestCase):
         effective_set = {"D2"}  # by direct effect
         self.assertTrue(revealing_or_denying(macid, "D1", effective_set))
         self.assertFalse(revealing_or_denying(macid, "D2", effective_set))
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             revealing_or_denying(macid, "D3", effective_set)
         effective_set2 = {"A"}
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             revealing_or_denying(macid, "D1", effective_set2)
 
     def test_get_reasoning_patterns(self) -> None:

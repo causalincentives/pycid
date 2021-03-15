@@ -116,17 +116,17 @@ class MACIDBase(BayesianModel):
             self.decision_agent[node] = agent
             self.add_cpds(cpd_new)
         else:
-            raise Exception(f"node {node} has not yet been assigned a domain.")
+            raise ValueError(f"node {node} has not yet been assigned a domain.")
 
     def make_chance(self, node: str) -> None:
         """Turn a decision node into a chance node."""
         if node in self.decisions:
             agent = self.decision_agent.pop(node)
             self.agent_decisions[agent].remove(node)
-        elif hasattr(self, "cpds") and node not in self.decisions:  # TODO: fix redundancy
+        elif hasattr(self, "cpds") and node not in self.decisions:
             pass
         elif not hasattr(self, "cpds"):
-            raise Exception("The (MA)CID has not yet been parameterised")
+            raise ValueError("The (MA)CID has not yet been parameterised")
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
@@ -138,7 +138,7 @@ class MACIDBase(BayesianModel):
             assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.decisions:
-                raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
+                raise ValueError(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             if isinstance(cpd, FunctionCPD):
                 sig = inspect.signature(cpd.function).parameters
                 arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
@@ -304,7 +304,7 @@ class MACIDBase(BayesianModel):
                 [factor.state_names[variable][idx[var_idx]] for var_idx, variable in enumerate(factor.variables)]
             )
             if np.isnan(ev).any():
-                raise Exception(
+                raise RuntimeError(
                     "query {} | {} generated Nan from idx: {}, prob: {}, \
                                 consider imputing a random decision".format(
                         variables, context, idx, prob
@@ -336,7 +336,7 @@ class MACIDBase(BayesianModel):
 
         By default, a topological ordering of the decision nodes is given"""
         if not nx.is_directed_acyclic_graph(self):
-            raise Exception("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
+            raise ValueError("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
 
         if nodes is None:
             nodes = self.decisions
@@ -344,7 +344,7 @@ class MACIDBase(BayesianModel):
             nodes = set(nodes)
             for node in nodes:
                 if node not in self.nodes:
-                    raise Exception(f"{node} is not in the (MA)CID.")
+                    raise ValueError(f"{node} is not in the (MA)CID.")
 
         srt = [node for node in nx.topological_sort(self) if node in nodes]
         return srt
@@ -490,7 +490,7 @@ class MACIDBase(BayesianModel):
         if current_cpd:
             sn = current_cpd.state_names[d]
         else:
-            raise Exception(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
+            raise ValueError(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         self.add_cpds(UniformRandomCPD(d, sn))
 
     def impute_fully_mixed_policy_profile(self) -> None:
@@ -650,7 +650,7 @@ class MechanismGraph(MACIDBase):
 
         for node in cid.nodes:
             if node[:-3] == "mec":
-                raise Exception("can't create a mechanism graph when node {node} already ends with mec")
+                raise ValueError("can't create a mechanism graph when node {node} already ends with mec")
             self.add_node(node + "mec")
             self.add_edge(node + "mec", node)
         # TODO: adapt the parameterization from cid as well

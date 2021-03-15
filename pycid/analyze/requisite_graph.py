@@ -16,16 +16,14 @@ def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
 
     Returns True if the node is requisite.
     """
-    if decision not in cid.nodes:
-        raise Exception(f"{decision} is not present in the cid")
     if node not in cid.get_parents(decision):
-        raise Exception(f"{node} is not a parent of {decision}")
+        raise ValueError(f"{node} is not a parent of {decision}")
 
     agent_utilities = cid.agent_utilities[cid.decision_agent[decision]]
     descended_agent_utilities = set(agent_utilities).intersection(nx.descendants(cid, decision))
     family_d = [decision] + cid.get_parents(decision)
     conditioning_nodes = [i for i in family_d if i != node]
-    return any([cid.is_active_trail(node, u_node, conditioning_nodes) for u_node in descended_agent_utilities])
+    return any(cid.is_active_trail(node, u_node, conditioning_nodes) for u_node in descended_agent_utilities)
 
 
 def requisite_list(cid: MACIDBase, decision: str) -> List[str]:

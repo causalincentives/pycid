@@ -28,7 +28,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(cid.decision_agent["S"], 0)
         self.assertCountEqual(cid.agent_decisions[0], ["D", "S"])
         cid2 = cid.copy_without_cpds()
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             cid2.make_decision("S")
 
     def test_make_chance(self) -> None:
@@ -90,10 +90,10 @@ class TestBASE(unittest.TestCase):
         macid = prisoners_dilemma()
         self.assertEqual(macid.get_valid_order(), ["D2", "D1"])
         rg = RelevanceGraph(macid)
-        with self.assertRaises(Exception):
+        with self.assertRaises(AttributeError):
             rg.get_valid_order()
             # TODO we're checking that the relevance graph doesn't have a valid order method? why?
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             macid.get_valid_order(["D3"])
 
     # @unittest.skip("")
@@ -228,7 +228,7 @@ class TestBASE(unittest.TestCase):
         example2 = taxi_competition()
         self.assertTrue(example2.sufficient_recall(1))
         self.assertTrue(example2.sufficient_recall(2))
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.assertTrue(example2.sufficient_recall(3))
 
 

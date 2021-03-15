@@ -109,7 +109,7 @@ def manipulation(macid: MACID, decision: str, effective_set: Set[str]) -> bool:
     3) There is a directed, effective path from D_A to U_B that does not pass through D_B.
     """
     if any(node not in macid.nodes for node in effective_set):
-        raise ValueError("One or many of the nodes in the effective_set are not present in the macid.")
+        raise KeyError("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
@@ -146,7 +146,7 @@ def signaling(macid: MACID, decision: str, effective_set: Set[str]) -> bool:
 
     """
     if any(node not in macid.nodes for node in effective_set):
-        raise ValueError("One or many of the nodes in the effective_set are not present in the macid.")
+        raise KeyError("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
@@ -198,7 +198,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: Set[str]) -
     3) There is an effective indirect front-door path π from D_A to U_B that is not blocked by D_B U W^{D_A}_{D_B}.
     """
     if any(node not in macid.nodes for node in effective_set):
-        raise ValueError("One or many of the nodes in the effective_set are not present in the macid.")
+        raise KeyError("One or many of the nodes in the effective_set are not present in the macid.")
 
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]

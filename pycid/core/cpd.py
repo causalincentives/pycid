@@ -159,7 +159,7 @@ class FunctionCPD(TabularCPD):
         if self.force_state_names:
             state_names_list = self.force_state_names
             if not set(self.possible_values(cid)).issubset(state_names_list):
-                raise Exception("variable {} can take value outside given state_names".format(self.variable))
+                raise ValueError("variable {} can take value outside given state_names".format(self.variable))
         else:
             state_names_list = self.possible_values(cid)
 

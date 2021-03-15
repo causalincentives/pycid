@@ -42,7 +42,7 @@ class MACID(MACIDBase):
 
         for dec in decisions_in_sg:
             if dec not in self.decisions:
-                raise Exception(f"The node {dec} is not a decision node in the (MACID")
+                raise ValueError(f"The node {dec} is not a decision node in the (MACID")
 
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
         agent_decs_in_sg = {

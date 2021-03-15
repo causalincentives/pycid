@@ -12,15 +12,14 @@ def admits_ici(cid: CID, decision: str, node: str) -> bool:
         i.e. a directed path D --> X --> U.
     """
     if len(cid.agents) > 1:
-        raise Exception(
-            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent."
+        raise ValueError(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only valid for CIDs with one agent."
         )
 
     if node not in cid.nodes:
-        raise Exception(f"{node} is not present in the cid")
+        raise ValueError(f"{node} is not present in the cid")
     if decision not in cid.nodes:
-        raise Exception(f"{decision} is not present in the cid")
+        raise ValueError(f"{decision} is not present in the cid")
 
     agent_utilities = cid.utilities
     d_u_paths = [path for util in agent_utilities for path in find_all_dir_paths(cid, decision, util)]

@@ -76,7 +76,7 @@ class TestMACID(unittest.TestCase):
         self.assertFalse(policy_assignment["D1"])
         ne_in_full_macid = macid.get_all_pure_ne_in_sg()
         self.assertEqual(len(ne_in_full_macid), 3)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             macid.get_all_pure_ne_in_sg(decisions_in_sg=["D3"])
 
     # @unittest.skip("")

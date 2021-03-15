@@ -15,15 +15,14 @@ def admits_voc(cid: CID, node: str) -> bool:
     in the reduced graph G∗.
     """
     if len(cid.agents) > 1:
-        raise Exception(
-            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent."
+        raise ValueError(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only valid for CIDs with one agent."
         )
 
     if node not in cid.nodes:
-        raise Exception(f"{node} is not present in the cid")
+        raise ValueError(f"{node} is not present in the cid")
     if not cid.sufficient_recall():
-        raise Exception("VoC only implemented graphs with sufficient recall")
+        raise ValueError("VoC only implemented graphs with sufficient recall")
     if node in cid.decisions:
         return False
 
@@ -56,17 +55,16 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     active when conditioning on Fa_D \ {X}
     """
     if len(cid.agents) > 1:
-        raise Exception(
-            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent."
+        raise ValueError(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only valid for CIDs with one agent."
         )
 
     if node not in cid.nodes:
-        raise Exception(f"{node} is not present in the cid")
+        raise ValueError(f"{node} is not present in the cid")
     if decision not in cid.nodes:
-        raise Exception(f"{decision} is not present in the cid")
+        raise ValueError(f"{decision} is not present in the cid")
     if not cid.sufficient_recall():
-        raise Exception("VoC only implemented graphs with sufficient recall")
+        raise ValueError("VoC only implemented graphs with sufficient recall")
 
     agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)
@@ -104,13 +102,12 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
     active when conditioning on Fa_D \ {X}
     """
     if len(cid.agents) > 1:
-        raise Exception(
-            f"This CID has {len(cid.agents)} agents. This incentive is currently only \
-                        valid for CIDs with one agent."
+        raise ValueError(
+            f"This CID has {len(cid.agents)} agents. This incentive is currently only valid for CIDs with one agent."
         )
 
     if node not in cid.nodes:
-        raise Exception(f"{node} is not present in the cid")
+        raise ValueError(f"{node} is not present in the cid")
 
     agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)
