@@ -5,7 +5,7 @@ import itertools
 import logging
 import random
 from functools import lru_cache
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -65,12 +65,12 @@ class MACIDBase(BayesianModel):
         self._cpds_to_add: Dict[str, TabularCPD] = {}
 
     @property
-    def all_decision_nodes(self) -> List[str]:
-        return list(set(itertools.chain.from_iterable(self.agent_decisions.values())))
+    def all_decision_nodes(self) -> Set[str]:
+        return set(itertools.chain.from_iterable(self.agent_decisions.values()))
 
     @property
-    def all_utility_nodes(self) -> List[str]:
-        return list(set(itertools.chain.from_iterable(self.agent_utilities.values())))
+    def all_utility_nodes(self) -> Set[str]:
+        return set(itertools.chain.from_iterable(self.agent_utilities.values()))
 
     @property
     def agents(self) -> List[AgentLabel]:
@@ -111,7 +111,7 @@ class MACIDBase(BayesianModel):
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
-        Add the given CPDs and initiate FunctionCPDs, UniformRandomCPDs etc
+        Add the given CPDs and initialize FunctionCPDs, UniformRandomCPDs etc
         """
 
         # Add each cpd to self._cpds_to_add after doing some checks
@@ -312,21 +312,22 @@ class MACIDBase(BayesianModel):
         """
         return sum(self.expected_value(self.agent_utilities[agent], context, intervene=intervene))
 
-    def get_valid_order(self, nodes: List[str] = None) -> List[str]:
+    def get_valid_order(self, nodes: Optional[Iterable[str]] = None) -> List[str]:
         """Get a topological order of the specified set of nodes (this may not be unique).
 
         By default, a topological ordering of the decision nodes is given"""
         if not nx.is_directed_acyclic_graph(self):
             raise Exception("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
 
-        if nodes:
+        if nodes is None:
+            nodes = self.all_decision_nodes
+        else:
+            nodes = set(nodes)
             for node in nodes:
                 if node not in self.nodes:
                     raise Exception(f"{node} is not in the (MA)CID.")
 
-        if not nodes:
-            nodes = self.all_decision_nodes
-        srt = [i for i in nx.topological_sort(self) if i in nodes]
+        srt = [node for node in nx.topological_sort(self) if node in nodes]
         return srt
 
     def is_s_reachable(self, d1: Union[str, Iterable[str]], d2: Union[str, Iterable[str]]) -> bool:
