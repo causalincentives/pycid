@@ -1,4 +1,3 @@
-import copy
 from typing import Any, Dict, List, Union
 
 import networkx as nx
@@ -147,7 +146,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     agent = macid.whose_node[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = copy.deepcopy(macid.all_decision_nodes)
+    list_decs = list(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
@@ -187,7 +186,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     agent = macid.whose_node[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = copy.deepcopy(macid.all_decision_nodes)
+    list_decs = list(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
@@ -246,7 +245,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
     agent = macid.whose_node[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = copy.deepcopy(macid.all_decision_nodes)
+    list_decs = list(macid.all_decision_nodes)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
