@@ -15,14 +15,12 @@ from pycid.core.macid_base import MACIDBase
 
 
 def _get_key_node(mb: MACIDBase, path: List[str]) -> str:
-    """
-    Returns the key node of a path (ie the first "fork" node in the path)
-    """
+    """Find the key node of a path (ie the first "fork" node in the path)."""
     for _, b, _ in zip(path[:-2], path[1:-1], path[2:]):
         structure = get_motif(mb, path, path.index(b))
         if structure == "fork":
             return b
-    return ""  # shouldn't happen
+    raise ValueError("No key node found")
 
 
 def _effective_dir_path_exists(mb: MACIDBase, start: str, finish: str, effective_set: List[str]) -> bool:
