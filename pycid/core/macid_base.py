@@ -98,35 +98,40 @@ class MACIDBase(BayesianModel):
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
-        if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
-            self.add_cpds(self.get_cpds(v))
+        # remove_edge can be called during __init__ when cpds is not yet defined
+        if not hasattr(self, "cpds"):
+            return
+        cpd = self.get_cpds(v)
+        if isinstance(cpd, UniformRandomCPD):
+            self.add_cpds(cpd)
 
     def add_edge(self, u: str, v: str) -> None:
         super().add_edge(u, v)
-        if hasattr(self, "cpds") and isinstance(self.get_cpds(v), UniformRandomCPD):
-            self.add_cpds(self.get_cpds(v))
+        # add_edge can be called during __init__ when cpds is not yet defined
+        if not hasattr(self, "cpds"):
+            return
+        cpd = self.get_cpds(v)
+        if isinstance(cpd, UniformRandomCPD):
+            self.add_cpds(cpd)
 
     def make_decision(self, node: str, agent: AgentLabel = 0) -> None:
         """"Turn a chance or utility node into a decision node."""
-        if hasattr(self, "cpds") and isinstance(self.get_cpds(node), DecisionDomain):
+        cpd = self.get_cpds(node)
+        if cpd is None:
+            raise ValueError(f"node {node} has not yet been assigned a domain.")
+        elif isinstance(cpd, DecisionDomain):
+            # Already a decision
             pass
-        elif hasattr(self, "cpds") and not isinstance(self.get_cpds(node), DecisionDomain):
-            cpd_new = DecisionDomain(node, self.get_cpds(node).state_names[node])
+        else:
+            cpd_new = DecisionDomain(node, cpd.state_names[node])
             self.agent_decisions[agent].append(node)
             self.decision_agent[node] = agent
             self.add_cpds(cpd_new)
-        else:
-            raise ValueError(f"node {node} has not yet been assigned a domain.")
 
     def make_chance(self, node: str) -> None:
         """Turn a decision node into a chance node."""
-        if node in self.decisions:
-            agent = self.decision_agent.pop(node)
-            self.agent_decisions[agent].remove(node)
-        elif hasattr(self, "cpds") and node not in self.decisions:
-            pass
-        elif not hasattr(self, "cpds"):
-            raise ValueError("The (MA)CID has not yet been parameterised")
+        agent = self.decision_agent.pop(node)
+        self.agent_decisions[agent].remove(node)
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
