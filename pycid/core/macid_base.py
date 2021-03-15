@@ -68,12 +68,12 @@ class MACIDBase(BayesianModel):
         self._cpds_to_add: Dict[str, TabularCPD] = {}
 
     @property
-    def all_decision_nodes(self) -> KeysView[str]:
+    def decisions(self) -> KeysView[str]:
         """The set of all decision nodes"""
         return self.decision_agent.keys()
 
     @property
-    def all_utility_nodes(self) -> KeysView[str]:
+    def utilities(self) -> KeysView[str]:
         """The set of all utility nodes"""
         return self.utility_agent.keys()
 
@@ -109,7 +109,7 @@ class MACIDBase(BayesianModel):
         if node in self.decisions:
             agent = self.decision_agent.pop(node)
             self.agent_decisions[agent].remove(node)
-        elif hasattr(self, "cpds") and node not in self.all_decision_nodes:  # TODO: fix redundancy
+        elif hasattr(self, "cpds") and node not in self.decisions:  # TODO: fix redundancy
             pass
         elif not hasattr(self, "cpds"):
             raise Exception("The (MA)CID has not yet been parameterised")
@@ -123,7 +123,7 @@ class MACIDBase(BayesianModel):
         for cpd in cpds:
             assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
-            if isinstance(cpd, DecisionDomain) and cpd.variable not in self.all_decision_nodes:
+            if isinstance(cpd, DecisionDomain) and cpd.variable not in self.decisions:
                 raise Exception(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
             if isinstance(cpd, FunctionCPD):
                 sig = inspect.signature(cpd.function).parameters
@@ -204,7 +204,7 @@ class MACIDBase(BayesianModel):
 
         # Check that strategically relevant decisions have a policy specified
         mech_graph = MechanismGraph(cid)
-        for decision in cid.all_decision_nodes:
+        for decision in cid.decisions:
             for query_node in query:
                 if mech_graph.is_active_trail(
                     decision + "mec", query_node, observed=list(context.keys()) + list(intervention.keys())
@@ -325,7 +325,7 @@ class MACIDBase(BayesianModel):
             raise Exception("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
 
         if nodes is None:
-            nodes = self.all_decision_nodes
+            nodes = self.decisions
         else:
             nodes = set(nodes)
             for node in nodes:
@@ -344,7 +344,7 @@ class MACIDBase(BayesianModel):
         D2′ to U given Pa(D)∪{D}, where a path is active in a MAID if it is active in the same graph, viewed as a BN.
 
         """
-        assert d2 in self.all_decision_nodes
+        assert d2 in self.decisions
         return self.is_r_reachable(d1, d2)
 
     def is_r_reachable(self, decisions: Union[str, Iterable[str]], nodes: Union[str, Iterable[str]]) -> bool:
@@ -450,7 +450,7 @@ class MACIDBase(BayesianModel):
             raise ValueError("Decisions not all from the same agent")
 
         macid = self.copy()
-        for d in macid.all_decision_nodes:
+        for d in macid.decisions:
             if (
                 isinstance(macid.get_cpds(d), DecisionDomain)
                 and not macid.is_s_reachable(decisions, d)
@@ -481,7 +481,7 @@ class MACIDBase(BayesianModel):
 
     def impute_fully_mixed_policy_profile(self) -> None:
         """Impute a fully mixed policy profile - ie a random decision rule to all decision nodes"""
-        for d in self.all_decision_nodes:
+        for d in self.decisions:
             self.impute_random_decision(d)
 
     def impute_optimal_decision(self, d: str) -> None:
@@ -555,9 +555,9 @@ class MACIDBase(BayesianModel):
             return "lightgray"  # chance node
 
     def _get_shape(self, node: str) -> str:
-        if node in self.all_decision_nodes:
+        if node in self.decisions:
             return "s"
-        elif node in self.all_utility_nodes:
+        elif node in self.utilities:
             return "D"
         else:
             return "o"

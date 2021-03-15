@@ -28,8 +28,6 @@ class CID(MACIDBase):
         """
         # Initialize a MACID with a single agent labelled `0`
         super().__init__(edges=edges, agent_decisions={0: decisions}, agent_utilities={0: utilities})
-        self.decisions = self.agent_decisions[0]
-        self.utilities = self.agent_utilities[0]
 
     def impute_optimal_policy(self) -> None:
         """Impute an optimal policy to all decision nodes"""

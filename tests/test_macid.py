@@ -39,7 +39,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(policy_assignment["D1"])
         self.assertFalse(policy_assignment["D2"])
         macid.impute_fully_mixed_policy_profile()
-        joint_policy = [macid.get_cpds(d) for d in macid.all_decision_nodes]
+        joint_policy = [macid.get_cpds(d) for d in macid.decisions]
         joint_policy_assignment = macid.policy_profile_assignment(joint_policy)
         self.assertTrue(joint_policy_assignment["D1"])
         self.assertTrue(joint_policy_assignment["D2"])

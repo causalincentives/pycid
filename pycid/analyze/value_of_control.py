@@ -24,11 +24,11 @@ def admits_voc(cid: CID, node: str) -> bool:
         raise Exception(f"{node} is not present in the cid")
     if not cid.sufficient_recall():
         raise Exception("VoC only implemented graphs with sufficient recall")
-    if node in cid.all_decision_nodes:
+    if node in cid.decisions:
         return False
 
     req_graph = requisite_graph(cid)
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utilities
 
     for util in agent_utilities:
         if node == util or util in nx.descendants(req_graph, node):
@@ -68,7 +68,7 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     if not cid.sufficient_recall():
         raise Exception("VoC only implemented graphs with sufficient recall")
 
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)
     d_family = [decision] + cid.get_parents(decision)
     con_nodes = [i for i in d_family if i != node]
@@ -112,7 +112,7 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
     if node not in cid.nodes:
         raise Exception(f"{node} is not present in the cid")
 
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)
 
     if not admits_voc(cid, node):
@@ -122,7 +122,7 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
         if node == util or util in nx.descendants(req_graph, node):
             x_u_paths = find_all_dir_paths(req_graph, node, util)
             for path in x_u_paths:
-                if not set(path).intersection(cid.all_decision_nodes):
+                if not set(path).intersection(cid.decisions):
                     return True
 
     return False

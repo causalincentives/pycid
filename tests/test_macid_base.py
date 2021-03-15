@@ -22,9 +22,9 @@ class TestBASE(unittest.TestCase):
 
     def test_make_decision(self) -> None:
         cid = get_3node_cid()
-        self.assertCountEqual(cid.all_decision_nodes, ["D"])
+        self.assertCountEqual(cid.decisions, ["D"])
         cid.make_decision("S")
-        self.assertCountEqual(cid.all_decision_nodes, ["D", "S"])
+        self.assertCountEqual(cid.decisions, ["D", "S"])
         self.assertEqual(cid.decision_agent["S"], 0)
         self.assertCountEqual(cid.agent_decisions[0], ["D", "S"])
         cid2 = cid.copy_without_cpds()
@@ -33,11 +33,11 @@ class TestBASE(unittest.TestCase):
 
     def test_make_chance(self) -> None:
         cid = get_3node_cid()
-        self.assertCountEqual(cid.all_decision_nodes, ["D"])
+        self.assertCountEqual(cid.decisions, ["D"])
         cid.make_decision("S")
-        self.assertCountEqual(cid.all_decision_nodes, ["D", "S"])
+        self.assertCountEqual(cid.decisions, ["D", "S"])
         cid.make_chance("S")
-        self.assertCountEqual(cid.all_decision_nodes, ["D"])
+        self.assertCountEqual(cid.decisions, ["D"])
 
     # @unittest.skip("")
     def test_assign_cpd(self) -> None:
@@ -209,8 +209,8 @@ class TestBASE(unittest.TestCase):
     def test_mechanism_graph(self) -> None:
         example = taxi_competition()
         mg = MechanismGraph(example)
-        self.assertCountEqual(mg.all_decision_nodes, ["D1", "D2"])
-        self.assertCountEqual(mg.all_utility_nodes, ["U1", "U2"])
+        self.assertCountEqual(mg.decisions, ["D1", "D2"])
+        self.assertCountEqual(mg.utilities, ["U1", "U2"])
         self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
 
     # @unittest.skip("")

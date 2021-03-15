@@ -158,7 +158,7 @@ def directed_decision_free_path(mb: MACIDBase, start_node: str, end_node: str) -
 
     start_to_end_paths = find_all_dir_paths(mb, start_node, end_node)
     dec_free_path_exists = any(
-        set(mb.all_decision_nodes).isdisjoint(set(path[1:-1])) for path in start_to_end_paths
+        set(mb.decisions).isdisjoint(set(path[1:-1])) for path in start_to_end_paths
     )  # ignore path's start_node and end_node
     if start_to_end_paths and dec_free_path_exists:
         return True

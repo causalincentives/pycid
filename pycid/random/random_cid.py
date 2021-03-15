@@ -36,7 +36,7 @@ def random_cid(
 
     if add_cpds:
         for node in cid.nodes:
-            if node in cid.all_decision_nodes:
+            if node in cid.decisions:
                 cid.add_cpds(DecisionDomain(node, [0, 1]))
             elif not cid.get_parents(node):  # node is a root node
                 cid.add_cpds(UniformRandomCPD(node, [0, 1]))
@@ -67,7 +67,7 @@ def random_cids(
 
         cid = random_cid(n_all, n_decisions, n_utilities, edge_density, add_sr_edges=add_sr_edges, seed=seed)
 
-        for uname in cid.all_utility_nodes:
+        for uname in cid.utilities:
             for edge in cid.edges:
                 assert uname != edge[0]
         if cid.sufficient_recall():
@@ -156,8 +156,8 @@ def _add_sufficient_recall(cid: CID, dec1: str, dec2: str, utility_node: str) ->
 
 def add_sufficient_recalls(cid: CID) -> None:
     """add edges to a cid until all decisions have sufficient recall of all prior decisions"""
-    decisions = list(cid.all_decision_nodes)
-    for utility_node in cid.all_utility_nodes:
+    decisions = list(cid.decisions)
+    for utility_node in cid.utilities:
         # decisions = cid._get_valid_order(cid.decisions)  # cannot be trusted...
         for i, dec1 in enumerate(decisions):
             for dec2 in decisions[i + 1 :]:

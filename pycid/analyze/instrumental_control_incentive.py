@@ -22,7 +22,7 @@ def admits_ici(cid: CID, decision: str, node: str) -> bool:
     if decision not in cid.nodes:
         raise Exception(f"{decision} is not present in the cid")
 
-    agent_utilities = cid.all_utility_nodes
+    agent_utilities = cid.utilities
     d_u_paths = [path for util in agent_utilities for path in find_all_dir_paths(cid, decision, util)]
     if any(node in path for path in d_u_paths):
         return True

@@ -24,7 +24,7 @@ class RelevanceGraph(nx.DiGraph):
     def __init__(self, cid: MACIDBase, decisions: Iterable[str] = None):
         super().__init__()
         if decisions is None:
-            decisions = cid.all_decision_nodes
+            decisions = cid.decisions
         self.add_nodes_from(decisions)
         dec_pair_perms = list(itertools.permutations(decisions, 2))
         for dec_pair in dec_pair_perms:

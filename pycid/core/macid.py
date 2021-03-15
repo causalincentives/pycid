@@ -36,12 +36,12 @@ class MACID(MACIDBase):
         """
         # TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         if decisions_in_sg is None:
-            decisions_in_sg = self.all_decision_nodes
+            decisions_in_sg = self.decisions
         else:
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
 
         for dec in decisions_in_sg:
-            if dec not in self.all_decision_nodes:
+            if dec not in self.decisions:
                 raise Exception(f"The node {dec} is not a decision node in the (MACID")
 
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
@@ -51,7 +51,7 @@ class MACID(MACIDBase):
 
         # impute random decisions to non-instantiated, irrelevant decision nodes
         macid = self.copy()
-        for d in macid.all_decision_nodes:
+        for d in macid.decisions:
             if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
 
@@ -77,7 +77,7 @@ class MACID(MACIDBase):
         ie a decision rule for each of the MACIM's decision nodes."""
         new_macid = self.copy_without_cpds()
         new_macid.add_cpds(*partial_policy)  # TODO: James, why does it add them to a new MACID? (Tom wonders)
-        return {d: new_macid.get_cpds(d) for d in new_macid.all_decision_nodes}
+        return {d: new_macid.get_cpds(d) for d in new_macid.decisions}
 
     def get_all_pure_spe(self) -> List[List[FunctionCPD]]:
         """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM

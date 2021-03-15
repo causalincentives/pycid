@@ -54,7 +54,7 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: List[str])
     """
     checks whether a path is effective
     """
-    dec_nodes_in_path = set(mb.all_decision_nodes).intersection(set(path[1:]))  # exclude first node of the path
+    dec_nodes_in_path = set(mb.decisions).intersection(set(path[1:]))  # exclude first node of the path
     all_dec_nodes_effective = all(dec_node in effective_set for dec_node in dec_nodes_in_path)
     # all([]) evaluates to true => this covers case where path has no decision nodes
     if all_dec_nodes_effective:
@@ -146,7 +146,7 @@ def manipulation(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = list(macid.all_decision_nodes)
+    list_decs = list(macid.decisions)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
@@ -186,7 +186,7 @@ def signaling(macid: MACID, decision: str, effective_set: List[str]) -> bool:
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = list(macid.all_decision_nodes)
+    list_decs = list(macid.decisions)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
@@ -245,7 +245,7 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: List[str]) 
     agent = macid.decision_agent[decision]
     agent_utils = macid.agent_utilities[agent]
     reachable_decisions = []  # set of possible D_B
-    list_decs = list(macid.all_decision_nodes)
+    list_decs = list(macid.decisions)
     list_decs.remove(decision)
     for dec_reach in list_decs:
         if dec_reach in effective_set:
@@ -280,7 +280,7 @@ def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
     (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
     motivations: Dict[str, List[str]] = {"dir_effect": [], "sig": [], "manip": [], "rev_den": []}
-    effective_set = list(mb.all_decision_nodes)
+    effective_set = list(mb.decisions)
     while True:
         new_set = [
             dec
