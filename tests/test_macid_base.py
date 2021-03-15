@@ -5,10 +5,10 @@ import numpy as np
 import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-from pycid.core.macid_base import MechanismGraph
-from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 from examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
 from examples.story_macids import forgetful_movie_star, prisoners_dilemma, subgame_difference, taxi_competition
+from pycid.core.macid_base import MechanismGraph
+from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 
 
 class TestBASE(unittest.TestCase):
@@ -50,12 +50,21 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_query(self) -> None:
         three_node = get_3node_cid()
-        with self.assertRaises(Exception):
+        three_node.query(["U"], {"D": -1}, intervention={"S": 1})
+        # The following queries should not be allowed before a policy is specified
+        with self.assertRaises(ValueError):
             three_node.query(["U"], {})
-        with self.assertRaises(Exception):
-            three_node.query(["U"], {"D": 0})
+        with self.assertRaises(ValueError):
+            three_node.query(["U"], {"D": 1})
+        with self.assertRaises(ValueError):
+            three_node.query(["U"], {"S": 1})
+        # but should be allowed after
         three_node.impute_random_policy()
-        with self.assertRaises(Exception):
+        three_node.query(["U"], {})
+        three_node.query(["U"], {"D": 1})
+        three_node.query(["U"], {"S": 1})
+        # contexts still need be within the domain of the variable
+        with self.assertRaises(ValueError):
             three_node.query(["U"], {"S": 0})
 
     # @unittest.skip("")
@@ -83,6 +92,7 @@ class TestBASE(unittest.TestCase):
         rg = RelevanceGraph(macid)
         with self.assertRaises(Exception):
             rg.get_valid_order()
+            # TODO we're checking that the relevance graph doesn't have a valid order method? why?
         with self.assertRaises(Exception):
             macid.get_valid_order(["D3"])
 
