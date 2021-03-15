@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple
 
-import matplotlib.cm as cm
 import networkx as nx
-import numpy as np
 
 from pycid.core.cpd import DecisionDomain, FunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -128,13 +126,3 @@ class MACID(MACIDBase):
             agent_decisions=self.agent_decisions,
             agent_utilities=self.agent_utilities,
         )
-
-    def _get_color(self, node: str) -> Union[str, np.ndarray]:
-        """
-        Assign a unique colour with each new agent's decision and utility nodes
-        """
-        colors = cm.rainbow(np.linspace(0, 1, len(self.agents)))
-        if node in self.all_decision_nodes or node in self.all_utility_nodes:
-            return colors[[self.agents.index(self.whose_node[node])]]  # type: ignore
-        else:
-            return "lightgray"  # chance node
