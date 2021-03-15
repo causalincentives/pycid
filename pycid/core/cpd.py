@@ -75,7 +75,6 @@ class FunctionCPD(TabularCPD):
         self,
         variable: str,
         function: Callable[..., State],
-        evidence: Sequence[str],
         state_names: Optional[Dict[str, Sequence[State]]] = None,
         label: str = None,
     ) -> None:
@@ -86,10 +85,8 @@ class FunctionCPD(TabularCPD):
         ----------
         variable: The variable name.
 
-        f: A function mapping evidence observations to an outcome for this variable.
+        function: A function mapping evidence observations to an outcome for this variable.
             Observations are passed by position according to the order of `evidence`.
-
-        evidence: The variables used as inputs to `f`.
 
         state_names: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
@@ -98,8 +95,7 @@ class FunctionCPD(TabularCPD):
         """
         self.variable = variable
         self.function = function
-        self.evidence = evidence
-        self.cid: BayesianModel = None
+        self.cid: Optional[BayesianModel] = None
 
         if state_names is not None:
             assert isinstance(state_names, dict)
@@ -111,6 +107,7 @@ class FunctionCPD(TabularCPD):
         if label is not None:
             self.label = label
         else:
+            sl = ""
             try:
                 sl = getsourcelines(self.function)[0][0]
             except OSError:
@@ -179,7 +176,7 @@ class FunctionCPD(TabularCPD):
 
     def copy(self) -> FunctionCPD:
         state_names = {self.variable: self.force_state_names} if self.force_state_names else None
-        return FunctionCPD(self.variable, self.function, self.evidence, state_names=state_names)
+        return FunctionCPD(self.variable, self.function, state_names=state_names)
 
     def dictionary(self) -> Dict[str, str]:
         return {str(pv): str(self.function(**pv)) for pv in self.parent_values(self.cid)}
@@ -203,14 +200,14 @@ class RandomlySampledFunctionCPD(FunctionCPD):
     Instantiates a randomly chosen FunctionCPD for the variable
     """
 
-    def __init__(self, variable: str, evidence: Sequence[str]) -> None:
+    def __init__(self, variable: str) -> None:
         possible_functions = [
             lambda **pv: np.prod(list(pv.values())),
             lambda **pv: np.sum(list(pv.values())),
             lambda **pv: 1 - np.prod(list(pv.values())),
             lambda **pv: 1 - np.sum(list(pv.values())),
         ]
-        super().__init__(variable, random.choice(possible_functions), evidence)
+        super().__init__(variable, random.choice(possible_functions))
 
 
 class DecisionDomain(UniformRandomCPD):

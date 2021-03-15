@@ -27,7 +27,7 @@ cid = CID([('S', 'D'),   # add nodes S and D, and a link S -> D
 cid.add_cpds(
     UniformRandomCPD('S', [-1, 1]),  # S is -1 or 1 with equal probability
     DecisionDomain('D', [-1, 1]),  # the permitted choices for D are -1 and 1
-    FunctionCPD('U', lambda s, d: s*d, evidence=['S', 'D']) # U is the product of S and D
+    FunctionCPD('U', lambda s, d: s*d) # U is the product of S and D (argument names are lowercase versions of the variable names)
 )
 
 # Draw the result
@@ -52,9 +52,8 @@ The code is structured into the following folders:
 * [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [pycid/random](pycid/random) has methods for generating random CIDs.
-* [examples](./examples) has a range of pre-specified CIDs and MACIDs,
-  as well as methods for generating random ones.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
+* [examples](./examples) has a range of pre-specified CIDs and MACIDs.
 * [tests](./tests) has unit tests for all public methods.
 
 ## Installation and setup

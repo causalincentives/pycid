@@ -242,7 +242,7 @@ class MACIDBase(BayesianModel):
             for p in self.get_parents(v):
                 self.remove_edge(p, v)
         for variable, value in intervention.items():
-            cpd = FunctionCPD(variable, lambda: value, evidence=self.get_parents(variable))
+            cpd = FunctionCPD(variable, lambda: value)
             self.add_cpds(cpd)
 
     def expected_value(
@@ -408,9 +408,7 @@ class MACIDBase(BayesianModel):
             def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            function_cpds.append(
-                FunctionCPD(decision, produce_function(), cpd.variables[1:], state_names=cpd.state_names)
-            )
+            function_cpds.append(FunctionCPD(decision, produce_function(), state_names=cpd.state_names))
         return function_cpds
 
     def pure_strategies(self, decision_nodes: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
@@ -497,7 +495,7 @@ class MACIDBase(BayesianModel):
             context = {p: pv[p.lower()] for p in parents}
             return new.expected_value([y], context)[0]
 
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, parents, label="cond_exp({})".format(y)))
+        self.add_cpds(FunctionCPD(d, cond_exp_policy, label="cond_exp({})".format(y)))
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""

@@ -3,6 +3,14 @@ import unittest
 
 import pytest
 
+from examples.simple_cids import get_minimal_cid, get_trim_example_cid
+from examples.story_cids import (
+    get_content_recommender,
+    get_fitness_tracker,
+    get_grade_predictor,
+    get_introduced_bias,
+    get_modified_content_recommender,
+)
 from pycid.analyze.effects import introduced_total_effect, total_effect
 from pycid.analyze.instrumental_control_incentive import admits_ici, admits_ici_list
 from pycid.analyze.requisite_graph import requisite, requisite_graph
@@ -18,14 +26,6 @@ from pycid.analyze.value_of_control import (
 from pycid.analyze.value_of_information import admits_voi, admits_voi_list
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid import MACID
-from examples.simple_cids import get_minimal_cid, get_trim_example_cid
-from examples.story_cids import (
-    get_content_recommender,
-    get_fitness_tracker,
-    get_grade_predictor,
-    get_introduced_bias,
-    get_modified_content_recommender,
-)
 
 
 class TestAnalyze(unittest.TestCase):
@@ -65,19 +65,19 @@ class TestAnalyze(unittest.TestCase):
         # Try modified model where X doesn't depend on Z
         cid = get_introduced_bias()
         cid.impute_random_policy()
-        cid.add_cpds(FunctionCPD("X", lambda a, z: a, evidence=["A", "Z"]))
+        cid.add_cpds(FunctionCPD("X", lambda a, z: a))
         cid.impute_conditional_expectation_decision("D", "Y")
         self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0, 2)
         # Try modified model where Y doesn't depend on Z
         cid = get_introduced_bias()
         cid.impute_random_policy()
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: x, evidence=["X", "Z"]))
+        cid.add_cpds(FunctionCPD("Y", lambda x, z: x))
         cid.impute_conditional_expectation_decision("D", "Y")
         self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0, 2)
         # Try modified model where Y doesn't depend on X
         cid = get_introduced_bias()
         cid.impute_random_policy()
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: z, evidence=["X", "Z"]))
+        cid.add_cpds(FunctionCPD("Y", lambda x, z: z))
         cid.impute_conditional_expectation_decision("D", "Y")
         self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0.333, 2)
 

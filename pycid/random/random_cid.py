@@ -41,7 +41,7 @@ def random_cid(
             elif not cid.get_parents(node):  # node is a root node
                 cid.add_cpds(UniformRandomCPD(node, [0, 1]))
             else:
-                cid.add_cpds(RandomlySampledFunctionCPD(node, cid.get_parents(node)))
+                cid.add_cpds(RandomlySampledFunctionCPD(node))
     return cid
 
 

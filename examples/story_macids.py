@@ -36,12 +36,8 @@ def prisoners_dilemma() -> MACID:
     agent1_payoff = np.array([[-1, -3], [0, -2]])
     agent2_payoff = np.transpose(agent1_payoff)
 
-    cpd_u1 = FunctionCPD(
-        "U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=["D1", "D2"]
-    )
-    cpd_u2 = FunctionCPD(
-        "U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=["D1", "D2"]
-    )
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)])
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
@@ -79,12 +75,8 @@ def battle_of_the_sexes() -> MACID:
     agent_f_payoff = np.array([[3, 0], [0, 2]])
     agent_m_payoff = np.array([[2, 0], [0, 3]])
 
-    cpd_u_f = FunctionCPD(
-        "U_F", lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)], evidence=["D_F", "D_M"]
-    )
-    cpd_u_m = FunctionCPD(
-        "U_M", lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)], evidence=["D_F", "D_M"]
-    )
+    cpd_u_f = FunctionCPD("U_F", lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)])
+    cpd_u_m = FunctionCPD("U_M", lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)])
 
     macid.add_cpds(cpd_d_f, cpd_d_m, cpd_u_f, cpd_u_m)
     return macid
@@ -122,12 +114,8 @@ def matching_pennies() -> MACID:
     agent1_payoff = np.array([[1, -1], [-1, 1]])
     agent2_payoff = np.array([[-1, 1], [1, -1]])
 
-    cpd_u1 = FunctionCPD(
-        "U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=["D1", "D2"]
-    )
-    cpd_u2 = FunctionCPD(
-        "U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)], evidence=["D1", "D2"]
-    )
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)])
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
@@ -174,12 +162,8 @@ def taxi_competition() -> MACID:
     agent1_payoff = np.array([[2, 3], [5, 1]])
     agent2_payoff = np.array([[2, 5], [3, 1]])
 
-    cpd_u1 = FunctionCPD(
-        "U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=["D1", "D2"]
-    )
-    cpd_u2 = FunctionCPD(
-        "U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=["D1", "D2"]
-    )
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)])
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
@@ -226,12 +210,8 @@ def modified_taxi_competition() -> MACID:
     agent1_payoff = np.array([[2, 3], [5, 1]])
     agent2_payoff = np.array([[2, 5], [3, 5]])
 
-    cpd_u1 = FunctionCPD(
-        "U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=["D1", "D2"]
-    )
-    cpd_u2 = FunctionCPD(
-        "U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)], evidence=["D1", "D2"]
-    )
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)])
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
