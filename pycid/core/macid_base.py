@@ -183,20 +183,34 @@ class MACIDBase(BayesianModel):
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
 
-        # Check that strategically relevant decisions have a policy specified
-        mech_graph = MechanismGraph(self)
-        for decision in self.all_decision_nodes:
-            for query_node in query:
-                if mech_graph.is_active_trail(decision + "mec", query_node, observed=list(context.keys())):
-                    cpd = self.get_cpds(decision)
-                    if not cpd:
-                        raise Exception(f"no DecisionDomain specified for {decision}")
-                    elif isinstance(cpd, DecisionDomain):
-                        raise Exception(f"query {query}|{context} depends on {decision}, but no policy imputed")
-
         for variable, value in context.items():
             if value not in self.get_cpds(variable).state_names[variable]:
-                raise Exception(f"The value {value} is not in the state_names of {variable}")
+                raise ValueError(f"The value {value} is not in the state_names of {variable}")
+
+        if intervention is None:
+            intervention = {}
+
+        # First apply the intervention, if any
+        if intervention:
+            cid = self.copy()
+            cid.intervene(intervention)
+        else:
+            cid = self
+
+        # Check that strategically relevant decisions have a policy specified
+        mech_graph = MechanismGraph(cid)
+        for decision in cid.all_decision_nodes:
+            for query_node in query:
+                if mech_graph.is_active_trail(
+                    decision + "mec", query_node, observed=list(context.keys()) + list(intervention.keys())
+                ):
+                    cpd = cid.get_cpds(decision)
+                    if not cpd:
+                        raise ValueError(f"no DecisionDomain specified for {decision}")
+                    elif isinstance(cpd, DecisionDomain):
+                        raise ValueError(
+                            f"P({query}|{context}, do({intervention})) depends on {decision}, but no policy imputed"
+                        )
 
         # query fails if graph includes nodes not in moralized graph, so we remove them
         # cid = self.copy()
@@ -205,45 +219,43 @@ class MACIDBase(BayesianModel):
         #     if node not in mm.nodes:
         #         cid.remove_node(node)
         # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
-        if intervention:
-            cid = self.copy()
-            cid.intervene(intervention)
-        else:
-            cid = self
 
         updated_state_names = {}
         for v in query:
             cpd = cid.get_cpds(v)
             updated_state_names[v] = cpd.state_names[v]
 
-        bp = BeliefPropagation(cid)
-        # TODO: check for probability 0 queries
-        # factor = bp.query(query, filtered_context)
-
-        # revise context so state_names are switched to their state number (overcomes pgmpy's bug)
-        revised_context = {
+        # Make a copy of self and revise the context without state_names (to handle a pgmpy bug),
+        copy = cid.copy_without_cpds()
+        for cpd in cid.cpds:
+            evidence = cpd.variables[1:] if len(cpd.variables) > 1 else None
+            evidence_card = cpd.cardinality[1:] if len(cpd.variables) > 1 else None
+            copy.add_cpds(TabularCPD(cpd.variable, cpd.variable_card, cpd.get_values(), evidence, evidence_card))
+        revised_context = {  # state_names are switched to their state number
             variable: self.get_cpds(variable).name_to_no[variable][value] for variable, value in context.items()
         }
+
+        bp = BeliefPropagation(copy)
+        # TODO: check for probability 0 queries
+
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
             factor = bp.query(query, revised_context, show_progress=False)
-        factor.state_names = updated_state_names  # factor sometimes gets state_names wrong...
+        factor.state_names = updated_state_names  # reintroduce the state_names
         return factor
 
     def intervene(self, intervention: Dict[str, Any]) -> None:
         """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
 
-        Soft interventions can be achieved by using add_cpds directly.
+        Soft interventions can be achieved by using self.add_cpds() directly.
 
         Parameters
         ----------
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
-        for v in intervention.keys():
-            for p in self.get_parents(v):
-                self.remove_edge(p, v)
-        for variable, value in intervention.items():
-            cpd = FunctionCPD(variable, lambda: value)
-            self.add_cpds(cpd)
+        for variable in intervention:
+            for p in self.get_parents(variable):  # remove ingoing edges
+                self.remove_edge(p, variable)
+            self.add_cpds(FunctionCPD(variable, lambda: intervention[variable]))
 
     def expected_value(
         self,
