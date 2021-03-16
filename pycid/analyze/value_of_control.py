@@ -73,12 +73,14 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     if not admits_voc(cid, node):
         return False
 
+    req_graph_node_descendants = set(nx.descendants(req_graph, node))
     for util in agent_utilities:
-        if node == util or util in nx.descendants(req_graph, node):
-            backdoor_exists = is_active_backdoor_trail(req_graph, node, util, con_nodes)
-            x_u_paths = find_all_dir_paths(req_graph, node, util)
-            if any(decision in paths for paths in x_u_paths) and backdoor_exists:
-                return True
+        if util != node and util not in req_graph_node_descendants:
+            continue
+        if not is_active_backdoor_trail(req_graph, node, util, con_nodes):
+            continue
+        if any(decision in path for path in find_all_dir_paths(req_graph, node, util)):
+            return True
 
     return False
 
@@ -115,12 +117,13 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
     if not admits_voc(cid, node):
         return False
 
+    req_graph_node_descendants = set(nx.descendants(req_graph, node))
     for util in agent_utilities:
-        if node == util or util in nx.descendants(req_graph, node):
-            x_u_paths = find_all_dir_paths(req_graph, node, util)
-            for path in x_u_paths:
-                if not set(path).intersection(cid.decisions):
-                    return True
+        if util != node and util not in req_graph_node_descendants:
+            continue
+        for path in find_all_dir_paths(req_graph, node, util):
+            if not set(path).intersection(cid.decisions):
+                return True
 
     return False
 

@@ -25,12 +25,13 @@ class TestPATHS(unittest.TestCase):
     def test_find_active_path(self) -> None:
         example = taxi_competition()
         self.assertEqual(find_active_path(example, "D1", "U1", {"D2"}), ["D1", "U1"])
-        self.assertFalse(find_active_path(example, "D1", "U1", {"D2", "U1"}))
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):  # No path
+            find_active_path(example, "D1", "U1", {"D2", "U1"})
+        with self.assertRaises(KeyError):  # Invalid node in observed
             find_active_path(example, "D1", "U1", {"D3"})
-        with self.assertRaises(KeyError):
+        with self.assertRaises(KeyError):  # Invalid start node
             find_active_path(example, "D3", "U1", {"D2"})
-        with self.assertRaises(KeyError):
+        with self.assertRaises(KeyError):  # Invalid end node
             find_active_path(example, "D1", "U3", {"D2"})
 
     # @unittest.skip("")
@@ -61,17 +62,17 @@ class TestPATHS(unittest.TestCase):
             agent_decisions={1: ["D"]},
             agent_utilities={1: ["E"]},
         )
-        self.assertEqual(find_all_dir_paths(example, "A", "E"), [["A", "B", "C", "D", "E"], ["A", "B", "F", "E"]])
-        self.assertEqual(find_all_dir_paths(example, "C", "E"), [["C", "D", "E"]])
-        self.assertFalse(find_all_dir_paths(example, "F", "A"))
-        self.assertTrue(len(find_all_dir_paths(example, "B", "E")) == 2)
+        self.assertEqual(list(find_all_dir_paths(example, "A", "E")), [["A", "B", "C", "D", "E"], ["A", "B", "F", "E"]])
+        self.assertEqual(list(find_all_dir_paths(example, "C", "E")), [["C", "D", "E"]])
+        self.assertFalse(list(find_all_dir_paths(example, "F", "A")))
+        self.assertTrue(len(list(find_all_dir_paths(example, "B", "E"))) == 2)
         with self.assertRaises(KeyError):
             find_all_dir_paths(example, "U2", "A")
 
     # @unittest.skip("")
     def test_find_all_undir_paths(self) -> None:
         example = get_3node_cid()
-        self.assertTrue(len(find_all_undir_paths(example, "S", "U")) == 2)
+        self.assertTrue(len(list(find_all_undir_paths(example, "S", "U"))) == 2)
         with self.assertRaises(KeyError):
             find_all_undir_paths(example, "S", "A")
 
@@ -80,15 +81,15 @@ class TestPATHS(unittest.TestCase):
             agent_decisions={1: ["D"]},
             agent_utilities={1: ["U"]},
         )
-        self.assertEqual(find_all_undir_paths(example2, "X1", "D"), [["X1", "D"]])
-        self.assertFalse(find_all_undir_paths(example2, "X1", "U"))
+        self.assertEqual(list(find_all_undir_paths(example2, "X1", "D")), [["X1", "D"]])
+        self.assertFalse(list(find_all_undir_paths(example2, "X1", "U")))
         example3 = MACID(
             [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("B", "F"), ("F", "E")],
             agent_decisions={1: ["D"]},
             agent_utilities={1: ["E"]},
         )
         self.assertCountEqual(
-            find_all_undir_paths(example3, "F", "A"), [["F", "E", "D", "C", "B", "A"], ["F", "B", "A"]]
+            list(find_all_undir_paths(example3, "F", "A")), [["F", "E", "D", "C", "B", "A"], ["F", "B", "A"]]
         )
 
     # @unittest.skip("")

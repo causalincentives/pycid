@@ -1,8 +1,36 @@
-from typing import List, Sequence, Set, Tuple
+from typing import Callable, Iterable, Iterator, List, Sequence, Set, Tuple
 
 import networkx as nx
 
 from pycid.core.macid_base import MACIDBase
+
+
+def _dfs_search_paths(start: str, end: str, successors: Callable[[List[str]], Iterable[str]]) -> Iterator[List[str]]:
+    """Perform a depth-first search over paths from start to end.
+
+    Successors is a function mapping a path to a set of possible successor states.
+    """
+    if start == end:
+        yield [start]
+        return
+
+    path = [start]
+    successor_stack = [iter(successors(path))]
+    while successor_stack:
+        try:
+            next_ = next(successor_stack[-1])
+        except StopIteration:
+            # Exausted all successors for this path
+            path.pop()
+            successor_stack.pop()
+            continue
+
+        if next_ == end:
+            yield path + [next_]
+            continue
+
+        path.append(next_)
+        successor_stack.append(iter(successors(path)))
 
 
 def _active_neighbours(mb: MACIDBase, path: Sequence[str], observed: Set[str]) -> Set[str]:
@@ -28,29 +56,23 @@ def _active_neighbours(mb: MACIDBase, path: Sequence[str], observed: Set[str]) -
     return new_active_neighbours
 
 
-def _find_active_path_recurse(mb: MACIDBase, path: List[str], end_node: str, observed: Set[str]) -> List[str]:
-    """Find active path from `path' to `end_node' given the `observed' set of nodes."""
-    if path[-1] == end_node and end_node not in observed:
-        return path
-    else:
-        neighbours = _active_neighbours(mb, path, observed)
-        for neighbour in neighbours:
-            ext = _find_active_path_recurse(mb, path + [neighbour], end_node, observed)
-            if ext:
-                return ext
-    return []  # should never happen
-
-
-def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Set[str] = None) -> List[str]:
-    """Find active path from `start_node' to `end_node' given the `observed' set of nodes."""
-    if observed is None:
-        observed = set()
+def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Set[str] = set()) -> List[str]:
+    """Find an active path from `start_node' to `end_node' given the `observed' set of nodes."""
     considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
 
-    return _find_active_path_recurse(mb, [start_node], end_node, observed)
+    if end_node in observed:
+        raise ValueError("No active path")
+
+    def successors(path: List[str]) -> Set[str]:
+        return _active_neighbours(mb, path, observed)
+
+    try:
+        return next(_dfs_search_paths(start_node, end_node, successors))
+    except StopIteration:
+        raise ValueError("No active path")
 
 
 def get_motif(mb: MACIDBase, path: Sequence[str], idx: int) -> str:
@@ -103,49 +125,33 @@ def get_motifs(mb: MACIDBase, path: Sequence[str]) -> List[str]:
     return shapes
 
 
-def _find_all_dirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> List[List[str]]:
-    """Find all directed paths beginning with 'path' as a prefix and ending at the end node"""
-
-    if path[-1] == end_node:
-        return [path]
-    path_extensions = []
-    children = mb.get_children(path[-1])
-    for child in children:
-        path_extensions.extend(_find_all_dirpath_recurse(mb, path + [child], end_node))
-    return path_extensions
-
-
-def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
-    """
-    Find all directed paths from start node to end node that exist in the (MA)CID.
-    """
+def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> Iterator[List[str]]:
+    """Iterate over all directed paths from start node to end node that exist in the (MA)CID."""
     for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
-    return _find_all_dirpath_recurse(mb, [start_node], end_node)
+
+    def successors(path: List[str]) -> Iterable[str]:
+        return mb.get_children(path[-1])  # type: ignore
+
+    return _dfs_search_paths(start_node, end_node, successors)
 
 
-def _find_all_undirpath_recurse(mb: MACIDBase, path: List[str], end_node: str) -> List[List[str]]:
-    """Find all undirected paths beginning with 'path' as a prefix and ending at the end node."""
-
-    if path[-1] == end_node:
-        return [path]
-    path_extensions = []
-    neighbours = list(mb.get_children(path[-1])) + list(mb.get_parents(path[-1]))
-    neighbours_not_in_path = set(neighbours).difference(set(path))
-    for child in neighbours_not_in_path:
-        path_extensions.extend(_find_all_undirpath_recurse(mb, path + [child], end_node))
-    return path_extensions
-
-
-def find_all_undir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[List[str]]:
+def find_all_undir_paths(mb: MACIDBase, start_node: str, end_node: str) -> Iterable[List[str]]:
     """
     Finds all undirected paths from start node to end node that exist in the (MA)CID.
     """
     for node in [start_node, end_node]:
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
-    return _find_all_undirpath_recurse(mb, [start_node], end_node)
+
+    def successors(path: List[str]) -> Iterable[str]:
+        neighbours = set(mb.get_children(path[-1]))
+        neighbours.update(mb.get_parents(path[-1]))
+        neighbours.difference_update(path)
+        return neighbours
+
+    return _dfs_search_paths(start_node, end_node, successors)
 
 
 def directed_decision_free_path(mb: MACIDBase, start_node: str, end_node: str) -> bool:
@@ -156,14 +162,8 @@ def directed_decision_free_path(mb: MACIDBase, start_node: str, end_node: str) -
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
 
-    start_to_end_paths = find_all_dir_paths(mb, start_node, end_node)
-    dec_free_path_exists = any(
-        set(mb.decisions).isdisjoint(set(path[1:-1])) for path in start_to_end_paths
-    )  # ignore path's start_node and end_node
-    if start_to_end_paths and dec_free_path_exists:
-        return True
-    else:
-        return False
+    # ignore path's start_node and end_node
+    return any(mb.decisions.isdisjoint(path[1:-1]) for path in find_all_dir_paths(mb, start_node, end_node))
 
 
 def _get_path_edges(mb: MACIDBase, path: Sequence[str]) -> List[Tuple[str, str]]:
@@ -226,8 +226,7 @@ def is_active_indirect_frontdoor_trail(
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
 
-    start_to_end_paths = find_all_undir_paths(mb, start_node, end_node)
-    for path in start_to_end_paths:
+    for path in find_all_undir_paths(mb, start_node, end_node):
         is_frontdoor_path = path[0] in mb.get_parents(path[1])
         not_blocked_by_observed = is_active_path(mb, path, observed)
         contains_collider = "collider" in get_motifs(mb, path)
@@ -250,9 +249,7 @@ def is_active_backdoor_trail(mb: MACIDBase, start_node: str, end_node: str, obse
         if node not in mb.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
 
-    start_to_end_paths = find_all_undir_paths(mb, start_node, end_node)
-    for path in start_to_end_paths:
-
+    for path in find_all_undir_paths(mb, start_node, end_node):
         if len(path) > 1:  # must have path of at least 2 nodes
             is_backdoor_path = path[1] in mb.get_parents(path[0])
             not_blocked_by_observed = is_active_path(mb, path, observed)

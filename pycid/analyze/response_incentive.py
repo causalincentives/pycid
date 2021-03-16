@@ -6,8 +6,7 @@ from pycid.core.get_paths import find_all_dir_paths
 
 
 def admits_ri(cid: CID, decision: str, node: str) -> bool:
-    r"""
-    Return True if cid admits a response incentive on node.
+    r"""Check if a CID admits a response incentive on a node.
 
      - A CID G admits a response incentive on X ∈ V \ {D} if
     and only if the reduced graph G* min has a directed path X --> D.
@@ -28,10 +27,12 @@ def admits_ri(cid: CID, decision: str, node: str) -> bool:
         return False
 
     req_graph = requisite_graph(cid)
-    if find_all_dir_paths(req_graph, node, decision):
+    try:
+        next(find_all_dir_paths(req_graph, node, decision))
+    except StopIteration:
+        return False
+    else:
         return True
-
-    return False
 
 
 def admits_ri_list(cid: CID, decision: str) -> List[str]:
