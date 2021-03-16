@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
+    Iterator,
     KeysView,
     List,
     Mapping,
@@ -448,12 +449,12 @@ class MACIDBase(BayesianModel):
             function_cpds.append(FunctionCPD(decision, produce_function(), state_names=cpd.state_names))
         return function_cpds
 
-    def pure_strategies(self, decision_nodes: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def pure_strategies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
         """
-        Find all of an agent's pure policies in this subgame.
+        Iterate over all of an agent's pure policies in this subgame.
         """
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
-        return list(itertools.product(*possible_dec_rules))
+        return itertools.product(*possible_dec_rules)
 
     def optimal_pure_strategies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
         """Find all optimal strategies for a given set of decisions.
@@ -476,12 +477,18 @@ class MACIDBase(BayesianModel):
                 and d not in decisions
             ):
                 macid.impute_random_decision(d)
-        expected_utility: List[float] = []
-        strategies = macid.pure_strategies(decisions)
-        for strategy in strategies:
+
+        optimal_strategies = []
+        max_utility = float("-inf")
+        for strategy in macid.pure_strategies(decisions):
             macid.add_cpds(*strategy)
-            expected_utility.append(macid.expected_utility({}, agent=agent))
-        return [strategy for i, strategy in enumerate(strategies) if expected_utility[i] == max(expected_utility)]
+            expected_utility = macid.expected_utility({}, agent=agent)
+            if expected_utility > max_utility:
+                optimal_strategies = [strategy]
+                max_utility = expected_utility
+            elif expected_utility == max_utility:
+                optimal_strategies.append(strategy)
+        return optimal_strategies
 
     def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """
