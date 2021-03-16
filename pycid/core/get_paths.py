@@ -48,7 +48,7 @@ def find_active_path(mb: MACIDBase, start_node: str, end_node: str, observed: Se
     considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     return _find_active_path_recurse(mb, [start_node], end_node, observed)
 
@@ -60,10 +60,10 @@ def get_motif(mb: MACIDBase, path: Sequence[str], idx: int) -> str:
     """
     for node in path:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     if idx > len(path) - 1:
-        raise ValueError(f"The given index {idx} is not valid for the length of this path {len(path)}")
+        raise IndexError(f"The given index {idx} is not valid for the length of this path {len(path)}")
 
     if len(path) == idx + 1:
         return "endpoint"
@@ -89,7 +89,7 @@ def get_motifs(mb: MACIDBase, path: Sequence[str]) -> List[str]:
     collider or endpoint"""
     for node in path:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     shapes = []
     for i in range(len(path)):
@@ -121,7 +121,7 @@ def find_all_dir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[Li
     """
     for node in [start_node, end_node]:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
     return _find_all_dirpath_recurse(mb, [start_node], end_node)
 
 
@@ -144,7 +144,7 @@ def find_all_undir_paths(mb: MACIDBase, start_node: str, end_node: str) -> List[
     """
     for node in [start_node, end_node]:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
     return _find_all_undirpath_recurse(mb, [start_node], end_node)
 
 
@@ -154,7 +154,7 @@ def directed_decision_free_path(mb: MACIDBase, start_node: str, end_node: str) -
     """
     for node in [start_node, end_node]:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     start_to_end_paths = find_all_dir_paths(mb, start_node, end_node)
     dec_free_path_exists = any(
@@ -191,7 +191,7 @@ def is_active_path(mb: MACIDBase, path: Sequence[str], observed: Set[str] = None
     considered_nodes = set(path).union(observed)
     for node in considered_nodes:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     if len(path) < 3:
         return True
@@ -224,7 +224,7 @@ def is_active_indirect_frontdoor_trail(
     considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     start_to_end_paths = find_all_undir_paths(mb, start_node, end_node)
     for path in start_to_end_paths:
@@ -248,7 +248,7 @@ def is_active_backdoor_trail(mb: MACIDBase, start_node: str, end_node: str, obse
     considered_nodes = observed.union({start_node}, {end_node})
     for node in considered_nodes:
         if node not in mb.nodes():
-            raise ValueError(f"The node {node} is not in the (MA)CID")
+            raise KeyError(f"The node {node} is not in the (MA)CID")
 
     start_to_end_paths = find_all_undir_paths(mb, start_node, end_node)
     for path in start_to_end_paths:

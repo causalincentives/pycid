@@ -26,11 +26,11 @@ class TestPATHS(unittest.TestCase):
         example = taxi_competition()
         self.assertEqual(find_active_path(example, "D1", "U1", {"D2"}), ["D1", "U1"])
         self.assertFalse(find_active_path(example, "D1", "U1", {"D2", "U1"}))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             find_active_path(example, "D1", "U1", {"D3"})
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             find_active_path(example, "D3", "U1", {"D2"})
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             find_active_path(example, "D1", "U3", {"D2"})
 
     # @unittest.skip("")
@@ -41,9 +41,9 @@ class TestPATHS(unittest.TestCase):
         self.assertEqual(get_motif(example, ["D3", "D2", "U2", "D11", "D12", "U3"], 2), "collider")
         self.assertEqual(get_motif(example, ["D3", "D2", "U2", "D11", "D12", "U3"], 4), "forward")
         self.assertEqual(get_motif(example, ["D3", "D2", "U2", "D11", "D12", "U3"], 5), "endpoint")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             get_motif(example, ["D3", "A", "U2", "D11", "D12", "U3"], 5)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             get_motif(example, ["D3", "D2", "U2", "D11", "D12", "U3"], 6)
 
     # @unittest.skip("")
@@ -51,7 +51,7 @@ class TestPATHS(unittest.TestCase):
         example = get_basic_subgames()
         motifs = get_motifs(example, ["D3", "D2", "U2", "D11", "D12", "U3"])
         self.assertEqual(motifs, ["backward", "fork", "collider", "fork", "forward", "endpoint"])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             get_motifs(example, ["D3", "A", "U2", "D11", "D12", "U3"])
 
     # @unittest.skip("")
@@ -65,14 +65,14 @@ class TestPATHS(unittest.TestCase):
         self.assertEqual(find_all_dir_paths(example, "C", "E"), [["C", "D", "E"]])
         self.assertFalse(find_all_dir_paths(example, "F", "A"))
         self.assertTrue(len(find_all_dir_paths(example, "B", "E")) == 2)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             find_all_dir_paths(example, "U2", "A")
 
     # @unittest.skip("")
     def test_find_all_undir_paths(self) -> None:
         example = get_3node_cid()
         self.assertTrue(len(find_all_undir_paths(example, "S", "U")) == 2)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             find_all_undir_paths(example, "S", "A")
 
         example2 = MACID(
@@ -99,7 +99,7 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(directed_decision_free_path(example, "X2", "U3"))
         self.assertFalse(directed_decision_free_path(example, "X2", "U2"))
         self.assertFalse(directed_decision_free_path(example, "U22", "U3"))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             directed_decision_free_path(example, "X1", "A")
 
     # @unittest.skip("")
@@ -110,9 +110,9 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(is_active_path(example, ["X1", "D", "X2"]))
         self.assertTrue(is_active_path(example, ["X1", "D", "X2"], {"D"}))
         self.assertTrue(is_active_path(example, ["X1", "D", "X2"], {"U"}))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             is_active_path(example, ["X1", "D", "A"], {"U"})
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             is_active_path(example, ["X1", "D", "X2"], {"A"})
 
     # @unittest.skip("")
@@ -124,9 +124,9 @@ class TestPATHS(unittest.TestCase):
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X3", "X1"))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X1", "U"))
         self.assertFalse(is_active_indirect_frontdoor_trail(example, "X1", "U", {"D", "X2"}))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             is_active_indirect_frontdoor_trail(example, "A", "U", {"D", "X2"})
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             is_active_indirect_frontdoor_trail(example, "X1", "U", {"A", "X2"})
 
     # @unittest.skip("")
@@ -136,9 +136,9 @@ class TestPATHS(unittest.TestCase):
         self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", {"D"}))
         self.assertFalse(is_active_backdoor_trail(example, "X1", "X2"))
         self.assertFalse(is_active_backdoor_trail(example, "X1", "X2", {"D"}))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.assertTrue(is_active_backdoor_trail(example, "A", "X2", {"D"}))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.assertTrue(is_active_backdoor_trail(example, "X3", "X2", {"A"}))
 
 
