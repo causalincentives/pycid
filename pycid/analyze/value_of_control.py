@@ -20,7 +20,7 @@ def admits_voc(cid: CID, node: str) -> bool:
         )
 
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise KeyError(f"{node} is not present in the cid")
     if not cid.sufficient_recall():
         raise ValueError("VoC only implemented graphs with sufficient recall")
     if node in cid.decisions:
@@ -60,9 +60,9 @@ def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
         )
 
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise KeyError(f"{node} is not present in the cid")
     if decision not in cid.nodes:
-        raise ValueError(f"{decision} is not present in the cid")
+        raise KeyError(f"{decision} is not present in the cid")
     if not cid.sufficient_recall():
         raise ValueError("VoC only implemented graphs with sufficient recall")
 
@@ -109,7 +109,7 @@ def admits_dir_voc(cid: CID, node: str) -> bool:
         )
 
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise KeyError(f"{node} is not present in the cid")
 
     agent_utilities = cid.utilities
     req_graph = requisite_graph(cid)

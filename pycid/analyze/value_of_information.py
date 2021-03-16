@@ -20,9 +20,9 @@ def admits_voi(cid: CID, decision: str, node: str) -> bool:
         )
 
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise KeyError(f"{node} is not present in the cid")
     if decision not in cid.nodes:
-        raise ValueError(f"{decision} is not present in the cid")
+        raise KeyError(f"{decision} is not present in the cid")
     if not cid.sufficient_recall():
         raise ValueError("Voi only implemented graphs with sufficient recall")
     if node in nx.descendants(cid, decision) or node == decision:

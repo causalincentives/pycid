@@ -17,7 +17,7 @@ def requisite(cid: MACIDBase, decision: str, node: str) -> bool:
     Returns True if the node is requisite.
     """
     if node not in cid.get_parents(decision):
-        raise ValueError(f"{node} is not a parent of {decision}")
+        raise KeyError(f"{node} is not a parent of {decision}")
 
     agent_utilities = cid.agent_utilities[cid.decision_agent[decision]]
     descended_agent_utilities = set(agent_utilities).intersection(nx.descendants(cid, decision))

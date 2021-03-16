@@ -17,9 +17,9 @@ def admits_ici(cid: CID, decision: str, node: str) -> bool:
         )
 
     if node not in cid.nodes:
-        raise ValueError(f"{node} is not present in the cid")
+        raise KeyError(f"{node} is not present in the cid")
     if decision not in cid.nodes:
-        raise ValueError(f"{decision} is not present in the cid")
+        raise KeyError(f"{decision} is not present in the cid")
 
     agent_utilities = cid.utilities
     d_u_paths = [path for util in agent_utilities for path in find_all_dir_paths(cid, decision, util)]

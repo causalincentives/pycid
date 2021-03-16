@@ -350,7 +350,7 @@ class MACIDBase(BayesianModel):
             nodes = set(nodes)
             for node in nodes:
                 if node not in self.nodes:
-                    raise ValueError(f"{node} is not in the (MA)CID.")
+                    raise KeyError(f"{node} is not in the (MA)CID.")
 
         srt = [node for node in nx.topological_sort(self) if node in nodes]
         return srt

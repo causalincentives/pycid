@@ -93,7 +93,7 @@ class TestBASE(unittest.TestCase):
         with self.assertRaises(AttributeError):
             rg.get_valid_order()
             # TODO we're checking that the relevance graph doesn't have a valid order method? why?
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             macid.get_valid_order(["D3"])
 
     # @unittest.skip("")

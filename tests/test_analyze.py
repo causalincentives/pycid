@@ -37,9 +37,9 @@ class TestAnalyze(unittest.TestCase):
         cid2 = get_grade_predictor()
         self.assertCountEqual(admits_voi_list(cid2, "P"), ["HS", "E", "Gr"])
         self.assertFalse(admits_voi(cid2, "P", "Ge"))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_voi(cid2, "P", "A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_voi(cid2, "B", "Ge")
         cid2.remove_edge("HS", "P")
         self.assertCountEqual(admits_voi_list(cid2, "P"), ["R", "HS", "E", "Gr"])
@@ -98,9 +98,9 @@ class TestAnalyze(unittest.TestCase):
         self.assertCountEqual(admits_voc_list(cid2), ["O", "M", "C"])
         self.assertTrue(admits_voc(cid2, "M"))
         self.assertFalse(admits_voc(cid2, "I"))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_voc(cid2, "A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_voc(cid2, "J")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
@@ -117,9 +117,9 @@ class TestAnalyze(unittest.TestCase):
         self.assertTrue(admits_ici(cid, "P", "I"))
         self.assertFalse(admits_ici(cid, "P", "O"))
         self.assertCountEqual(admits_ici_list(cid, "P"), ["I", "P", "C"])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_ici(cid, "P", "A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_ici(cid, "B", "O")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
@@ -138,9 +138,9 @@ class TestAnalyze(unittest.TestCase):
         self.assertTrue(admits_ri(cid, "P", "R"))
         cid.remove_edge("HS", "P")
         self.assertEqual(admits_ri_list(cid, "P"), [])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_ri(cid, "P", "A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_ri(cid, "B", "E")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
@@ -157,9 +157,9 @@ class TestAnalyze(unittest.TestCase):
         self.assertFalse(admits_indir_voc(cid, "C", "TF"))
         self.assertTrue(admits_indir_voc(cid, "C", "SC"))
         self.assertCountEqual(admits_indir_voc_list(cid, "C"), ["SC"])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_indir_voc(cid, "C", "A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_indir_voc(cid, "B", "TF")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
@@ -176,7 +176,7 @@ class TestAnalyze(unittest.TestCase):
         self.assertFalse(admits_dir_voc(cid, "TF"))
         self.assertTrue(admits_dir_voc(cid, "F"))
         self.assertCountEqual(admits_dir_voc_list(cid), ["F", "P"])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             admits_dir_voc(cid, "B")
         macid = MACID(
             [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],

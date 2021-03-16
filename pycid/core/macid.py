@@ -40,10 +40,6 @@ class MACID(MACIDBase):
         else:
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
 
-        for dec in decisions_in_sg:
-            if dec not in self.decisions:
-                raise ValueError(f"The node {dec} is not a decision node in the (MACID")
-
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
         agent_decs_in_sg = {
             agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
