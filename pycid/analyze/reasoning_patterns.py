@@ -59,8 +59,7 @@ def _effective_backdoor_path_not_blocked_by_set_w(
     Returns the effective backdoor path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
     """
-    start_finish_paths: List[List[str]] = find_all_undir_paths(mb, start, finish)
-    for path in start_finish_paths:
+    for path in find_all_undir_paths(mb, start, finish):
         is_backdoor_path = path[1] in mb.get_parents(path[0])
         not_blocked_by_w = is_active_path(mb, path, w)
         if is_backdoor_path and not_blocked_by_w and _path_is_effective(mb, path, effective_set):
@@ -75,8 +74,7 @@ def _effective_undir_path_not_blocked_by_set_w(
     Returns an effective undirected path not blocked if we condition on nodes in set w.
     If no such path exists, this returns None.
     """
-    start_finish_paths: List[List[str]] = find_all_undir_paths(mb, start, finish)
-    for path in start_finish_paths:
+    for path in find_all_undir_paths(mb, start, finish):
         not_blocked_by_w = is_active_path(mb, path, w)
         if not_blocked_by_w and _path_is_effective(mb, path, effective_set):
             return path
