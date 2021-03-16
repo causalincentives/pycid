@@ -456,10 +456,11 @@ class MACIDBase(BayesianModel):
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return itertools.product(*possible_dec_rules)
 
-    def optimal_pure_strategies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def optimal_pure_strategies(self, decisions: Iterable[str], eps: float = 1e-8) -> List[Tuple[FunctionCPD, ...]]:
         """Find all optimal strategies for a given set of decisions.
 
-        All decisions must belong to the same agent.
+        - All decisions must belong to the same agent.
+        - eps is the margin of error when comparing utilities for equality.
         """
         if not decisions:
             return []
@@ -483,11 +484,11 @@ class MACIDBase(BayesianModel):
         for strategy in macid.pure_strategies(decisions):
             macid.add_cpds(*strategy)
             expected_utility = macid.expected_utility({}, agent=agent)
-            if expected_utility > max_utility:
+            if abs(expected_utility - max_utility) < eps:
+                optimal_strategies.append(strategy)
+            elif expected_utility > max_utility:
                 optimal_strategies = [strategy]
                 max_utility = expected_utility
-            elif expected_utility == max_utility:
-                optimal_strategies.append(strategy)
         return optimal_strategies
 
     def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
