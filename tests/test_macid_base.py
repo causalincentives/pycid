@@ -101,7 +101,7 @@ class TestBASE(unittest.TestCase):
         cid = get_minimal_cid()
         cid.impute_random_policy()
         self.assertEqual(cid.expected_value(["B"], {})[0], 0.5)
-        for a in [0, 1, 2]:
+        for a in [0, 1]:
             cid.intervene({"A": a})
             self.assertEqual(cid.expected_value(["B"], {})[0], a)
         self.assertEqual(cid.expected_value(["B"], {}, intervene={"A": 1})[0], 1)
