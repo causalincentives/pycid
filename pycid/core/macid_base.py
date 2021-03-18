@@ -29,7 +29,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, ParentsNotReadyException, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -156,7 +156,7 @@ class MACIDBase(BayesianModel):
                 if hasattr(cpd_to_add, "initialize_tabular_cpd"):
                     try:
                         cpd_to_add.initialize_tabular_cpd(self)
-                    except ValueError:
+                    except ParentsNotReadyException:
                         pass
                 if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
                     # if the state_names have changed, remember to update all descendants:

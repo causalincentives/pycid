@@ -13,6 +13,10 @@ from pgmpy.models import BayesianModel  # type: ignore
 State = Any
 
 
+class ParentsNotReadyException(ValueError):
+    pass
+
+
 class UniformRandomCPD(TabularCPD):
     """UniformRandomPD class creates a uniform random CPD given parents in graph
 
@@ -177,7 +181,7 @@ class StochasticFunctionCPD(TabularCPD):
         Requires that all parents in the CID have already been instantiated.
         """
         if not self.parents_instantiated(cid):
-            raise ValueError(f"Parents of {self.variable} are not yet instantiated.")
+            raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid
         if self.force_state_names:
             state_names_list = self.force_state_names
@@ -198,6 +202,10 @@ class StochasticFunctionCPD(TabularCPD):
                 for t in state_names_list
             ]
         )
+        if (matrix.sum(axis=0) != 1).any():
+            raise ValueError(f"The values for {self.variable} do not sum to 1 \n{matrix}")
+        if (matrix < 0).any() or (matrix > 1).any():
+            raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{matrix}")
         state_names = {self.variable: state_names_list}
 
         super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=state_names)
