@@ -9,6 +9,17 @@ computing optimal policies and Nash equilibria,
 studying the effects of interventions, and
 checking graphical criteria for various types of incentives.
 
+## Install
+Create and activate
+a [python virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) or
+a [conda environment](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs).
+Then install using:
+```shell
+python3 -m pip install pycid
+```
+
+PyCID requires python version 3.7 or greater.
+
 ## Basic usage
 
 ```python
@@ -56,18 +67,21 @@ as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [tests](./tests) has unit tests for all public methods.
 
-## Installation and setup
+## Contributing
+The project is developed at <https://github.com/causalincentives/pycid>.
 
-Requirements: Python 3.7 or later
-
+### Install
+First create and activate
+a [python virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) or
+a [conda environment](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs).
 ```shell
 git clone https://github.com/causalincentives/pycid  # download the code
 cd pycid
-pip3 install --editable .[test]
+python3 -m pip install --editable .[test]
 python3 -m pytest   # check that everything works
 ```
 
-## Contributing
+### Making Commits
 Fast checks are set up as git pre-commit hooks.
 To enable them, run:
 ```shell
