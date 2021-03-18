@@ -1,4 +1,4 @@
-# Causal Influence Diagram Representation
+# PyCID: Causal Influence Diagrams library
 
 This package implements causal influence diagrams and methods to analyze them, and is part of the
 [Causal Incentives](https://causalincentives.com) project.
@@ -8,6 +8,17 @@ defining CIDs and MACIDs,
 computing optimal policies and Nash equilibria,
 studying the effects of interventions, and
 checking graphical criteria for various types of incentives.
+
+## Install
+Create and activate
+a [python virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) or
+a [conda environment](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs).
+Then install using:
+```shell
+python3 -m pip install pycid
+```
+
+PyCID requires python version 3.7 or greater.
 
 ## Basic usage
 
@@ -51,23 +62,26 @@ The code is structured into the following folders:
   computing optimal policies and Nash equilibria.
 * [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
-* [pycid/random](pycid/random) has methods for generating random CIDs.
+* [pycid/random](./pycid/random) has methods for generating random CIDs.
+* [pycid/examples](./pycid/examples) has a range of pre-specified CIDs and MACIDs.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
-* [examples](./examples) has a range of pre-specified CIDs and MACIDs.
 * [tests](./tests) has unit tests for all public methods.
 
-## Installation and setup
+## Contributing
+The project is developed at <https://github.com/causalincentives/pycid>.
 
-Requirements: Python 3.7 or later
-
+### Install
+First create and activate
+a [python virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) or
+a [conda environment](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs).
 ```shell
 git clone https://github.com/causalincentives/pycid  # download the code
 cd pycid
-pip3 install --editable .[test]
+python3 -m pip install --editable .[test]
 python3 -m pytest   # check that everything works
 ```
 
-## Contributing
+### Making Commits
 Fast checks are set up as git pre-commit hooks.
 To enable them, run:
 ```shell
