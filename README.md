@@ -1,4 +1,4 @@
-# Causal Influence Diagram Representation
+# PyCID: Causal Influence Diagrams library
 
 This package implements causal influence diagrams and methods to analyze them, and is part of the
 [Causal Incentives](https://causalincentives.com) project.
