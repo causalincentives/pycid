@@ -265,7 +265,9 @@ class MACIDBase(BayesianModel):
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
-            self.add_cpds(FunctionCPD(variable, lambda: intervention[variable]))
+            self.add_cpds(
+                FunctionCPD(variable, lambda: intervention[variable], state_names=self.get_cpds(variable).state_names)
+            )
 
     def expected_value(
         self,
