@@ -38,7 +38,7 @@ jobs:
         .
       
     - name: Install the built package
-      run: python -m pip install dist/*.whl
+      run: python -m pip install "$(ls dist/*.whl)"[test]
       
     - name: Run tests on the package
       run: pytest
