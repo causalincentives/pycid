@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import itertools
 import logging
 import random
@@ -145,22 +144,8 @@ class MACIDBase(BayesianModel):
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.decisions:
                 raise ValueError(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
-            if isinstance(cpd, FunctionCPD):
-                sig = inspect.signature(cpd.function).parameters
-                arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
-                args = set(sig)
-                lower_case_parents = {p.lower() for p in self.get_parents(cpd.variable)}
-                if "VAR_KEYWORD" in arg_kinds:
-                    pass
-                    # if not lower_case_parents.issubset(args):
-                    #     raise ValueError(f"function for {cpd.variable} accepts {lower_case_parents - args}, "
-                    #                      f"which doesn't match parents {self.get_parents(cpd.variable)}")
-                else:
-                    if set(args) != lower_case_parents:
-                        raise ValueError(
-                            f"function for {cpd.variable} mismatch parents on"
-                            f" {args.symmetric_difference(lower_case_parents)}, "
-                        )
+            if hasattr(cpd, "check_parents"):
+                cpd.check_parents(self)
             self._cpds_to_add[cpd.variable] = cpd
 
         # Initialize CPDs in topological order. Call super().add_cpds if initialized
