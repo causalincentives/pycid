@@ -210,7 +210,6 @@ class StochasticFunctionCPD(TabularCPD):
         return StochasticFunctionCPD(self.variable, self.stochastic_function, state_names=state_names)
 
     def __repr__(self) -> str:
-        mapping = ""
         if self.cid and self.parents_instantiated(self.cid):
             dictionary = {}
             for pv in self.parent_values(self.cid):
@@ -221,11 +220,10 @@ class StochasticFunctionCPD(TabularCPD):
                         break
                 else:
                     dictionary[str(pv)] = output
-            data = [["Input:         ", "Output:        "]]
-            data += [[key, dictionary[key]] for key in sorted(list(dictionary.keys()))]
-            for row in data:
-                mapping += "\n" + "{: >15} {: >15}".format(*row)
-        return f"<FunctionCPD {self.variable}:{self.stochastic_function}> {mapping}"
+            mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
+        else:
+            mapping = ""
+        return f"<FunctionCPD {self.variable}:{self.stochastic_function}> \n{mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()
