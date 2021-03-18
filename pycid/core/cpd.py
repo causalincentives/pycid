@@ -4,8 +4,7 @@ import inspect
 import itertools
 import random
 from inspect import getsourcelines
-from numbers import Number
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -76,7 +75,7 @@ class StochasticFunctionCPD(TabularCPD):
     def __init__(
         self,
         variable: str,
-        stochastic_function: Callable[..., Dict[State, Number]],
+        stochastic_function: Callable[..., Dict[State, Union[int, float]]],
         state_names: Optional[Dict[str, Sequence[State]]] = None,
         label: str = None,
     ) -> None:
@@ -210,9 +209,6 @@ class StochasticFunctionCPD(TabularCPD):
         state_names = {self.variable: self.force_state_names} if self.force_state_names else None
         return StochasticFunctionCPD(self.variable, self.stochastic_function, state_names=state_names)
 
-    def dictionary(self) -> Dict[str, str]:
-        return {str(pv): str(self.stochastic_function(**pv)) for pv in self.parent_values(self.cid)}
-
     def __repr__(self) -> str:
         mapping = ""
         if self.cid and self.parents_instantiated(self.cid):
@@ -225,7 +221,6 @@ class StochasticFunctionCPD(TabularCPD):
                         break
                 else:
                     dictionary[str(pv)] = output
-            dictionary = self.dictionary()
             data = [["Input:         ", "Output:        "]]
             data += [[key, dictionary[key]] for key in sorted(list(dictionary.keys()))]
             for row in data:
