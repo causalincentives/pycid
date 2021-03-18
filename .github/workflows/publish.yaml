@@ -47,8 +47,7 @@ jobs:
     - name: Run tests on the package
       run: pytest
 
-    - name: Publish to Test PyPI
+    - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
-        repository_url: https://pypi.org/legacy/
