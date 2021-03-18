@@ -1,10 +1,30 @@
 # Packaging Instructions
-## Validate
+## Publish with a GitHub Release
+An action is set up to automatically publish a release on PyPI each type a version tag is created.
+
+### Version Tag Structure
+A version tag should have the form `vMAJOR.MINOR.PATCH[EXTRAS]`
+where `[EXTRAS]` are optional extras as allowed by [PEP 440](https://www.python.org/dev/peps/pep-0440/).
+
+Versioning numbers should follow [Semantic Versioning](https://semver.org/).
+To summarize, while in development mode: `v0.MINOR.PATCH`, `PATCH` should be incremented for backwards-compatible bug
+fixes and `MINOR` for everything else (breaking changes and new features).
+
+### Instructions
+[Create a new release on GitHub](https://github.com/causalincentives/pycid/releases/new) with an appropriate version
+tag and title.
+For example: tag `v0.2.1` and title `Version 0.2.1`.
+
+Publish the release. Check the actions tab to see whether the publish to PyPI succeeded.
+
+
+## Publish Manually
+### Validate
 Make sure that:
 * All changes are commited to `master` and the working directory has no changes or new files.
 * The code passes all tests by running [tests/check-code.sh](tests/check-code.sh).
 
-## Tag a Version
+### Tag a Version
 The code version is created based on the lasted git tag on each run of `pip install/build`.
 The version is stored in `pycid/version.py` or can be seen by running `pip show pycid` on the local install.
 Note that the package version does not automatically update in an editable install so `pip install` must be re-run to
@@ -26,11 +46,16 @@ git tag -a "v0.2.1" -m "Version 0.2.1"  # Create an annotated tag.
 git push --tags                         # Pust tags to origin
 ```
 
-## Test Version
+At this point the GitHub action will take over and publish to PyPI if all tests pass.
+The following steps are not necessary and are included for reference only.
+
+### Test Version
 Make sure the versioning worked by re-installing the package (`pip install --editable .`)
 and make sure that `pip show pycid` shows the new version number without any extra suffixes.
 
-## Build and Upload to PyPI
+### Build and Upload to PyPI
+*This has been replaced by a GitHub action and should not be done manually. It is for reference only.*
+
 Detailed instructions are
 [here](https://packaging.python.org/tutorials/packaging-projects/#generating-distribution-archives).
 
