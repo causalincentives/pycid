@@ -190,15 +190,23 @@ class StochasticFunctionCPD(TabularCPD):
         else:
             state_names_list = self.possible_values(cid)
 
+        def complete_dictionary(dict: Dict[State, Union[int, float]]) -> Dict[State, Union[int, float]]:
+            """Complete a dictionary with values for missing keys"""
+            for pv in self.parent_values(cid):
+                missing_keys = set(state_names_list) - set(dict.keys())
+                if len(missing_keys) == 1:  # if there is only one missing key, we know its probability
+                    dict[missing_keys.pop()] = 1 - sum(dict.values())  # type: ignore
+                else:  # otherwise, we'll just assume unmentioned keys have probability 0
+                    for key in missing_keys:
+                        dict[key] = 0
+            return dict
+
         card = len(state_names_list)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
         matrix = np.array(
             [
-                [
-                    self.stochastic_function(**i)[t] if t in self.stochastic_function(**i) else 0
-                    for i in self.parent_values(cid)
-                ]
+                [complete_dictionary(self.stochastic_function(**i))[t] for i in self.parent_values(cid)]
                 for t in state_names_list
             ]
         )
