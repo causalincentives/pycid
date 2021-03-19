@@ -1,104 +1,68 @@
+from __future__ import annotations
+
 import sys
-import unittest
+from typing import Any, Callable
 
 import pytest
 
-from pycid.examples.simple_cids import (
-    get_2dec_cid,
-    get_3node_cid,
-    get_5node_cid,
-    get_5node_cid_with_scaled_utility,
-    get_insufficient_recall_cid,
-    get_minimal_cid,
-    get_sequential_cid,
-    get_trim_example_cid,
-)
-from pycid.examples.simple_macids import (
-    basic2agent_tie_break,
-    basic_different_dec_cardinality,
-    get_basic_subgames,
-    get_basic_subgames2,
-    get_basic_subgames3,
-    get_path_example,
-    two_agent_no_pne,
-    two_agent_one_pne,
-    two_agent_two_pne,
-    two_agents_three_actions,
-)
-from pycid.examples.story_cids import (
-    get_car_accident_predictor,
-    get_content_recommender,
-    get_content_recommender2,
-    get_fitness_tracker,
-    get_grade_predictor,
-    get_introduced_bias,
-    get_modified_content_recommender,
-)
-from pycid.examples.story_macids import (
-    battle_of_the_sexes,
-    forgetful_movie_star,
-    matching_pennies,
-    modified_taxi_competition,
-    politician,
-    prisoners_dilemma,
-    road_example,
-    sequential,
-    signal,
-    subgame_difference,
-    taxi_competition,
-    tree_doctor,
-    triage,
-    umbrella,
-)
+from pycid import MACIDBase
+from pycid.examples import simple_cids, simple_macids, story_cids, story_macids
+
+CONSTRUCTORS = [
+    # Simple CID
+    simple_cids.get_minimal_cid,
+    simple_cids.get_3node_cid,
+    simple_cids.get_5node_cid,
+    simple_cids.get_5node_cid_with_scaled_utility,
+    simple_cids.get_2dec_cid,
+    simple_cids.get_sequential_cid,
+    simple_cids.get_insufficient_recall_cid,
+    simple_cids.get_trim_example_cid,
+    # Simple MACID
+    simple_macids.basic2agent_tie_break,
+    simple_macids.basic_different_dec_cardinality,
+    simple_macids.get_basic_subgames,
+    simple_macids.get_basic_subgames2,
+    simple_macids.get_basic_subgames3,
+    simple_macids.get_path_example,
+    simple_macids.two_agent_no_pne,
+    simple_macids.two_agent_one_pne,
+    simple_macids.two_agent_two_pne,
+    simple_macids.two_agents_three_actions,
+    # Story CID
+    story_cids.get_fitness_tracker,
+    story_cids.get_introduced_bias,
+    story_cids.get_car_accident_predictor,
+    story_cids.get_content_recommender,
+    story_cids.get_content_recommender2,
+    story_cids.get_modified_content_recommender,
+    story_cids.get_grade_predictor,
+    # Story MACID
+    story_macids.prisoners_dilemma,
+    story_macids.battle_of_the_sexes,
+    story_macids.matching_pennies,
+    story_macids.taxi_competition,
+    story_macids.modified_taxi_competition,
+    story_macids.tree_doctor,
+    story_macids.forgetful_movie_star,
+    story_macids.subgame_difference,
+    story_macids.road_example,
+    story_macids.politician,
+    story_macids.umbrella,
+    story_macids.sequential,
+    story_macids.signal,
+    story_macids.triage,
+]
 
 
-class TestExamples(unittest.TestCase):
-    def test_simple_cid_examples(self) -> None:
-        get_minimal_cid()
-        get_3node_cid()
-        get_5node_cid()
-        get_5node_cid_with_scaled_utility()
-        get_2dec_cid()
-        get_sequential_cid()
-        get_insufficient_recall_cid()
-        get_trim_example_cid()
+@pytest.fixture(params=CONSTRUCTORS)
+def graph_constructor(request: Any) -> Callable[[], MACIDBase]:
+    return request.param  # type: ignore
 
-    def test_simple_macid_examples(self) -> None:
-        get_basic_subgames()
-        get_basic_subgames2()
-        get_basic_subgames3()
-        get_path_example()
-        basic2agent_tie_break()
-        two_agent_one_pne()
-        two_agent_two_pne()
-        two_agent_no_pne()
-        two_agents_three_actions()
-        basic_different_dec_cardinality()
 
-    def test_story_cid_examples(self) -> None:
-        get_fitness_tracker()
-        get_introduced_bias()
-        get_car_accident_predictor()
-        get_content_recommender()
-        get_content_recommender2()
-        get_modified_content_recommender()
-        get_grade_predictor()
-
-    def test_story_macid_examples(self) -> None:
-        prisoners_dilemma()
-        battle_of_the_sexes()
-        matching_pennies()
-        taxi_competition()
-        modified_taxi_competition()
-        tree_doctor()
-        forgetful_movie_star()
-        subgame_difference()
-        road_example()
-        politician()
-        umbrella()
-        sequential()
-        signal()
-        triage()
+def test_constructs_macid_base(graph_constructor: Callable) -> None:
+    graph = graph_constructor()
+    assert isinstance(graph, MACIDBase)
 
 
 if __name__ == "__main__":
