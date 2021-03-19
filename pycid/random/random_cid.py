@@ -1,8 +1,11 @@
 import random
 from typing import List, Tuple
 
+import numpy as np
+
+from pycid import FunctionCPD
 from pycid.core.cid import CID
-from pycid.core.cpd import DecisionDomain, RandomlySampledFunctionCPD, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, UniformRandomCPD
 from pycid.core.get_paths import find_active_path
 
 # TODO add a random_macid function
@@ -166,3 +169,18 @@ def add_sufficient_recalls(cid: CID) -> None:
                     _add_sufficient_recall(cid, dec1, dec2, utility_node)
                 else:
                     _add_sufficient_recall(cid, dec2, dec1, utility_node)
+
+
+class RandomlySampledFunctionCPD(FunctionCPD):
+    """
+    Instantiates a randomly chosen FunctionCPD for the variable
+    """
+
+    def __init__(self, variable: str) -> None:
+        possible_functions = [
+            lambda **pv: np.prod(list(pv.values())),
+            lambda **pv: np.sum(list(pv.values())),
+            lambda **pv: 1 - np.prod(list(pv.values())),
+            lambda **pv: 1 - np.sum(list(pv.values())),
+        ]
+        super().__init__(variable, random.choice(possible_functions))

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import itertools
-import random
 from inspect import getsourcelines
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
 
@@ -75,11 +74,17 @@ class StochasticFunctionCPD(TabularCPD):
     StochasticFunctionCPD class used to specify relationship between variables with a stochastic
     function, rather than with a probability matrix
 
-    Stochastic functions are represented with dictionaries {state_name: probability}.
-    This makes it possible to specify the probabilities and values as functions of the parent
-    values. For example, if Y is a child of binary-valued variable X, then we can say the Y
-    copies the value of X with 90% probability with the function lambda x: {x: 0.9, 1-x: 0.1}.
+    Stochastic functions are represented with dictionaries {outcome: probability}.
+    This makes it easy to specify the distribution as functions of the parent outcomes.
+    For example, if Y is a child of binary-valued variable X, then we can say the Y
+    copies the value of X with 90% probability with the function:
+
+    lambda x: {x: 0.9, 1-x: 0.1}.
+
     In fact, since only two values are possible for Y, lambda x: {x: 0.9} suffices.
+
+    In general, probabilities need to be specified for all but one of the possible outcomes.
+    The possible outcomes can be specified with the domain= keyword to __init__.
 
     Once inserted into a CID, initialize_tabular_cpd converts the function
     into a probability matrix for the TabularCPD. It is necessary to wait with this until the values
@@ -100,8 +105,11 @@ class StochasticFunctionCPD(TabularCPD):
         ----------
         variable: The variable name.
 
-        stochastic_function: A function mapping evidence observations to an outcome for this variable.
-            Observations are passed by position according to the order of `evidence`.
+        stochastic_function: A stochastic function that maps parent outcomes to a distribution
+        over outcomes for this variable (see doc-string for class).
+        The different parents are identified by name: the arguments to the function must
+        be lowercase versions of the names of the parent variables. For example, if X has
+        parents Y, S1, and Obs, the arguments to function must be y, s1, and obs.
 
         domain: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
@@ -265,8 +273,10 @@ class FunctionCPD(StochasticFunctionCPD):
         ----------
         variable: The variable name.
 
-        function: A function mapping evidence observations to an outcome for this variable.
-            Observations are passed by position according to the order of `evidence`.
+        function: A function mapping parent outcomes to an outcome for this variable.
+        The different parents are identified by name: the arguments to the function must
+        be lowercase versions of the names of the parent variables. For example, if X has
+        parents Y, S1, and Obs, the arguments to function must be y, s1, and obs.
 
         domain: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
@@ -280,21 +290,6 @@ class FunctionCPD(StochasticFunctionCPD):
             domain=domain,
             label=label if label is not None else StochasticFunctionCPD.compute_label(function),
         )
-
-
-class RandomlySampledFunctionCPD(FunctionCPD):
-    """
-    Instantiates a randomly chosen FunctionCPD for the variable
-    """
-
-    def __init__(self, variable: str) -> None:
-        possible_functions = [
-            lambda **pv: np.prod(list(pv.values())),
-            lambda **pv: np.sum(list(pv.values())),
-            lambda **pv: 1 - np.prod(list(pv.values())),
-            lambda **pv: 1 - np.sum(list(pv.values())),
-        ]
-        super().__init__(variable, random.choice(possible_functions))
 
 
 class DecisionDomain(UniformRandomCPD):
