@@ -574,7 +574,7 @@ class MACIDBase(BayesianModel):
             except KeyError:
                 agent = None
         if agent is not None:
-            color: np.ndarray = colors[agents.index(agent)]
+            color: np.ndarray = colors[[agents.index(agent)]]
             return color
         else:
             return "lightgray"  # chance node
