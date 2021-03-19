@@ -131,6 +131,10 @@ class MACIDBase(BayesianModel):
 
     def make_chance(self, node: str) -> None:
         """Turn a decision node into a chance node."""
+        if node not in self.nodes():
+            raise KeyError(f"The node {node} is not in the (MA)CID")
+        if node not in self.decisions:
+            raise ValueError(f"{node} is already a chance (or utility) node.")
         agent = self.decision_agent.pop(node)
         self.agent_decisions[agent].remove(node)
 
