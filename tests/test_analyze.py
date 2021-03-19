@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import sys
-import unittest
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -27,165 +29,345 @@ from pycid.examples.story_cids import (
     get_modified_content_recommender,
 )
 
+if TYPE_CHECKING:
+    from pycid import CID
 
-class TestAnalyze(unittest.TestCase):
-    # @unittest.skip("")
-    def test_value_of_information(self) -> None:
-        cid = get_introduced_bias()
-        self.assertTrue(admits_voi(cid, "D", "A"))
-        self.assertEqual(set(admits_voi_list(cid, "D")), {"A", "X", "Z", "Y"})
-        cid2 = get_grade_predictor()
-        self.assertCountEqual(admits_voi_list(cid2, "P"), ["HS", "E", "Gr"])
-        self.assertFalse(admits_voi(cid2, "P", "Ge"))
-        with self.assertRaises(KeyError):
-            admits_voi(cid2, "P", "A")
-        with self.assertRaises(KeyError):
-            admits_voi(cid2, "B", "Ge")
-        cid2.remove_edge("HS", "P")
-        self.assertCountEqual(admits_voi_list(cid2, "P"), ["R", "HS", "E", "Gr"])
 
-    # @unittest.skip("")
-    def test_total_effect(self) -> None:
-        cid = get_minimal_cid()
-        cid.impute_random_policy()
-        self.assertEqual(total_effect(cid, "A", "B", 0, 1), 1)
-        cid = get_introduced_bias()
-        cid.impute_random_policy()
-        self.assertEqual(total_effect(cid, "A", "X", 0, 1), 0.5)
-        self.assertEqual(total_effect(cid, "A", "D", 0, 1), 0)
-        self.assertEqual(total_effect(cid, "A", "Y", 0, 1), 0.5)
+@pytest.fixture
+def cid_minimal() -> CID:
+    return get_minimal_cid()
 
-    # @unittest.skip("")
-    def test_introduced_total_effect(self) -> None:
-        cid = get_introduced_bias()
-        cid.impute_random_policy()
-        self.assertEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), -0.5)
-        cid.impute_conditional_expectation_decision("D", "Y")
-        self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0.3333, 2)
-        # Try modified model where X doesn't depend on Z
-        cid = get_introduced_bias()
-        cid.impute_random_policy()
+
+@pytest.fixture
+def imputed_cid_minimal(cid_minimal: CID) -> CID:
+    cid_minimal.impute_random_policy()
+    return cid_minimal
+
+
+@pytest.fixture
+def cid_introduced_bias() -> CID:
+    return get_introduced_bias()
+
+
+@pytest.fixture
+def imputed_cid_introduced_bias(cid_introduced_bias: CID) -> CID:
+    cid_introduced_bias.impute_random_policy()
+    return cid_introduced_bias
+
+
+@pytest.fixture
+def cid_grade_predictor() -> CID:
+    return get_grade_predictor()
+
+
+@pytest.fixture
+def cid_content_recommender() -> CID:
+    return get_content_recommender()
+
+
+@pytest.fixture
+def cid_modified_content_recommender() -> CID:
+    return get_modified_content_recommender()
+
+
+@pytest.fixture
+def cid_trim_example() -> CID:
+    return get_trim_example_cid()
+
+
+@pytest.fixture
+def cid_fitness_tracker() -> CID:
+    return get_fitness_tracker()
+
+
+@pytest.fixture
+def macid() -> MACID:
+    return MACID(
+        [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
+        agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+    )
+
+
+# Note: The classes are not necessary.
+# They are used to create a common namespace for tests of the same function.
+
+
+class TestAdmitsVoi:
+    @staticmethod
+    def test_has_voi_introduced_bias(cid_introduced_bias: CID) -> None:
+        assert admits_voi(cid_introduced_bias, "D", "A")
+
+    @staticmethod
+    def test_no_void_grade_predictor(cid_grade_predictor: CID) -> None:
+        assert not admits_voi(cid_grade_predictor, "P", "Ge")
+
+    @staticmethod
+    def test_invalid_decision(cid_grade_predictor: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_voi(cid_grade_predictor, "_", "Ge")
+
+    @staticmethod
+    def test_invalid_target(cid_grade_predictor: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_voi(cid_grade_predictor, "P", "_")
+
+
+class TestAdmitsVoiList:
+    @staticmethod
+    def test_introduced_bias(cid_introduced_bias: CID) -> None:
+        assert set(admits_voi_list(cid_introduced_bias, "D")) == {"A", "X", "Z", "Y"}
+
+    @staticmethod
+    def test_grade_predictor(cid_grade_predictor: CID) -> None:
+        assert set(admits_voi_list(cid_grade_predictor, "P")) == {"HS", "E", "Gr"}
+
+    @staticmethod
+    def test_grade_predictor_removed_edge(cid_grade_predictor: CID) -> None:
+        cid_grade_predictor.remove_edge("HS", "P")
+        assert set(admits_voi_list(cid_grade_predictor, "P")) == {"R", "HS", "E", "Gr"}
+
+
+class TestTotalEffect:
+    @staticmethod
+    def test_minimal_cid(imputed_cid_minimal: CID) -> None:
+        assert total_effect(imputed_cid_minimal, "A", "B", 0, 1) == 1
+
+    @staticmethod
+    def test_introduced_bias(imputed_cid_introduced_bias: CID) -> None:
+        assert total_effect(imputed_cid_introduced_bias, "A", "X", 0, 1) == pytest.approx(0.5)
+        assert total_effect(imputed_cid_introduced_bias, "A", "D", 0, 1) == pytest.approx(0)
+        assert total_effect(imputed_cid_introduced_bias, "A", "Y", 0, 1) == pytest.approx(0.5)
+
+
+class TestIntroducedTotalEffect:
+    @staticmethod
+    def test_introduced_bias(imputed_cid_introduced_bias: CID) -> None:
+        assert introduced_total_effect(imputed_cid_introduced_bias, "A", "D", "Y", 0, 1) == pytest.approx(-0.5)
+
+        imputed_cid_introduced_bias.impute_conditional_expectation_decision("D", "Y")
+        assert introduced_total_effect(imputed_cid_introduced_bias, "A", "D", "Y", 0, 1) == pytest.approx(1 / 3)
+
+    @staticmethod
+    def test_introduced_bias_x_nodep_z(imputed_cid_introduced_bias: CID) -> None:
+        # Modified model where X doesn't depend on Z
+        cid = imputed_cid_introduced_bias
         cid.add_cpds(FunctionCPD("X", lambda a, z: a))
         cid.impute_conditional_expectation_decision("D", "Y")
-        self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0, 2)
-        # Try modified model where Y doesn't depend on Z
-        cid = get_introduced_bias()
-        cid.impute_random_policy()
+        assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
+
+    @staticmethod
+    def test_introduced_bias_y_nodep_z(imputed_cid_introduced_bias: CID) -> None:
+        # Modified model where Y doesn't depend on Z
+        cid = imputed_cid_introduced_bias
         cid.add_cpds(FunctionCPD("Y", lambda x, z: x))
         cid.impute_conditional_expectation_decision("D", "Y")
-        self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0, 2)
-        # Try modified model where Y doesn't depend on X
-        cid = get_introduced_bias()
-        cid.impute_random_policy()
+        assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
+
+    @staticmethod
+    def test_introduced_bias_y_nodep_x(imputed_cid_introduced_bias: CID) -> None:
+        # Modified model where Y doesn't depend on X
+        cid = imputed_cid_introduced_bias
         cid.add_cpds(FunctionCPD("Y", lambda x, z: z))
         cid.impute_conditional_expectation_decision("D", "Y")
-        self.assertAlmostEqual(introduced_total_effect(cid, "A", "D", "Y", 0, 1), 0.333, 2)
+        assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(1 / 3)
 
-    def test_requisite_graph(self) -> None:
-        cid = get_trim_example_cid()
-        self.assertFalse(requisite(cid, "D2", "D1"))
-        self.assertTrue(requisite(cid, "D2", "Y2"))
-        self.assertCountEqual(cid.get_parents("D2"), ["Y1", "Y2", "D1", "Z1", "Z2"])
-        self.assertEqual(len(cid.edges), 12)
-        req_graph = requisite_graph(cid)
-        self.assertEqual(len(req_graph.edges), 7)
-        self.assertCountEqual(req_graph.get_parents("D2"), ["Y2"])
 
-    def test_value_of_control(self) -> None:
-        cid = get_content_recommender()
-        self.assertCountEqual(admits_voc_list(cid), ["O", "I", "M", "C"])
-        cid2 = get_modified_content_recommender()
-        self.assertCountEqual(admits_voc_list(cid2), ["O", "M", "C"])
-        self.assertTrue(admits_voc(cid2, "M"))
-        self.assertFalse(admits_voc(cid2, "I"))
-        with self.assertRaises(KeyError):
-            admits_voc(cid2, "A")
-        with self.assertRaises(KeyError):
-            admits_voc(cid2, "J")
-        macid = MACID(
-            [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        )
-        with self.assertRaises(ValueError):
-            admits_voc(macid, "D2")
-        with self.assertRaises(ValueError):
+class TestRequisite:
+    @staticmethod
+    def test_requisite_trim_example(cid_trim_example: CID) -> None:
+        assert requisite(cid_trim_example, "D2", "Y2")
+
+    @staticmethod
+    def test_not_requisite_trim_example(cid_trim_example: CID) -> None:
+        assert not requisite(cid_trim_example, "D2", "D1")
+
+
+class TestRequisiteGraph:
+    @staticmethod
+    def test_trim_example(cid_trim_example: CID) -> None:
+        assert len(cid_trim_example.edges) == 12
+        assert set(cid_trim_example.get_parents("D2")) == {"Y1", "Y2", "D1", "Z1", "Z2"}
+
+        req_graph = requisite_graph(cid_trim_example)
+        assert len(req_graph.edges) == 7
+        assert set(req_graph.get_parents("D2")) == {"Y2"}
+
+
+class TestAdmitsVoc:
+    @staticmethod
+    def test_has_voc_modified_content_recommender(cid_modified_content_recommender: CID) -> None:
+        assert admits_voc(cid_modified_content_recommender, "M")
+
+    @staticmethod
+    def test_no_voc_modified_content_recommender(cid_modified_content_recommender: CID) -> None:
+        assert not admits_voc(cid_modified_content_recommender, "I")
+
+    @staticmethod
+    def test_invalid_target(cid_content_recommender: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_voc(cid_content_recommender, "_")
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
+            admits_voc(macid, "U1")
+
+
+class TestAdmitsVocList:
+    @staticmethod
+    def test_content_recommender(cid_content_recommender: CID) -> None:
+        assert set(admits_voc_list(cid_content_recommender)) == {"O", "I", "M", "C"}
+
+    @staticmethod
+    def test_modified_content_recommender(cid_modified_content_recommender: CID) -> None:
+        assert set(admits_voc_list(cid_modified_content_recommender)) == {"O", "M", "C"}
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_voc_list(macid)
 
-    def test_instrumental_control_incentive(self) -> None:
-        cid = get_content_recommender()
-        self.assertTrue(admits_ici(cid, "P", "I"))
-        self.assertFalse(admits_ici(cid, "P", "O"))
-        self.assertCountEqual(admits_ici_list(cid, "P"), ["I", "P", "C"])
-        with self.assertRaises(KeyError):
-            admits_ici(cid, "P", "A")
-        with self.assertRaises(KeyError):
-            admits_ici(cid, "B", "O")
-        macid = MACID(
-            [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        )
-        with self.assertRaises(ValueError):
+
+class TestAdmitsIci:
+    @staticmethod
+    def test_has_ici_content_recommender(cid_content_recommender: CID) -> None:
+        assert admits_ici(cid_content_recommender, "P", "I")
+
+    @staticmethod
+    def test_no_ici_content_recommender(cid_content_recommender: CID) -> None:
+        assert not admits_ici(cid_content_recommender, "P", "O")
+
+    @staticmethod
+    def test_invalid_decision(cid_content_recommender: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_ici(cid_content_recommender, "_", "O")
+
+    @staticmethod
+    def test_invalid_target(cid_content_recommender: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_ici(cid_content_recommender, "P", "_")
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_ici(macid, "D2", "D1")
-        with self.assertRaises(ValueError):
+
+
+class TestAdmitsIciList:
+    @staticmethod
+    def test_content_recommender(cid_content_recommender: CID) -> None:
+        assert set(admits_ici_list(cid_content_recommender, "P")) == {"I", "P", "C"}
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_ici_list(macid, "D2")
 
-    def test_response_incentive(self) -> None:
-        cid = get_grade_predictor()
-        self.assertCountEqual(admits_ri_list(cid, "P"), ["R", "HS"])
-        self.assertFalse(admits_ri(cid, "P", "E"))
-        self.assertTrue(admits_ri(cid, "P", "R"))
-        cid.remove_edge("HS", "P")
-        self.assertEqual(admits_ri_list(cid, "P"), [])
-        with self.assertRaises(KeyError):
-            admits_ri(cid, "P", "A")
-        with self.assertRaises(KeyError):
-            admits_ri(cid, "B", "E")
-        macid = MACID(
-            [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        )
-        with self.assertRaises(ValueError):
+
+class TestAdmitsRi:
+    @staticmethod
+    def test_has_ri_grade_predictor(cid_grade_predictor: CID) -> None:
+        assert admits_ri(cid_grade_predictor, "P", "R")
+
+    @staticmethod
+    def test_no_ri_grade_predictor(cid_grade_predictor: CID) -> None:
+        assert not admits_ri(cid_grade_predictor, "P", "E")
+
+    @staticmethod
+    def test_invalid_decision(cid_grade_predictor: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_ri(cid_grade_predictor, "_", "E")
+
+    @staticmethod
+    def test_invalid_target(cid_grade_predictor: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_ri(cid_grade_predictor, "P", "_")
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_ri(macid, "D2", "D1")
-        with self.assertRaises(ValueError):
+
+
+class TestAdmitsRiList:
+    @staticmethod
+    def test_grade_predictor(cid_grade_predictor: CID) -> None:
+        assert set(admits_ri_list(cid_grade_predictor, "P")) == {"R", "HS"}
+
+        cid_grade_predictor.remove_edge("HS", "P")
+        assert set(admits_ri_list(cid_grade_predictor, "P")) == set()
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_ri_list(macid, "D2")
 
-    def test_indirect_value_of_control(self) -> None:
-        cid = get_fitness_tracker()
-        self.assertFalse(admits_indir_voc(cid, "C", "TF"))
-        self.assertTrue(admits_indir_voc(cid, "C", "SC"))
-        self.assertCountEqual(admits_indir_voc_list(cid, "C"), ["SC"])
-        with self.assertRaises(KeyError):
-            admits_indir_voc(cid, "C", "A")
-        with self.assertRaises(KeyError):
-            admits_indir_voc(cid, "B", "TF")
-        macid = MACID(
-            [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        )
-        with self.assertRaises(ValueError):
+
+class TestAdmitsIndirVoc:
+    @staticmethod
+    def test_has_indir_voc_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert admits_indir_voc(cid_fitness_tracker, "C", "SC")
+
+    @staticmethod
+    def test_no_indir_voc_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert not admits_indir_voc(cid_fitness_tracker, "C", "TF")
+
+    @staticmethod
+    def test_invalid_decision(cid_fitness_tracker: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_indir_voc(cid_fitness_tracker, "_", "TF")
+
+    @staticmethod
+    def test_invalid_target(cid_fitness_tracker: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_indir_voc(cid_fitness_tracker, "C", "_")
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_indir_voc(macid, "D2", "D1")
-        with self.assertRaises(ValueError):
+
+
+class TestAdmitsIndirVocList:
+    @staticmethod
+    def test_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert set(admits_indir_voc_list(cid_fitness_tracker, "C")) == {"SC"}
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_indir_voc_list(macid, "D2")
 
-    def test_direct_value_of_control(self) -> None:
-        cid = get_fitness_tracker()
-        self.assertFalse(admits_dir_voc(cid, "TF"))
-        self.assertTrue(admits_dir_voc(cid, "F"))
-        self.assertCountEqual(admits_dir_voc_list(cid), ["F", "P"])
-        with self.assertRaises(KeyError):
-            admits_dir_voc(cid, "B")
-        macid = MACID(
-            [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-            agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-            agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        )
-        with self.assertRaises(ValueError):
+
+class TestAdmitsDirVoc:
+    @staticmethod
+    def test_has_dir_voc_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert admits_dir_voc(cid_fitness_tracker, "F")
+
+    @staticmethod
+    def test_no_dir_voc_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert not admits_dir_voc(cid_fitness_tracker, "TF")
+
+    @staticmethod
+    def test_invalid_target(cid_fitness_tracker: CID) -> None:
+        with pytest.raises(KeyError):
+            admits_dir_voc(cid_fitness_tracker, "_")
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_dir_voc(macid, "D2")
-        with self.assertRaises(ValueError):
+
+
+class TestAdmitsDirVocList:
+    @staticmethod
+    def test_fitness_tracker(cid_fitness_tracker: CID) -> None:
+        assert set(admits_dir_voc_list(cid_fitness_tracker)) == {"F", "P"}
+
+    @staticmethod
+    def test_macid_raises(macid: MACID) -> None:
+        with pytest.raises(ValueError):
             admits_dir_voc_list(macid)
 
 
