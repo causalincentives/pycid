@@ -68,8 +68,15 @@ class UniformRandomCPD(TabularCPD):
 
 
 class StochasticFunctionCPD(TabularCPD):
-    """StochasticFunctionCPD class used to specify relationship between variables with a function
-     that outputs a dictionary of probabilities, rather than with a probability matrix
+    """
+    StochasticFunctionCPD class used to specify relationship between variables with a stochastic
+    function, rather than with a probability matrix
+
+    Stochastic functions are represented with dictionaries {state_name: probability}.
+    This makes it possible to specify the probabilities and values as functions of the parent
+    values. For example, if Y is a child of binary-valued variable X, then we can say the Y
+    copies the value of X with 90% probability with the function lambda x: {x: 0.9, 1-x: 0.1}.
+    In fact, since only two values are possible for Y, lambda x: {x: 0.9} suffices.
 
     Once inserted into a BayesianModel, initialize_tabular_cpd converts the function
     into a probability matrix for the TabularCPD. It is necessary to wait with this until the values
@@ -83,7 +90,7 @@ class StochasticFunctionCPD(TabularCPD):
         state_names: Optional[Dict[str, Sequence[State]]] = None,
         label: str = None,
     ) -> None:
-        """Initialize StochasticFunctionCPD with a variable name and a stochastic function
+        """Initialize StochasticFunctionCPD with a variable name and a stochastic function.
 
 
         Parameters
