@@ -1,11 +1,10 @@
 import random
 from typing import List, Tuple
 
-import numpy as np
-
 from pycid.core.cid import CID
-from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
+from pycid.core.cpd import DecisionDomain
 from pycid.core.get_paths import find_active_path
+from pycid.random.random_cpd import random_cpd
 
 # TODO add a random_macid function
 
@@ -41,7 +40,7 @@ def random_cid(
             if node in cid.decisions:
                 cid.add_cpds(DecisionDomain(node, [0, 1]))
             else:
-                cid.add_cpds(sample_random_cpd(node))
+                cid.add_cpds(random_cpd(node))
     return cid
 
 
@@ -166,28 +165,3 @@ def add_sufficient_recalls(cid: CID) -> None:
                     _add_sufficient_recall(cid, dec1, dec2, utility_node)
                 else:
                     _add_sufficient_recall(cid, dec2, dec1, utility_node)
-
-
-def sample_random_cpd(variable: str, domain: List = [0, 1], smoothness: float = 1.0) -> StochasticFunctionCPD:
-    """
-    Sample a random CPD, with outcomes in the given domain
-
-    Parameters
-    ----------
-    variable: Name of variable
-
-    domain: List of possible outcomes. By default [0, 1]
-
-    smoothness: How different the probabilities for different probabilities are.
-    When small (e.g. 0.001), most probability mass falls on a single outcome, and
-    when large (e.g. 1000), the distribution approaches a uniform distribution.
-    """
-
-    def prob_vector() -> List:
-        return np.random.dirichlet(np.ones(len(domain)) * smoothness, size=1).flat  # type: ignore
-
-    return StochasticFunctionCPD(
-        variable,
-        lambda **pv: {domain[i]: prob for i, prob in enumerate(prob_vector())},
-        domain=domain if domain else [0, 1],
-    )
