@@ -3,7 +3,9 @@ from pycid.core.cid import CID
 
 def total_effect(cid: CID, a: str, x: str, a0: int = 0, a1: int = 1) -> float:
     "the total effect on x from intervening on a with a2 rather than a1"
-    total_effect = cid.expected_value([x], {}, intervene={a: a1})[0] - cid.expected_value([x], {}, intervene={a: a0})[0]
+    total_effect = (
+        cid.expected_value([x], {}, intervention={a: a1})[0] - cid.expected_value([x], {}, intervention={a: a0})[0]
+    )
     return total_effect  # type: ignore
 
 
