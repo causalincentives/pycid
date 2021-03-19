@@ -215,9 +215,11 @@ class StochasticFunctionCPD(TabularCPD):
         card = len(domain)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
-        matrix = np.array(
-            [[complete_dictionary(self.stochastic_function(**i))[t] for i in self.parent_values(cid)] for t in domain]
-        )
+        matrix_list = []
+        for pv in self.parent_values(cid):
+            probabilities = complete_dictionary(self.stochastic_function(**pv))
+            matrix_list.append([probabilities[t] for t in domain])
+        matrix = np.array(matrix_list).T
         if not np.allclose(matrix.sum(axis=0), 1, atol=0.01):
             raise ValueError(f"The values for {self.variable} do not sum to 1 \n{matrix}")
         if (matrix < 0).any() or (matrix > 1).any():
