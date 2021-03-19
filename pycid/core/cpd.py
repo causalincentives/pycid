@@ -4,13 +4,15 @@ import inspect
 import itertools
 import random
 from inspect import getsourcelines
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
-from pgmpy.models import BayesianModel  # type: ignore
 
 State = Any
+
+if TYPE_CHECKING:
+    from pycid import MACIDBase
 
 
 class ParentsNotReadyException(ValueError):
@@ -24,7 +26,7 @@ class UniformRandomCPD(TabularCPD):
     is run.
     """
 
-    def __init__(self, variable: str, state_names: Sequence[State], label: Optional[str] = None):
+    def __init__(self, variable: str, domain: Sequence[State], label: Optional[str] = None):
         """Create a UniformRandomCPD
 
         Call `initialize_tabular_cpd` to complete the initialization.
@@ -33,18 +35,18 @@ class UniformRandomCPD(TabularCPD):
         ----------
         variable: The variable name.
 
-        state_names: The possible outcomes of the variable.
+        domain: The possible outcomes of the variable.
 
         label: An optional label used to describe this distribution.
         """
         self.variable = variable
-        self.variable_card = len(state_names)
-        self.state_names = {variable: state_names}
-        self.label = label if label is not None else f"DiscUni({state_names})"
+        self.variable_card = len(domain)
+        self.domain = domain
+        self.label = label if label is not None else f"DiscUni({domain})"
         # we call super().__init__() in initialize_tabular_cpd instead
 
     def copy(self) -> UniformRandomCPD:
-        return UniformRandomCPD(self.variable, self.state_names[self.variable])
+        return UniformRandomCPD(self.variable, self.domain)
 
     def __repr__(self) -> str:
         return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
@@ -52,7 +54,7 @@ class UniformRandomCPD(TabularCPD):
     def __str__(self) -> str:
         return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
 
-    def initialize_tabular_cpd(self, cid: BayesianModel) -> bool:
+    def initialize_tabular_cpd(self, cid: MACIDBase) -> bool:
         """initialize the TabularCPD with a matrix representing a uniform random distribution"""
         parents = cid.get_parents(self.variable)
         # check that parents are initialized
@@ -61,8 +63,9 @@ class UniformRandomCPD(TabularCPD):
                 return False
         parents_card = [cid.get_cardinality(p) for p in parents]
         transition_matrix = np.ones((self.variable_card, np.product(parents_card).astype(int))) / self.variable_card
+        cid.state_names[self.variable] = self.domain
         super().__init__(
-            self.variable, self.variable_card, transition_matrix, parents, parents_card, state_names=self.state_names
+            self.variable, self.variable_card, transition_matrix, parents, parents_card, state_names=cid.state_names
         )
         return True
 
@@ -78,7 +81,7 @@ class StochasticFunctionCPD(TabularCPD):
     copies the value of X with 90% probability with the function lambda x: {x: 0.9, 1-x: 0.1}.
     In fact, since only two values are possible for Y, lambda x: {x: 0.9} suffices.
 
-    Once inserted into a BayesianModel, initialize_tabular_cpd converts the function
+    Once inserted into a CID, initialize_tabular_cpd converts the function
     into a probability matrix for the TabularCPD. It is necessary to wait with this until the values
     of the parents have been computed, since the state names depends on the values of the parents.
     """
@@ -87,7 +90,7 @@ class StochasticFunctionCPD(TabularCPD):
         self,
         variable: str,
         stochastic_function: Callable[..., Dict[State, Union[int, float]]],
-        state_names: Optional[Dict[str, Sequence[State]]] = None,
+        domain: Optional[Sequence[State]] = None,
         label: str = None,
     ) -> None:
         """Initialize StochasticFunctionCPD with a variable name and a stochastic function.
@@ -100,26 +103,21 @@ class StochasticFunctionCPD(TabularCPD):
         stochastic_function: A function mapping evidence observations to an outcome for this variable.
             Observations are passed by position according to the order of `evidence`.
 
-        state_names: An optional specification of the variable's domain.
+        domain: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
 
         label: An optional label used to describe this distribution.
         """
         self.variable = variable
         self.stochastic_function = stochastic_function
-        self.cid: Optional[BayesianModel] = None
+        self.cid: Optional[MACIDBase] = None
 
-        if state_names is not None:
-            assert isinstance(state_names, dict)
-            assert isinstance(state_names[variable], list)
-            self.force_state_names: Optional[Sequence[State]] = state_names[variable]
-        else:
-            self.force_state_names = None
+        assert isinstance(domain, (list, type(None)))
+        self.force_domain: Optional[Sequence[State]] = domain
+        self.domain: Optional[Sequence[State]] = domain
 
-        if label is not None:
-            self.label = label
-        else:
-            self.label = self.compute_label(stochastic_function)
+        assert isinstance(label, (str, type(None)))
+        self.label = label if label is not None else self.compute_label(stochastic_function)
         # we call super().__init__() in initialize_tabular_cpd instead
 
     @staticmethod
@@ -146,7 +144,7 @@ class StochasticFunctionCPD(TabularCPD):
             return function.__name__
         return ""
 
-    def check_parents(self, cid: BayesianModel) -> None:
+    def check_parents(self, cid: MACIDBase) -> None:
         """Raises a ValueError if the parents in the CID don't match the argument to the specified function"""
         sig = inspect.signature(self.stochastic_function).parameters
         arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
@@ -158,7 +156,7 @@ class StochasticFunctionCPD(TabularCPD):
                 f" {args.symmetric_difference(lower_case_parents)}, "
             )
 
-    def parents_instantiated(self, cid: BayesianModel) -> bool:
+    def parents_instantiated(self, cid: MACIDBase) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
         for p in cid.get_parents(self.variable):
             p_cpd = cid.get_cpds(p)
@@ -166,7 +164,7 @@ class StochasticFunctionCPD(TabularCPD):
                 return False
         return True
 
-    def parent_values(self, cid: BayesianModel) -> List[Dict[str, Any]]:
+    def parent_values(self, cid: MACIDBase) -> List[Dict[str, Any]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         assert self.parents_instantiated(cid)
         parent_values = []
@@ -177,12 +175,12 @@ class StochasticFunctionCPD(TabularCPD):
         pv_list = list(itertools.product(*parent_values))
         return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
 
-    def possible_values(self, cid: BayesianModel) -> List[List]:
+    def possible_values(self, cid: MACIDBase) -> List[State]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
         return sorted(set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)]))
 
-    def initialize_tabular_cpd(self, cid: BayesianModel) -> None:
+    def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
         """Initialize the probability table for the inherited TabularCPD.
 
         Requires that all parents in the CID have already been instantiated.
@@ -190,59 +188,51 @@ class StochasticFunctionCPD(TabularCPD):
         if not self.parents_instantiated(cid):
             raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid
-        if self.force_state_names:
-            state_names_list = self.force_state_names
-            if not set(self.possible_values(cid)).issubset(state_names_list):
+        if self.force_domain:
+            if not set(self.possible_values(cid)).issubset(self.force_domain):
                 raise ValueError("variable {} can take value outside given state_names".format(self.variable))
-        else:
-            state_names_list = self.possible_values(cid)
 
-        def complete_dictionary(dict: Dict[State, Union[int, float]]) -> Dict[State, Union[int, float]]:
+        domain: Sequence[State] = self.force_domain if self.force_domain else self.possible_values(cid)
+
+        def complete_dictionary(dictionary: Dict[State, Union[int, float]]) -> Dict[State, Union[int, float]]:
             """Complete a dictionary with values for missing keys"""
-            for pv in self.parent_values(cid):
-                missing_keys = set(state_names_list) - set(dict.keys())
-                if len(missing_keys) == 1:  # if there is only one missing key, we know its probability
-                    dict[missing_keys.pop()] = 1 - sum(dict.values())  # type: ignore
-                else:  # otherwise, we'll just assume unmentioned keys have probability 0
-                    for key in missing_keys:
-                        dict[key] = 0
-            return dict
+            missing_keys = set(domain) - set(dictionary.keys())
+            if len(missing_keys) == 1:  # if there is only one missing key, we know its probability
+                dictionary[missing_keys.pop()] = 1 - sum(dictionary.values())  # type: ignore
+            else:  # otherwise, we'll just assume unmentioned keys have probability 0
+                for key in missing_keys:
+                    dictionary[key] = 0
+            return dictionary
 
-        card = len(state_names_list)
+        card = len(domain)
         evidence = cid.get_parents(self.variable)
         evidence_card = [cid.get_cardinality(p) for p in evidence]
         matrix = np.array(
-            [
-                [complete_dictionary(self.stochastic_function(**i))[t] for i in self.parent_values(cid)]
-                for t in state_names_list
-            ]
+            [[complete_dictionary(self.stochastic_function(**i))[t] for i in self.parent_values(cid)] for t in domain]
         )
         if (matrix.sum(axis=0) != 1).any():
             raise ValueError(f"The values for {self.variable} do not sum to 1 \n{matrix}")
         if (matrix < 0).any() or (matrix > 1).any():
             raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{matrix}")
-        state_names = {self.variable: state_names_list}
+        self.domain = domain
+        cid.state_names[self.variable] = self.domain
 
-        super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=state_names)
-
-    def scope(self) -> List[str]:
-        return [self.variable]
+        super().__init__(self.variable, card, matrix, evidence, evidence_card, state_names=cid.state_names)
 
     def copy(self) -> StochasticFunctionCPD:
-        state_names = {self.variable: self.force_state_names} if self.force_state_names else None
-        return StochasticFunctionCPD(self.variable, self.stochastic_function, state_names=state_names)
+        return StochasticFunctionCPD(self.variable, self.stochastic_function, domain=self.force_domain)
 
     def __repr__(self) -> str:
         if self.cid and self.parents_instantiated(self.cid):
             dictionary = {}
             for pv in self.parent_values(self.cid):
-                output = self.stochastic_function(**pv)
-                for state_name in output:
-                    if output[state_name] == 1:
-                        dictionary[str(pv)] = state_name
+                probabilities = self.stochastic_function(**pv)
+                for outcome in probabilities:
+                    if probabilities[outcome] == 1:
+                        dictionary[str(pv)] = outcome
                         break
                 else:
-                    dictionary[str(pv)] = output
+                    dictionary[str(pv)] = probabilities
             mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         else:
             mapping = ""
@@ -256,7 +246,7 @@ class FunctionCPD(StochasticFunctionCPD):
     """FunctionCPD class used to specify relationship between variables with a function rather than
     a probability matrix
 
-    Once inserted into a BayesianModel, initialize_tabular_cpd converts the function
+    Once inserted into a CID, initialize_tabular_cpd converts the function
     into a probability matrix for the TabularCPD. It is necessary to wait with this until the values
     of the parents have been computed, since the state names depends on the values of the parents.
     """
@@ -265,7 +255,7 @@ class FunctionCPD(StochasticFunctionCPD):
         self,
         variable: str,
         function: Callable[..., State],
-        state_names: Optional[Dict[str, Sequence[State]]] = None,
+        domain: Optional[Sequence[State]] = None,
         label: str = None,
     ) -> None:
         """Initialize FunctionCPD with a variable name and a function
@@ -278,7 +268,7 @@ class FunctionCPD(StochasticFunctionCPD):
         function: A function mapping evidence observations to an outcome for this variable.
             Observations are passed by position according to the order of `evidence`.
 
-        state_names: An optional specification of the variable's domain.
+        domain: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
 
         label: An optional label used to describe this distribution.
@@ -287,7 +277,7 @@ class FunctionCPD(StochasticFunctionCPD):
         super().__init__(
             variable,
             lambda **x: {function(**x): 1},
-            state_names=state_names,
+            domain=domain,
             label=label if label is not None else StochasticFunctionCPD.compute_label(function),
         )
 
@@ -313,14 +303,14 @@ class DecisionDomain(UniformRandomCPD):
     Under the hood it becomes a UniformRandomCPD
     """
 
-    def __init__(self, variable: str, state_names: Sequence[State]):
-        super().__init__(variable, state_names, label=f"Dec({state_names})")
+    def __init__(self, variable: str, domain: Sequence[State]):
+        super().__init__(variable, domain, label=f"Dec({domain})")
 
     def copy(self) -> DecisionDomain:
-        return DecisionDomain(self.variable, state_names=self.state_names[self.variable])
+        return DecisionDomain(self.variable, domain=self.domain)
 
     def __repr__(self) -> str:
-        return f"<DecisionDomain {self.variable}:{self.state_names[self.variable]}>"
+        return f"<DecisionDomain {self.variable}:{self.domain}>"
 
     def __str__(self) -> str:
-        return f"<DecisionDomain {self.variable}:{self.state_names[self.variable]}>"
+        return f"<DecisionDomain {self.variable}:{self.domain}>"

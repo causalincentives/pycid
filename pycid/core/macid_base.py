@@ -29,7 +29,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD, ParentsNotReadyException, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, ParentsNotReadyException, State, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -80,6 +80,7 @@ class MACIDBase(BayesianModel):
         self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
 
         self._cpds_to_add: Dict[str, TabularCPD] = {}
+        self.state_names: Dict[str, State] = {}
 
     @property
     def decisions(self) -> KeysView[str]:
@@ -159,9 +160,13 @@ class MACIDBase(BayesianModel):
                     except ParentsNotReadyException:
                         pass
                 if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
-                    # if the state_names have changed, remember to update all descendants:
+                    # if the domains have changed, remember to update all descendants:
                     previous_cpd = self.get_cpds(var)
-                    if previous_cpd and previous_cpd.state_names[var] != cpd_to_add.state_names[var]:
+                    if (
+                        previous_cpd
+                        and hasattr(previous_cpd, "domain")
+                        and previous_cpd.state_names[var] != cpd_to_add.state_names[var]
+                    ):
                         for descendant in nx.descendants(self, var):
                             if descendant not in self._cpds_to_add and self.get_cpds(descendant):
                                 self._cpds_to_add[descendant] = self.get_cpds(descendant)
@@ -194,8 +199,8 @@ class MACIDBase(BayesianModel):
         """
 
         for variable, value in context.items():
-            if value not in self.get_cpds(variable).state_names[variable]:
-                raise ValueError(f"The value {value} is not in the state_names of {variable}")
+            if value not in self.state_names[variable]:
+                raise ValueError(f"The value {value} is not in the domain of {variable}")
 
         if intervention is None:
             intervention = {}
@@ -265,15 +270,13 @@ class MACIDBase(BayesianModel):
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
-            self.add_cpds(
-                FunctionCPD(variable, lambda: intervention[variable], state_names=self.get_cpds(variable).state_names)
-            )
+            self.add_cpds(FunctionCPD(variable, lambda: intervention[variable], domain=self.state_names[variable]))
 
     def expected_value(
         self,
         variables: Iterable[str],
         context: Dict[str, Any],
-        intervene: Dict[str, Any] = None,
+        intervention: Dict[str, Any] = None,
     ) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
@@ -286,7 +289,7 @@ class MACIDBase(BayesianModel):
 
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
-        factor = self.query(variables, context, intervention=intervene)
+        factor = self.query(variables, context, intervention=intervention)
         factor.normalize()  # make probs add to one
 
         ev = np.array([0.0 for _ in factor.variables])
@@ -306,7 +309,7 @@ class MACIDBase(BayesianModel):
         return ev.tolist()  # type: ignore
 
     def expected_utility(
-        self, context: Dict[str, Any], intervene: Dict[str, Any] = None, agent: AgentLabel = 0
+        self, context: Dict[str, Any], intervention: Dict[str, Any] = None, agent: AgentLabel = 0
     ) -> float:
         """Compute the expected utility of an agent for a given context and optional intervention
 
@@ -322,7 +325,7 @@ class MACIDBase(BayesianModel):
 
         agent: Evaluate the utility of this agent.
         """
-        return sum(self.expected_value(self.agent_utilities[agent], context, intervene=intervene))
+        return sum(self.expected_value(self.agent_utilities[agent], context, intervention=intervention))
 
     def get_valid_order(self, nodes: Optional[Iterable[str]] = None) -> List[str]:
         """Get a topological order of the specified set of nodes (this may not be unique).
@@ -405,7 +408,7 @@ class MACIDBase(BayesianModel):
         cpd: TabularCPD = self.get_cpds(decision)
         evidence_card = cpd.cardinality[1:]
         parents = cpd.variables[1:]
-        state_names = cpd.state_names[decision]
+        domain = cpd.state_names[decision]
 
         parent_values = []
         for p in parents:
@@ -416,14 +419,14 @@ class MACIDBase(BayesianModel):
 
         # We begin by representing each possible decision as a list values, with length
         # equal the number of decision contexts
-        functions_as_lists = list(itertools.product(state_names, repeat=np.product(len(possible_arguments))))
+        functions_as_lists = list(itertools.product(domain, repeat=np.product(len(possible_arguments))))
 
-        def arg2idx(parent_values: Dict[str, Any]) -> int:
+        def arg2idx(pv: Dict[str, Any]) -> int:
             """Convert a decision context into an index for the function list"""
             idx = 0
-            for i, p in enumerate(parents):
-                name_to_no: Dict[Any, int] = self.get_cpds(p).name_to_no[p]
-                idx += name_to_no[parent_values[p.lower()]] * np.product(evidence_card[:i])
+            for i, parent in enumerate(parents):
+                name_to_no: Dict[Any, int] = self.get_cpds(parent).name_to_no[parent]
+                idx += name_to_no[pv[parent.lower()]] * np.product(evidence_card[:i])
             assert 0 <= idx <= len(functions_as_lists)
             return idx
 
@@ -433,7 +436,7 @@ class MACIDBase(BayesianModel):
             def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            function_cpds.append(FunctionCPD(decision, produce_function(), state_names=cpd.state_names))
+            function_cpds.append(FunctionCPD(decision, produce_function(), domain=cpd.state_names[cpd.variable]))
         return function_cpds
 
     def pure_strategies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
