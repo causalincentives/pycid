@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import os
 import sys
-import unittest
 from typing import Any, List, Tuple
 
 import nbformat
@@ -33,30 +34,24 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
     return nb, errors
 
 
-class TestNotebooks(unittest.TestCase):
-    def test_fairness_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/fairness.ipynb")
-        self.assertEqual(len(errors), 0)
+NOTEBOOKS = [
+    "fairness",
+    "CID_Basics_Tutorial",
+    "CID_Incentives_Tutorial",
+    "generate_cid",
+    "MACID_Basics_Tutorial",
+    "Reasoning_Patterns_Tutorial",
+]
 
-    def test_cid_basics_tutorial_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/CID_Basics_Tutorial.ipynb")
-        self.assertEqual(len(errors), 0)
 
-    def test_cid_incentives_tutorial_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/CID_Incentives_Tutorial.ipynb")
-        self.assertEqual(len(errors), 0)
+@pytest.fixture(params=NOTEBOOKS)
+def notebook_name(request: Any) -> str:
+    return request.param  # type: ignore
 
-    def test_generate_cid_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/generate_cid.ipynb")
-        self.assertEqual(len(errors), 0)
 
-    def test_macid_basics_tutorial_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/MACID_Basics_Tutorial.ipynb")
-        self.assertEqual(len(errors), 0)
-
-    def test_reasoning_patterns_tutorial_notebook(self) -> None:
-        _, errors = run_notebook("notebooks/Reasoning_Patterns_Tutorial.ipynb")
-        self.assertEqual(len(errors), 0)
+def test_notebook(notebook_name: str) -> None:
+    _, errors = run_notebook(f"notebooks/{notebook_name}.ipynb")
+    assert len(errors) == 0
 
 
 if __name__ == "__main__":
