@@ -42,14 +42,32 @@ def admits_voi_list(cid: CID, decision: str) -> List[str]:
     return [x for x in non_descendants if admits_voi(cid, decision, x)]
 
 
-def voi(cid: CID, decision: str, variable: str) -> float:
-    # TODO test this method
+def voi(cid: CID, decision: str, node: str) -> float:
+    r"""
+    Returns the quantitative value of information (voi) of a variable corresponding to a node in a parameterised CID.
+
+    A node X ∈ V \ Desc(D) in a single-decision CID has quantitative voi equal to the maximum
+    utility attainable in M(X->D) minus the maximum utility attainable in M(X\->D) where
+    - M(X->D) is the CID that contains the directed edge X -> D
+    - M(X\->D) is the CID without the directed edge X -> D.
+
+    ("Agent Incentives: a Causal Perspective" by Everitt, Carey, Langlois, Ortega, and Legg, 2020)
+    """
+    if node not in cid.nodes:
+        raise KeyError(f"{node} is not present in the cid")
+    if node in {decision}.union(set(nx.descendants(cid, decision))):
+        raise ValueError(
+            f"{node} is a decision node or is a descendent of the decision node. \
+                VOI only applies to nodes which are not descendents of the decision node."
+        )
     new_cid = cid.copy()
-    new_cid.add_edge(variable, decision)
+    new_cid.draw()
+    new_cid.add_edge(node, decision)
+    new_cid.draw()
     new_cid.impute_optimal_policy()
     ev1: float = new_cid.expected_utility({})
-    new_cid = cid.copy()
-    new_cid.remove_edge(variable, decision)
+    new_cid.remove_all_decision_rules()
+    new_cid.remove_edge(node, decision)
     new_cid.impute_optimal_policy()
     ev2: float = new_cid.expected_utility({})
     return ev1 - ev2
