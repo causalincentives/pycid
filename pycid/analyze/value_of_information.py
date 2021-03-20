@@ -44,12 +44,12 @@ def admits_voi_list(cid: CID, decision: str) -> List[str]:
 
 def voi(cid: CID, decision: str, variable: str) -> float:
     # TODO test this method
-    new = cid.copy()
-    new.add_edge(variable, decision)
-    new.impute_optimal_policy()
-    ev1: float = new.expected_utility({})
-    new = cid.copy()
-    new.remove_edge(variable, decision)
-    new.impute_optimal_policy()
-    ev2: float = new.expected_utility({})
+    new_cid = cid.copy()
+    new_cid.add_edge(variable, decision)
+    new_cid.impute_optimal_policy()
+    ev1: float = new_cid.expected_utility({})
+    new_cid = cid.copy()
+    new_cid.remove_edge(variable, decision)
+    new_cid.impute_optimal_policy()
+    ev2: float = new_cid.expected_utility({})
     return ev1 - ev2

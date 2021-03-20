@@ -507,6 +507,17 @@ class MACIDBase(BayesianModel):
         for d in self.decisions:
             self.impute_random_decision(d)
 
+    def remove_policy_profile(self) -> None:
+        """ Remove the decision rules from all decisions in the (MA)CID"""
+        for d in self.decisions:
+            cpd = self.get_cpds(d)
+            if cpd is None:
+                raise ValueError(f"decision {d} has not yet been assigned a domain.")
+            elif isinstance(cpd, DecisionDomain):
+                continue
+            else:
+                self.add_cpds(DecisionDomain(d, cpd.domain))
+
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
         self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
