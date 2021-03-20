@@ -17,10 +17,10 @@ from pycid.analyze.value_of_control import (
     admits_voc,
     admits_voc_list,
 )
-from pycid.analyze.value_of_information import admits_voi, admits_voi_list
+from pycid.analyze.value_of_information import admits_voi, admits_voi_list, quantitative_voi
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid import MACID
-from pycid.examples.simple_cids import get_minimal_cid, get_trim_example_cid
+from pycid.examples.simple_cids import get_minimal_cid, get_quantitative_voi_cid, get_trim_example_cid
 from pycid.examples.story_cids import (
     get_content_recommender,
     get_fitness_tracker,
@@ -47,6 +47,11 @@ def imputed_cid_minimal(cid_minimal: CID) -> CID:
 @pytest.fixture
 def cid_introduced_bias() -> CID:
     return get_introduced_bias()
+
+
+@pytest.fixture
+def cid_quantitative_voi() -> CID:
+    return get_quantitative_voi_cid()
 
 
 @pytest.fixture
@@ -126,6 +131,24 @@ class TestAdmitsVoiList:
     def test_grade_predictor_removed_edge(cid_grade_predictor: CID) -> None:
         cid_grade_predictor.remove_edge("HS", "P")
         assert set(admits_voi_list(cid_grade_predictor, "P")) == {"R", "HS", "E", "Gr"}
+
+
+class TestQuantitativeVoi:
+    @staticmethod
+    def test_quantitative_voi(cid_quantitative_voi: CID) -> None:
+        assert set(admits_voi_list(cid_quantitative_voi, "D")) == {"X", "S"}
+        assert quantitative_voi(cid_quantitative_voi, "D", "X") == pytest.approx(0.6)
+        assert quantitative_voi(cid_quantitative_voi, "D", "S") == pytest.approx(0.4)
+
+    @staticmethod
+    def test_invalid_target(cid_quantitative_voi: CID) -> None:
+        with pytest.raises(KeyError):
+            quantitative_voi(cid_quantitative_voi, "D", "_")
+
+    @staticmethod
+    def test_invalid_node(cid_quantitative_voi: CID) -> None:
+        with pytest.raises(ValueError):
+            quantitative_voi(cid_quantitative_voi, "D", "U")
 
 
 class TestTotalEffect:

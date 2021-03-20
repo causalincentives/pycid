@@ -18,6 +18,7 @@ CONSTRUCTORS = [
     simple_cids.get_sequential_cid,
     simple_cids.get_insufficient_recall_cid,
     simple_cids.get_trim_example_cid,
+    simple_cids.get_quantitative_voi_cid,
     # Simple MACID
     simple_macids.basic2agent_tie_break,
     simple_macids.basic_different_dec_cardinality,

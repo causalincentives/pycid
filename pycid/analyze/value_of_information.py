@@ -42,14 +42,15 @@ def admits_voi_list(cid: CID, decision: str) -> List[str]:
     return [x for x in non_descendants if admits_voi(cid, decision, x)]
 
 
-def voi(cid: CID, decision: str, node: str) -> float:
+def quantitative_voi(cid: CID, decision: str, node: str) -> float:
     r"""
     Returns the quantitative value of information (voi) of a variable corresponding to a node in a parameterised CID.
 
-    A node X ∈ V \ Desc(D) in a single-decision CID has quantitative voi equal to the maximum
-    utility attainable in M(X->D) minus the maximum utility attainable in M(X\->D) where
+    A node X ∈ V \ Desc(D) in a single-decision CID has quantitative voi equal to
+    EU_max[M(X->D)] - EU_max[M(X \ ->D)]
+    ie the maximum utility attainable in M(X->D) minus the maximum utility attainable in M(X \ ->D) where
     - M(X->D) is the CID that contains the directed edge X -> D
-    - M(X\->D) is the CID without the directed edge X -> D.
+    - M(X \ ->D) is the CID without the directed edge X -> D.
 
     ("Agent Incentives: a Causal Perspective" by Everitt, Carey, Langlois, Ortega, and Legg, 2020)
     """

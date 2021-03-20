@@ -17,4 +17,4 @@ from pycid.analyze.value_of_control import (  # noqa
     admits_voc,
     admits_voc_list,
 )
-from pycid.analyze.value_of_information import admits_voi, admits_voi_list  # noqa
+from pycid.analyze.value_of_information import admits_voi, admits_voi_list, quantitative_voi  # noqa

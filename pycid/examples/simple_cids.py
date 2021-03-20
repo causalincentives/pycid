@@ -1,5 +1,5 @@
 from pycid.core.cid import CID
-from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, StochasticFunctionCPD, UniformRandomCPD
 
 
 def get_minimal_cid() -> CID:
@@ -61,6 +61,17 @@ def get_2dec_cid() -> CID:
     cpd_s2 = FunctionCPD("S2", lambda s1, d1: int(s1 == d1))
     cpd_u = FunctionCPD("U", lambda s2, d2: int(s2 == d2))
     cid.add_cpds(cpd_s1, cpd_d1, cpd_s2, cpd_d2, cpd_u)
+    return cid
+
+
+def get_quantitative_voi_cid() -> CID:
+    cid = CID([("S", "X"), ("X", "D"), ("D", "U"), ("S", "U")], decisions=["D"], utilities=["U"])
+    cpd_s = UniformRandomCPD("S", [-1, 1])
+    # X takes the value of S with probability 0.8
+    cpd_x = StochasticFunctionCPD("X", lambda s: {s: 0.8}, domain=[-1, 1])
+    cpd_d = DecisionDomain("D", [-1, 0, 1])
+    cpd_u = FunctionCPD("U", lambda s, d: int(s) * int(d))
+    cid.add_cpds(cpd_s, cpd_x, cpd_d, cpd_u)
     return cid
 
 
