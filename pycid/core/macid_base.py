@@ -412,38 +412,33 @@ class MACIDBase(BayesianModel):
     def pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
-        cpd: TabularCPD = self.get_cpds(decision)
-        evidence_card = cpd.cardinality[1:]
-        parents = cpd.variables[1:]
-        domain = cpd.state_names[decision]
+        domain = self.get_cpds(decision).state_names[decision]
+        parents = self.get_parents(decision)
+        parent_cardinalities = [self.get_cardinality(parent) for parent in parents]
 
-        parent_values = []
-        for p in parents:
-            p_cpd = self.get_cpds(p)
-            parent_values.append(p_cpd.state_names[p])
-        pv_list = list(itertools.product(*parent_values))
-        possible_arguments = [{p.lower(): pv[i] for i, p in enumerate(parents)} for pv in pv_list]
-
-        # We begin by representing each possible decision as a list values, with length
-        # equal the number of decision contexts
-        functions_as_lists = list(itertools.product(domain, repeat=np.product(len(possible_arguments))))
+        # We begin by representing each possible decision rule as a tuple of outcomes, with
+        # one element for each possible decision context
+        number_of_decision_contexts = int(np.product(parent_cardinalities))
+        functions_as_tuples = itertools.product(domain, repeat=number_of_decision_contexts)
 
         def arg2idx(pv: Dict[str, Any]) -> int:
             """Convert a decision context into an index for the function list"""
             idx = 0
             for i, parent in enumerate(parents):
                 name_to_no: Dict[Any, int] = self.get_cpds(parent).name_to_no[parent]
-                idx += name_to_no[pv[parent.lower()]] * np.product(evidence_card[:i])
-            assert 0 <= idx <= len(functions_as_lists)
+                idx += name_to_no[pv[parent.lower()]] * int(np.product(parent_cardinalities[:i]))
+            assert 0 <= idx <= number_of_decision_contexts
             return idx
 
         function_cpds: List[FunctionCPD] = []
-        for func_list in functions_as_lists:
+        for func_list in functions_as_tuples:
 
             def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
+                # using a default argument is a trick to get func_list to evaluate early
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
             function_cpds.append(FunctionCPD(decision, produce_function(), domain=domain))
+
         return function_cpds
 
     def pure_strategies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
