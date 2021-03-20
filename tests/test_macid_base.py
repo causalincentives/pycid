@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
+from pycid.core.cpd import DecisionDomain
 from pycid.core.macid_base import MechanismGraph
 from pycid.core.relevance_graph import CondensedRelevanceGraph, RelevanceGraph
 from pycid.examples.simple_cids import get_3node_cid, get_5node_cid, get_minimal_cid
@@ -218,6 +219,19 @@ class TestBASE(unittest.TestCase):
         cid = get_3node_cid()
         cid_no_cpds = cid.copy_without_cpds()
         self.assertTrue(len(cid_no_cpds.cpds) == 0)
+
+    def test_remove_all_decision_rules(self) -> None:
+        macid = prisoners_dilemma()
+        self.assertTrue(isinstance(macid.get_cpds("D1"), DecisionDomain))
+        macid.remove_all_decision_rules()
+        self.assertTrue(isinstance(macid.get_cpds("D1"), DecisionDomain))
+        macid.impute_fully_mixed_policy_profile()
+        self.assertFalse(isinstance(macid.get_cpds("D1"), DecisionDomain))
+        macid.remove_all_decision_rules()
+        self.assertTrue(isinstance(macid.get_cpds("D1"), DecisionDomain))
+        macid_copy = macid.copy_without_cpds()
+        with self.assertRaises(ValueError):
+            macid_copy.remove_all_decision_rules()
 
     # @unittest.skip("")
     def test_sufficient_recall(self) -> None:

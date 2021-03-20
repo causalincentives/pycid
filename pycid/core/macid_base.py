@@ -507,7 +507,7 @@ class MACIDBase(BayesianModel):
         for d in self.decisions:
             self.impute_random_decision(d)
 
-    def remove_policy_profile(self) -> None:
+    def remove_all_decision_rules(self) -> None:
         """ Remove the decision rules from all decisions in the (MA)CID"""
         for d in self.decisions:
             cpd = self.get_cpds(d)
