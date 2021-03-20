@@ -62,9 +62,7 @@ def quantitative_voi(cid: CID, decision: str, node: str) -> float:
                 VOI only applies to nodes which are not descendents of the decision node."
         )
     new_cid = cid.copy()
-    new_cid.draw()
     new_cid.add_edge(node, decision)
-    new_cid.draw()
     new_cid.impute_optimal_policy()
     ev1: float = new_cid.expected_utility({})
     new_cid.remove_all_decision_rules()
