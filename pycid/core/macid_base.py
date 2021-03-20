@@ -29,7 +29,14 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD, ParentsNotReadyException, State, UniformRandomCPD
+from pycid.core.cpd import (
+    DecisionDomain,
+    FunctionCPD,
+    ParentsNotReadyException,
+    State,
+    StochasticFunctionCPD,
+    UniformRandomCPD,
+)
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -145,8 +152,8 @@ class MACIDBase(BayesianModel):
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, DecisionDomain) and cpd.variable not in self.decisions:
                 raise ValueError(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
-            if hasattr(cpd, "check_parents"):
-                cpd.check_parents(self)
+            if isinstance(cpd, StochasticFunctionCPD):
+                cpd.check_function_arguments_match_parent_names(self)
             self._cpds_to_add[cpd.variable] = cpd
 
         # Initialize CPDs in topological order. Call super().add_cpds if initialized
@@ -436,7 +443,7 @@ class MACIDBase(BayesianModel):
             def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            function_cpds.append(FunctionCPD(decision, produce_function(), domain=cpd.state_names[cpd.variable]))
+            function_cpds.append(FunctionCPD(decision, produce_function(), domain=domain))
         return function_cpds
 
     def pure_strategies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
