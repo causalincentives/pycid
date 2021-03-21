@@ -36,7 +36,7 @@ class CausalBayesianNetwork(BayesianModel):
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
-        # remove_edge can be called during __init__ when cpds is not yet defined
+        # remove_edge can be called during __init__ when cpds are not yet defined
         if not hasattr(self, "cpds"):
             return
         cpd = self.get_cpds(v)
