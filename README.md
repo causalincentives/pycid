@@ -58,13 +58,13 @@ To quickly get started using colab, make a copy of [this notebook](https://colab
 ## Code overview
 
 The code is structured into the following folders:
-* [pycid/core](./pycid/core) contains methods and classes for specifying CID and MACID models,
+* [pycid/core](./pycid/core) contains methods and classes for specifying CBN, CID and MACID models,
   for finding and characterising types of paths in these models' graphs, and for
   computing optimal policies and Nash equilibria.
 * [pycid/analyze](./pycid/analyze) has methods for analyzing different types of effects and interventions
 as well as incentives in single-decision CIDs and reasoning patterns in MACIDs.
 * [pycid/random](./pycid/random) has methods for generating random CIDs.
-* [pycid/examples](./pycid/examples) has a range of pre-specified CIDs and MACIDs.
+* [pycid/examples](./pycid/examples) has a range of pre-specified CBNs, CIDs and MACIDs.
 * [notebooks](./notebooks) has iPython notebooks illustrating the use of key methods.
 * [tests](./tests) has unit tests for all public methods.
 
