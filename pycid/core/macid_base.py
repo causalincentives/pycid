@@ -26,7 +26,7 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 
-from pycid.core.causal_bayesian_network import CausalBayesianNetwork, MechanismGraph
+from pycid.core.causal_bayesian_network import CausalBayesianNetwork
 from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
@@ -453,3 +453,21 @@ class MACIDBase(CausalBayesianNetwork):
             return "D"
         else:
             return "o"
+
+
+class MechanismGraph(MACIDBase):
+    """A mechanism graph has an extra parent node+"mec" for each node"""
+
+    def __init__(self, cid: MACIDBase):
+        super().__init__(
+            edges=cid.edges(),
+            agent_decisions=cid.agent_decisions,
+            agent_utilities=cid.agent_utilities,
+        )
+
+        for node in cid.nodes:
+            if node[:-3] == "mec":
+                raise ValueError("can't create a mechanism graph when node {node} already ends with mec")
+            self.add_node(node + "mec")
+            self.add_edge(node + "mec", node)
+        # TODO: adapt the parameterization from cid as well

@@ -281,16 +281,3 @@ class CausalBayesianNetwork(BayesianModel):
                 return self._get_color(node)
 
         self.draw(node_color=node_color)
-
-
-class MechanismGraph(CausalBayesianNetwork):
-    """A mechanism graph has an extra parent node+"mec" for each node"""
-
-    def __init__(self, cbn: CausalBayesianNetwork):
-        super().__init__(edges=cbn.edges())
-        for node in cbn.nodes:
-            if node[:-3] == "mec":
-                raise ValueError("can't create a mechanism graph when node {node} already ends with mec")
-            self.add_node(node + "mec")
-            self.add_edge(node + "mec", node)
-        # TODO: adapt the parameterization from cbn as well

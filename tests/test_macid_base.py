@@ -177,14 +177,6 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(crg.get_decisions_in_scc()[0], ["D2"])
 
     # @unittest.skip("")
-    def test_mechanism_graph(self) -> None:
-        example = taxi_competition()
-        mg = MechanismGraph(example)
-        self.assertCountEqual(mg.decisions, ["D1", "D2"])
-        self.assertCountEqual(mg.utilities, ["U1", "U2"])
-        self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
-
-    # @unittest.skip("")
     def test_copy_without_cpds(self) -> None:
         cid = get_3node_cid()
         cid_no_cpds = cid.copy_without_cpds()
@@ -214,6 +206,14 @@ class TestBASE(unittest.TestCase):
         self.assertTrue(example2.sufficient_recall(2))
         with self.assertRaises(ValueError):
             self.assertTrue(example2.sufficient_recall(3))
+
+    # @unittest.skip("")
+    def test_mechanism_graph(self) -> None:
+        example = taxi_competition()
+        mg = MechanismGraph(example)
+        self.assertCountEqual(mg.decisions, ["D1", "D2"])
+        self.assertCountEqual(mg.utilities, ["U1", "U2"])
+        self.assertEqual(len(mg.nodes()), len(example.nodes()) * 2)
 
 
 if __name__ == "__main__":
