@@ -1,7 +1,7 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, StochasticFunctionCPD
 from pycid.core.macid import MACID
 
 
@@ -214,6 +214,64 @@ def modified_taxi_competition() -> MACID:
     cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)])
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    return macid
+
+
+def robot_warehouse():
+    r"""
+    Implementation of AAMAS robot warehouse example
+
+    - Robot 1 collects packages, and can choose to
+    hurry or not (D1)
+    - Hurrying can be quicker (Q) but lead to
+    breakages (B)
+    - Robot 2 tidies up, and can choose to repair
+    (R) breakages or not (D2)
+    - Conducting repairs can obstruct (O) robot 1
+    - Robot 1 rewarded for speed and lack of
+    breakages (U1), robot 2 is rewarded for things
+    being in a state of repair (U2)
+
+    """
+    macid = MACID(
+        [
+            ("D1", "Q"),
+            ("D1", "B"),
+            ("Q", "U1"),
+            ("B", "U1"),
+            ("B", "R"),
+            ("B", "D2"),
+            ("D2", "R"),
+            ("D2", "O"),
+            ("O", "U1"),
+            ("R", "U2"),
+        ],
+        agent_decisions={
+            1: ["D1"],
+            2: ["D2"],
+        },
+        agent_utilities={
+            1: ["U1"],
+            2: ["U2"],
+        },
+    )
+
+    macid.add_cpds(
+        DecisionDomain("D1", domain=[0, 1]),
+        DecisionDomain("D2", domain=[0, 1]),
+        # Q copies the value of D1 with 90% probability
+        StochasticFunctionCPD("Q", lambda d1: {d1: 0.9}, domain=[0, 1]),
+        # B copies the value of D1 with 30% probability
+        StochasticFunctionCPD("B", lambda d1: {d1: 0.3}, domain=[0, 1]),
+        # R = not B or D2
+        FunctionCPD("R", lambda b, d2: int(not b or d2)),
+        # O copies the value of D2 with 60% probability
+        StochasticFunctionCPD("O", lambda d2: {d2: 0.6}, domain=[0, 1]),
+        # U1 = (Q and not O) - B
+        FunctionCPD("U1", lambda q, b, o: int(q and not o) - int(b)),
+        # U2 = R
+        FunctionCPD("U2", lambda r: r),
+    )
     return macid
 
 
