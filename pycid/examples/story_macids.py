@@ -217,7 +217,7 @@ def modified_taxi_competition() -> MACID:
     return macid
 
 
-def robot_warehouse():
+def robot_warehouse() -> MACID:
     r"""
     Implementation of AAMAS robot warehouse example
 

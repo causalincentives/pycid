@@ -5,10 +5,12 @@ from typing import Any, Callable
 
 import pytest
 
-from pycid import MACIDBase
-from pycid.examples import simple_cids, simple_macids, story_cids, story_macids
+from pycid.core.causal_bayesian_network import CausalBayesianNetwork
+from pycid.examples import simple_cbns, simple_cids, simple_macids, story_cids, story_macids
 
 CONSTRUCTORS = [
+    # Simple CBN
+    simple_cbns.get_3node_cbn,
     # Simple CID
     simple_cids.get_minimal_cid,
     simple_cids.get_3node_cid,
@@ -53,17 +55,18 @@ CONSTRUCTORS = [
     story_macids.sequential,
     story_macids.signal,
     story_macids.triage,
+    story_macids.robot_warehouse,
 ]
 
 
 @pytest.fixture(params=CONSTRUCTORS)
-def graph_constructor(request: Any) -> Callable[[], MACIDBase]:
+def graph_constructor(request: Any) -> Callable[[], CausalBayesianNetwork]:
     return request.param  # type: ignore
 
 
 def test_constructs_macid_base(graph_constructor: Callable) -> None:
     graph = graph_constructor()
-    assert isinstance(graph, MACIDBase)
+    assert isinstance(graph, CausalBayesianNetwork)
 
 
 if __name__ == "__main__":
