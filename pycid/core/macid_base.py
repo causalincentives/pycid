@@ -427,13 +427,6 @@ class MACIDBase(CausalBayesianNetwork):
             agent_utilities=self.agent_utilities,
         )
 
-    def copy(self) -> MACIDBase:
-        """copy the MACIDBase object"""
-        model_copy = self.copy_without_cpds()
-        if self.cpds:
-            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
-        return model_copy
-
     def _get_color(self, node: str) -> Union[np.ndarray, str]:
         """
         Assign a unique colour to each new agent's decision and utility nodes

@@ -209,9 +209,16 @@ class CausalBayesianNetwork(BayesianModel):
                 )
         return ev.tolist()  # type: ignore
 
-    def copy(self) -> CausalBayesianNetwork:
+    def copy_without_cpds(self) -> CausalBayesianNetwork:
         """copy the CausalBayesianNetwork object"""
         return CausalBayesianNetwork(edges=self.edges)
+
+    def copy(self) -> CausalBayesianNetwork:
+        """copy the MACIDBase object"""
+        model_copy = self.copy_without_cpds()
+        if self.cpds:
+            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
+        return model_copy
 
     def _get_color(self, node: str) -> Union[np.ndarray, str]:
         # TODO: the return type is like this because otherwise it violates the "Liskov substitution principle".
