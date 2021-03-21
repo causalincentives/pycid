@@ -50,8 +50,8 @@ cid.draw()
 
 The [notebooks](./notebooks) provide many more examples, including
 a [CID Basics Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb),
-a [MACID Basics Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb/MACID_Basics_Tutorial.ipynb), and
-a [CID Incentives Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb/notebooks/CID_Incentives_Tutorial.ipynb).
+a [MACID Basics Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb), and
+a [CID Incentives Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Incentives_Tutorial.ipynb).
 
 To quickly get started using colab, make a copy of [this notebook](https://colab.research.google.com/drive/1QsITqn02c8zBfdOxaR0gVFcLQA_2UROu#scrollTo=GfupUXwM77Ti).
 
