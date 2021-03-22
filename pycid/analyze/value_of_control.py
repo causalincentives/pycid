@@ -43,6 +43,33 @@ def admits_voc_list(cid: CID) -> List[str]:
     return [x for x in list(cid.nodes) if admits_voc(cid, x)]
 
 
+def quantitative_voc(cid: CID, node: str) -> float:
+    r"""
+    Returns the quantitative value of control (voc) of a variable corresponding to a node in a parameterised CID.
+
+    A node X ∈ V \ {D} in a single-decision CID has quantitative voi equal to
+    max_EU_(π, g^x)[M_g^x] - max_EU_(π)[M]
+    ie the maximum utility attainable under any policy π and any soft intervention g^x in M_g^x minus the maximum
+    utility attainable under any policy π in M where:
+    - M is the original CID
+    - M_g^x is the the original CID modified with a new soft intervention g^x
+    (ie a new function g^x: dom(Pa^X) -> dom(X)) on variable X.
+
+    ("Agent Incentives: a Causal Perspective" by Everitt, Carey, Langlois, Ortega, and Legg, 2020)
+    """
+    if node not in cid.nodes:
+        raise KeyError(f"{node} is not present in the cid")
+
+    # optimal policy in the original CID.
+    cid.impute_optimal_policy()
+    ev1: float = cid.expected_utility({})
+    cid.make_decision(node)
+    # optimal policy in the modified CID where the agent can now decide the CPD for node.
+    cid.impute_optimal_policy()
+    ev2: float = cid.expected_utility({})
+    return ev2 - ev1
+
+
 def admits_indir_voc(cid: CID, decision: str, node: str) -> bool:
     r"""Check if a single-decision CID admits indirect positive value of control for a node.
 
