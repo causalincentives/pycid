@@ -77,7 +77,7 @@ def get_quantitative_voi_cid() -> CID:
 
 def get_sequential_cid() -> CID:
     """
-    This CID is a subtle case of sufficient recall, as the strategy for D1 influences
+    This CID is a subtle case of sufficient recall, as the decision rule for D1 influences
     the expected utility of D2, but D2 can still be chosen without knowing D1, since
     D1 does not influence any utility nodes descending from D2.
     """

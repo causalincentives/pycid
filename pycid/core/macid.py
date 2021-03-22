@@ -21,7 +21,7 @@ class MACID(MACIDBase):
         """
         return self.get_all_pure_ne_in_sg()
 
-    def joint_pure_strategies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
+    def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[FunctionCPD, ...]]:
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
@@ -53,12 +53,12 @@ class MACID(MACIDBase):
 
         # NE finder
         all_pure_ne_in_sg: List[List[FunctionCPD]] = []
-        for pp in self.joint_pure_strategies(decisions_in_sg):
-            macid.add_cpds(*pp)  # impute the strategy profile
+        for pp in self.joint_pure_policies(decisions_in_sg):
+            macid.add_cpds(*pp)  # impute the policy profile
 
             for a in agents_in_sg:  # check that each agent is happy
                 eu_pp_agent_a = macid.expected_utility({}, agent=a)
-                macid.add_cpds(*macid.optimal_pure_strategies(agent_decs_in_sg[a])[0])
+                macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
                 max_eu_agent_a = macid.expected_utility({}, agent=a)
 
                 if max_eu_agent_a > eu_pp_agent_a:  # not an NE

@@ -304,15 +304,15 @@ class MACIDBase(CausalBayesianNetwork):
 
         return function_cpds
 
-    def pure_strategies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
+    def pure_policies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
         """
         Iterate over all of an agent's pure policies in this subgame.
         """
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return itertools.product(*possible_dec_rules)
 
-    def optimal_pure_strategies(self, decisions: Iterable[str], eps: float = 1e-8) -> List[Tuple[FunctionCPD, ...]]:
-        """Find all optimal strategies for a given set of decisions.
+    def optimal_pure_policies(self, decisions: Iterable[str], eps: float = 1e-8) -> List[Tuple[FunctionCPD, ...]]:
+        """Find all optimal policies for a given set of decisions.
 
         - All decisions must belong to the same agent.
         - eps is the margin of error when comparing utilities for equality.
@@ -334,23 +334,23 @@ class MACIDBase(CausalBayesianNetwork):
             ):
                 macid.impute_random_decision(d)
 
-        optimal_strategies = []
+        optimal_policies = []
         max_utility = float("-inf")
-        for strategy in macid.pure_strategies(decisions):
-            macid.add_cpds(*strategy)
+        for policy in macid.pure_policies(decisions):
+            macid.add_cpds(*policy)
             expected_utility = macid.expected_utility({}, agent=agent)
             if abs(expected_utility - max_utility) < eps:
-                optimal_strategies.append(strategy)
+                optimal_policies.append(policy)
             elif expected_utility > max_utility:
-                optimal_strategies = [strategy]
+                optimal_policies = [policy]
                 max_utility = expected_utility
-        return optimal_strategies
+        return optimal_policies
 
     def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """
         Return a list of all optimal decision rules for a given decision
         """
-        return [strategy[0] for strategy in self.optimal_pure_strategies([decision])]
+        return [policy[0] for policy in self.optimal_pure_policies([decision])]
 
     def impute_random_decision(self, d: str) -> None:
         """Impute a random policy to the given decision node"""

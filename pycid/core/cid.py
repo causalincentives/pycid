@@ -43,7 +43,7 @@ class CID(MACIDBase):
         Return a list of all deterministic optimal policies.
         # TODO: Subgame perfectness option
         """
-        return self.optimal_pure_strategies(self.decisions)
+        return self.optimal_pure_policies(self.decisions)
 
     def impute_random_policy(self) -> None:
         """Impute a random policy to all decision nodes in the CID"""

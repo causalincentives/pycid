@@ -229,8 +229,8 @@ def revealing_or_denying(macid: MACID, decision: str, effective_set: Set[str]) -
 def get_reasoning_patterns(mb: MACID) -> Dict[str, List[Any]]:
     """A dictionary matching each reasoning pattern with the decision nodes in the MAID which admit it.
 
-    This finds all of the circumstances under which an agent in a MAID has a reason to prefer one strategy over
-    another, when all other agents are playing WD strategies.
+    This finds all of the circumstances under which an agent in a MAID has a reason to prefer one policy over
+    another, when all other agents are playing WD policies.
     (Pfeffer and Gal, 2007: On the Reasoning patterns of Agents in Games).
     """
     motivations: Dict[str, List[str]] = {"dir_effect": [], "sig": [], "manip": [], "rev_den": []}
