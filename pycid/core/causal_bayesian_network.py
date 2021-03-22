@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -29,7 +29,6 @@ class CausalBayesianNetwork(BayesianModel):
         super().__init__(ebunch=edges)
 
         self._cpds_to_add: Dict[str, TabularCPD] = {}
-        self.state_names: Dict[str, Sequence[Outcome]] = {}
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
@@ -94,11 +93,16 @@ class CausalBayesianNetwork(BayesianModel):
         """
 
         # Step 1. Remove previous cpds
+        print(f'got {[cpd.variable for cpd in cpds]}')
         for cpd in cpds:
             try:
+                print(f'removing {cpd.variable}')
                 self.remove_cpds(cpd.variable)
             except ValueError:
+                print("fail")
                 pass
+            else:
+                print('success')
 
         # Step 2. Add each cpd to self._cpds_to_add or super after doing some checks
         for cpd in cpds:
@@ -107,32 +111,38 @@ class CausalBayesianNetwork(BayesianModel):
                 cpd.check_function_arguments_match_parent_names(self)
                 self._cpds_to_add[cpd.variable] = cpd
             elif isinstance(cpd, TabularCPD):
-                super().add_cpds(cpd)
+                print(f"adding {cpd.variable}")
+                BayesianModel.add_cpds(self, cpd)
             else:
                 raise ValueError(f"I don't know how to add cpd {cpd} of type {type(cpd)}")
 
         # Step 3. Initialize CPDs in topological order
         initalized_cpds = []
-        for var in self.get_valid_order(self._cpds_to_add.keys()):
+        for var in self.get_valid_order(self.nodes):
             try:
-                self._cpds_to_add[var].initialize_tabular_cpd(self)
-            except ParentsNotReadyException:
+                cpd = self.get_cpd(var)
+                cpd.initialize_tabular_cpd(self)
+            except (KeyError, AttributeError, ParentsNotReadyException):
                 pass
             else:
-                initalized_cpds.append(self._cpds_to_add[var])
+                if var in self._cpds_to_add:
+                    initalized_cpds.append(cpd)
 
         # Step 3. Call super
         for cpd in initalized_cpds:
-            super().add_cpds(cpd)
+            print(f"adding initialized {cpd.variable}")
+            BayesianModel.add_cpds(self, cpd)
             del self._cpds_to_add[cpd.variable]
 
         # Step 4. Sync state_names
-        # try:
-        #     state_names = {var: self.get_domain(var) for var in self.nodes}
-        #     for cpd in self.get_cpds():
-        #         cpd.store_state_names(None, None, state_names)
-        # except:
-        #     print()
+        state_names = {}
+        for var in self.nodes:
+            try:
+                state_names[var] = self.get_domain(var)
+            except KeyError:
+                pass
+        for var in state_names:
+            self.get_cpd(var).store_state_names(None, None, state_names)
 
     # def add_cpds(self, *cpds: TabularCPD) -> None:
     #     """
@@ -197,7 +207,7 @@ class CausalBayesianNetwork(BayesianModel):
         """
 
         for variable, outcome in context.items():
-            if outcome not in self.state_names[variable]:
+            if outcome not in self.get_domain(variable):
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:
@@ -210,35 +220,11 @@ class CausalBayesianNetwork(BayesianModel):
         else:
             cbn = self
 
-        # query fails if graph includes nodes not in moralized graph, so we remove them
-        # cid = self.copy()
-        # mm = MarkovModel(cid.moralize().edges())
-        # for node in self.nodes:
-        #     if node not in mm.nodes:
-        #         cid.remove_node(node)
-        # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
-
-        updated_state_names = {}
-        for v in query:
-            cpd = cbn.get_cpds(v)
-            updated_state_names[v] = cpd.state_names[v]
-
-        # Make a copy of self and revise the context without state_names (to handle a pgmpy bug),
-        copy = cbn.copy_without_cpds()
-        for cpd in cbn.cpds:
-            evidence = cpd.variables[1:] if len(cpd.variables) > 1 else None
-            evidence_card = cpd.cardinality[1:] if len(cpd.variables) > 1 else None
-            copy.add_cpds(TabularCPD(cpd.variable, cpd.variable_card, cpd.get_values(), evidence, evidence_card))
-        revised_context = {  # state_names are switched to their state number
-            variable: self.get_cpds(variable).name_to_no[variable][value] for variable, value in context.items()
-        }
-
-        bp = BeliefPropagation(copy)
+        bp = BeliefPropagation(cbn)
         # TODO: check for probability 0 queries
 
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
-            factor = bp.query(query, revised_context, show_progress=False)
-        factor.state_names = updated_state_names  # reintroduce the state_names
+            factor = bp.query(query, {**context, **intervention}, show_progress=False)
         return factor
 
     def intervene(self, intervention: Dict[str, Outcome]) -> None:
@@ -253,7 +239,9 @@ class CausalBayesianNetwork(BayesianModel):
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
-            self.add_cpds(FunctionCPD(variable, lambda: intervention[variable], domain=self.state_names[variable]))
+        print(f"intervening on {list(intervention.keys())}")
+        self.add_cpds(*[FunctionCPD(variable, lambda: outcome, domain=self.get_domain(variable))
+                       for variable, outcome in intervention.items()])
 
     def expected_value(
         self,
@@ -299,6 +287,7 @@ class CausalBayesianNetwork(BayesianModel):
         """copy the MACIDBase object"""
         model_copy = self.copy_without_cpds()
         if self.cpds:
+            print("copying cpds")
             model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
         return model_copy
 

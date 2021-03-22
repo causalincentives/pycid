@@ -148,7 +148,7 @@ class MACIDBase(CausalBayesianNetwork):
         """
 
         for variable, outcome in context.items():
-            if outcome not in self.state_names[variable]:
+            if outcome not in self.get_domain(variable):
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:
@@ -176,7 +176,7 @@ class MACIDBase(CausalBayesianNetwork):
                             f"P({query}|{context}, do({intervention})) depends on {decision}, but no policy imputed"
                         )
 
-        return super().query(query, context, intervention)
+        return super().query(query, {**context, **intervention})
 
     def expected_utility(
         self, context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None, agent: AgentLabel = 0
@@ -385,7 +385,9 @@ class MACIDBase(CausalBayesianNetwork):
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
         # TODO: Move to analyze, as this is not really a core feature?
+
         parents: List[str] = self.get_parents(d)
+        print("making a copy")
         new = self.copy()
 
         @lru_cache(maxsize=1000)
@@ -393,7 +395,9 @@ class MACIDBase(CausalBayesianNetwork):
             context = {p: pv[p.lower()] for p in parents}
             return new.expected_value([y], context)[0]
 
+        print("adding a new decision")
         self.add_cpds(FunctionCPD(d, cond_exp_policy, label="cond_exp({})".format(y)))
+        print("adding a decision is done")
 
     # Wrapper around DAG.active_trail_nodes to accept arbitrary iterables for observed.
     # Really, DAG.active_trail_nodes should accept Sets, especially since it does

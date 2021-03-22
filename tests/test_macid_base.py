@@ -78,7 +78,7 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_get_valid_order(self) -> None:
         macid = prisoners_dilemma()
-        self.assertEqual(macid.get_valid_order(), ["D2", "D1"])
+        self.assertEqual(macid.get_valid_order(macid.decisions), ["D2", "D1"])
         rg = RelevanceGraph(macid)
         with self.assertRaises(AttributeError):
             rg.get_valid_order()

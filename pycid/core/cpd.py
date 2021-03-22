@@ -73,14 +73,16 @@ class StochasticFunctionCPD(TabularCPD):
 
         assert isinstance(domain, (list, type(None)))
         self.force_domain: Optional[Sequence[Outcome]] = domain
-        self.domain: Optional[Sequence[Outcome]] = domain
-
         if domain:
             self.store_state_names(None, None, {variable: domain})
 
         assert isinstance(label, (str, type(None)))
         self.label = label if label is not None else self.compute_label(stochastic_function)
         # we call super().__init__() in initialize_tabular_cpd instead
+
+    @property
+    def domain(self):
+        return self.state_names[self.variable]
 
     @staticmethod
     def compute_label(function: Callable) -> str:
@@ -139,7 +141,7 @@ class StochasticFunctionCPD(TabularCPD):
         pv_list = list(itertools.product(*parent_values))
         return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
 
-    def possible_values(self, cid: MACIDBase) -> Sequence[Outcome]:
+    def compute_domain(self, cid: MACIDBase) -> Sequence[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
         possible_values : Set[Outcome] = set().union(
@@ -149,9 +151,9 @@ class StochasticFunctionCPD(TabularCPD):
             assert possible_values.issubset(set(self.force_domain))
             return self.force_domain
         else:
-            self.domain = sorted(possible_values)
-            self.store_state_names(None, None, {self.variable: self.domain})
-            return self.domain
+            domain = sorted(possible_values)
+            self.store_state_names(None, None, {self.variable: domain})
+            return domain
 
     def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
         """Initialize the probability table for the inherited TabularCPD.
@@ -161,11 +163,7 @@ class StochasticFunctionCPD(TabularCPD):
         if not self.parents_instantiated(cid):
             raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid
-        if self.force_domain:
-            if not set(self.possible_values(cid)).issubset(self.force_domain):
-                raise ValueError("variable {} can take value outside given state_names".format(self.variable))
-
-        domain: Sequence[Outcome] = self.force_domain if self.force_domain else self.possible_values(cid)
+        domain = self.compute_domain(cid)
 
         def complete_prob_dictionary(
             prob_dictionary: Dict[Outcome, Union[int, float]]
@@ -189,15 +187,14 @@ class StochasticFunctionCPD(TabularCPD):
             raise ValueError(f"The values for {self.variable} do not sum to 1 \n{probability_matrix}")
         if (probability_matrix < 0).any() or (probability_matrix > 1).any():
             raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
-        self.domain = domain
-        cid.state_names[self.variable] = self.domain
 
-        super().__init__(self.variable, card, probability_matrix, evidence, evidence_card, state_names=cid.state_names)
+        super().__init__(self.variable, card, probability_matrix, evidence, evidence_card, state_names=self.state_names)
 
     def copy(self) -> StochasticFunctionCPD:
         return StochasticFunctionCPD(self.variable, self.stochastic_function, domain=self.force_domain)
 
-    def __repr__(self) -> str:
+    @property
+    def mapping(self) -> str:
         if self.cid and self.parents_instantiated(self.cid):
             dictionary: Dict[str, Union[Dict, Outcome]] = {}
             for pv in self.parent_values(self.cid):
@@ -208,10 +205,13 @@ class StochasticFunctionCPD(TabularCPD):
                         break
                 else:
                     dictionary[str(pv)] = probabilities
-            mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
+            mapping = "\n" + "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         else:
             mapping = ""
-        return f"<FunctionCPD {self.variable}:{self.stochastic_function}> \n{mapping}"
+        return mapping
+
+    def __repr__(self) -> str:
+        return f"<StochasticFunctionCPD {self.variable}:{self.stochastic_function}> \n{self.mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -258,6 +258,12 @@ class FunctionCPD(StochasticFunctionCPD):
             label=label if label is not None else StochasticFunctionCPD.compute_label(function),
         )
 
+    def __repr__(self) -> str:
+        return f"<FunctionCPD {self.variable}:{self.stochastic_function}>{self.mapping}"
+
+    def copy(self) -> FunctionCPD:
+        return FunctionCPD(self.variable, self.function, domain=self.force_domain)
+
 
 class UniformRandomCPD(StochasticFunctionCPD):
     """UniformRandomPD class creates a uniform random CPD given parents in graph
@@ -287,7 +293,7 @@ class UniformRandomCPD(StochasticFunctionCPD):
         return UniformRandomCPD(self.variable, self.domain, label=self.label)  # type: ignore
 
     def __repr__(self) -> str:
-        return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
+        return f"<UniformRandomCPD {self.variable}:{self.domain}>"
 
 
 class DecisionDomain(UniformRandomCPD):

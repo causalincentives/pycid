@@ -3,7 +3,6 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
-import numpy as np
 import pytest
 
 from pycid.examples.simple_cids import (
@@ -94,7 +93,10 @@ class TestConditionalExpectationDecision:
     @staticmethod
     def test_impute_cond_expectation_decision(cid_introduced_bias: CID) -> None:
         cid_introduced_bias.impute_conditional_expectation_decision("D", "Y")
+        print("computing expected utility")
         eu_ce = cid_introduced_bias.expected_utility({})
+        print("done computing expected utility")
+        #import pdb; pdb.set_trace()
         assert eu_ce == pytest.approx(-0.1666, abs=1e-2)
 
 

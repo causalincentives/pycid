@@ -35,60 +35,63 @@ def macid_taxi_comp() -> MACID:
     return taxi_competition()
 
 
-class TestRemoveAddEdge:
-    @staticmethod
-    def test_remove_add_edge(cid_3node: CID) -> None:
-        cid = cid_3node
-        cid.remove_edge("S", "D")
-        assert cid.check_model()
-        cid.add_edge("S", "D")
-        assert cid.check_model()
-
-
-class TestAssignCpd:
-    @staticmethod
-    def test_add_cpds(cbn_3node: CausalBayesianNetwork) -> None:
-        cbn = cbn_3node
-        cbn.add_cpds(TabularCPD("D", 2, np.eye(2), evidence=["S"], evidence_card=[2]))
-        assert cbn.check_model()
-        cpd = cbn.get_cpds("D").values
-        assert np.array_equal(cpd, np.array([[1, 0], [0, 1]]))
-
-
-class TestQuery:
-    @staticmethod
-    def test_query(cbn_3node: CausalBayesianNetwork) -> None:
-        assert cbn_3node.query(["U"], {"D": 2}).values[2] == float(1.0)
-
-    @staticmethod
-    def test_valid_context(cbn_3node: CausalBayesianNetwork) -> None:
-        with pytest.raises(ValueError):
-            cbn_3node.query(["U"], {"S": 0})
+# class TestRemoveAddEdge:
+#     @staticmethod
+#     def test_remove_add_edge(cid_3node: CID) -> None:
+#         cid = cid_3node
+#         cid.remove_edge("S", "D")
+#         assert cid.check_model()
+#         cid.add_edge("S", "D")
+#         assert cid.check_model()
+#
+#
+# class TestAssignCpd:
+#     @staticmethod
+#     def test_add_cpds(cbn_3node: CausalBayesianNetwork) -> None:
+#         cbn = cbn_3node
+#         cbn.add_cpds(TabularCPD("D", 2, np.eye(2), evidence=["S"], evidence_card=[2]))
+#         assert cbn.check_model()
+#         cpd = cbn.get_cpds("D").values
+#         assert np.array_equal(cpd, np.array([[1, 0], [0, 1]]))
+#
+#
+# class TestQuery:
+#     @staticmethod
+#     def test_query(cbn_3node: CausalBayesianNetwork) -> None:
+#         assert cbn_3node.query(["U"], {"D": 2}).values[2] == float(1.0)
+#
+#     @staticmethod
+#     def test_valid_context(cbn_3node: CausalBayesianNetwork) -> None:
+#         with pytest.raises(ValueError):
+#             cbn_3node.query(["U"], {"S": 0})
 
 
 class TestIntervention:
-    @staticmethod
-    def test_cid_single_intervention(cid_minimal: CID) -> None:
-        cid = cid_minimal
-        cid.impute_random_policy()
-        assert cid.expected_value(["B"], {})[0] == 0.5
-        for a in [0, 1]:
-            cid.intervene({"A": a})
-            assert cid.expected_value(["B"], {})[0] == a
-        assert cid.expected_value(["B"], {}, intervention={"A": 1})[0] == 1
+    #@staticmethod
+    # def test_cid_single_intervention(cid_minimal: CID) -> None:
+    #     cid = cid_minimal
+    #     cid.impute_random_policy()
+    #     assert cid.expected_value(["B"], {})[0] == 0.5
+    #     for a in [0, 1]:
+    #         cid.intervene({"A": a})
+    #         assert cid.expected_value(["B"], {})[0] == a
+    #     assert cid.expected_value(["B"], {}, intervention={"A": 1})[0] == 1
 
     @staticmethod
     def test_macid_double_intervention(macid_taxi_comp: MACID) -> None:
         macid = macid_taxi_comp
+        print("imputing random policy")
         macid.impute_fully_mixed_policy_profile()
+        print("doing intervention")
         assert macid.expected_value(["U1"], {}, intervention={"D1": "c", "D2": "e"})[0] == 3
+        print("doing intervention 2")
         assert macid.expected_value(["U2"], {}, intervention={"D1": "c", "D2": "e"})[0] == 5
 
 
-class TestCopyWithoutCpds:
-    @staticmethod
-    def test_copy_without_cpds(cbn_3node: CausalBayesianNetwork) -> None:
-        assert len(cbn_3node.copy_without_cpds().cpds) == 0
+# class TestCopyWithoutCpds:
+#     @staticmethod
+#     def test_copy_without_cpds(cbn_3node: CausalBayesianNetwork) -> None:
+#         assert len(cbn_3node.copy_without_cpds().cpds) == 0
 
 
 if __name__ == "__main__":
