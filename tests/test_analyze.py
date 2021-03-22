@@ -175,7 +175,7 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_x_nodep_z(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where X doesn't depend on Z
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("X", lambda a, z: a))
+        cid.add_cpds(FunctionCPD("X", lambda a, z: a))  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
 
@@ -183,7 +183,7 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_y_nodep_z(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where Y doesn't depend on Z
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: x))
+        cid.add_cpds(FunctionCPD("Y", lambda x, z: x))  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
 
@@ -191,7 +191,7 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_y_nodep_x(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where Y doesn't depend on X
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: z))
+        cid.add_cpds(FunctionCPD("Y", lambda x, z: z))  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(1 / 3)
 

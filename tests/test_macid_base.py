@@ -19,9 +19,14 @@ class TestBASE(unittest.TestCase):
         self.assertCountEqual(cid.decisions, ["D", "S"])
         self.assertEqual(cid.decision_agent["S"], 0)
         self.assertCountEqual(cid.agent_decisions[0], ["D", "S"])
-        cid2 = cid.copy_without_cpds()
-        with self.assertRaises(ValueError):
-            cid2.make_decision("S")
+
+    def test_make_utility(self) -> None:
+        cid = get_3node_cid()
+        self.assertCountEqual(cid.utilities, ["U"])
+        cid.make_utility("S")
+        self.assertCountEqual(cid.utilities, ["U", "S"])
+        self.assertEqual(cid.utility_agent["S"], 0)
+        self.assertCountEqual(cid.agent_utilities[0], ["U", "S"])
 
     def test_make_chance(self) -> None:
         cid = get_3node_cid()

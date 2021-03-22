@@ -3,12 +3,12 @@ from __future__ import annotations
 import inspect
 import itertools
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence, Union, Hashable
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-State = Any
+Outcome = Hashable
 
 if TYPE_CHECKING:
     from pycid import MACIDBase
@@ -45,8 +45,8 @@ class StochasticFunctionCPD(TabularCPD):
     def __init__(
         self,
         variable: str,
-        stochastic_function: Callable[..., Dict[State, Union[int, float]]],
-        domain: Optional[Sequence[State]] = None,
+        stochastic_function: Callable[..., Dict[Outcome, Union[int, float]]],
+        domain: Optional[Sequence[Outcome]] = None,
         label: str = None,
     ) -> None:
         """Initialize StochasticFunctionCPD with a variable name and a stochastic function.
@@ -72,8 +72,8 @@ class StochasticFunctionCPD(TabularCPD):
         self.cid: Optional[MACIDBase] = None
 
         assert isinstance(domain, (list, type(None)))
-        self.force_domain: Optional[Sequence[State]] = domain
-        self.domain: Optional[Sequence[State]] = domain
+        self.force_domain: Optional[Sequence[Outcome]] = domain
+        self.domain: Optional[Sequence[Outcome]] = domain
 
         assert isinstance(label, (str, type(None)))
         self.label = label if label is not None else self.compute_label(stochastic_function)
@@ -123,7 +123,7 @@ class StochasticFunctionCPD(TabularCPD):
                 return False
         return True
 
-    def parent_values(self, cid: MACIDBase) -> List[Dict[str, Any]]:
+    def parent_values(self, cid: MACIDBase) -> List[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         assert self.parents_instantiated(cid)
         parent_values = []
@@ -134,10 +134,11 @@ class StochasticFunctionCPD(TabularCPD):
         pv_list = list(itertools.product(*parent_values))
         return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
 
-    def possible_values(self, cid: MACIDBase) -> List[State]:
+    def possible_values(self, cid: MACIDBase) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
-        return sorted(set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)]))
+        return sorted(set().union(*[self.stochastic_function(**x).keys()  # type: ignore
+                                    for x in self.parent_values(cid)]))
 
     def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
         """Initialize the probability table for the inherited TabularCPD.
@@ -151,9 +152,11 @@ class StochasticFunctionCPD(TabularCPD):
             if not set(self.possible_values(cid)).issubset(self.force_domain):
                 raise ValueError("variable {} can take value outside given state_names".format(self.variable))
 
-        domain: Sequence[State] = self.force_domain if self.force_domain else self.possible_values(cid)
+        domain: Sequence[Outcome] = self.force_domain if self.force_domain else self.possible_values(cid)
 
-        def complete_prob_dictionary(prob_dictionary: Dict[State, Union[int, float]]) -> Dict[State, Union[int, float]]:
+        def complete_prob_dictionary(
+            prob_dictionary: Dict[Outcome, Union[int, float]]
+        ) -> Dict[Outcome, Union[int, float]]:
             """Complete a probability dictionary with probabilities for missing outcomes"""
             missing_outcomes = set(domain) - set(prob_dictionary.keys())
             missing_prob_mass = 1 - sum(prob_dictionary.values())  # type: ignore
@@ -183,7 +186,7 @@ class StochasticFunctionCPD(TabularCPD):
 
     def __repr__(self) -> str:
         if self.cid and self.parents_instantiated(self.cid):
-            dictionary = {}
+            dictionary: Dict[str, Union[Dict, Outcome]] = {}
             for pv in self.parent_values(self.cid):
                 probabilities = self.stochastic_function(**pv)
                 for outcome in probabilities:
@@ -213,8 +216,8 @@ class FunctionCPD(StochasticFunctionCPD):
     def __init__(
         self,
         variable: str,
-        function: Callable[..., State],
-        domain: Optional[Sequence[State]] = None,
+        function: Callable[..., Outcome],
+        domain: Optional[Sequence[Outcome]] = None,
         label: str = None,
     ) -> None:
         """Initialize FunctionCPD with a variable name and a function
@@ -250,7 +253,7 @@ class UniformRandomCPD(StochasticFunctionCPD):
     is run.
     """
 
-    def __init__(self, variable: str, domain: Sequence[State], label: Optional[str] = None):
+    def __init__(self, variable: str, domain: Sequence[Outcome], label: Optional[str] = None):
         """Create a UniformRandomCPD
 
         Call `initialize_tabular_cpd` to complete the initialization.
@@ -280,7 +283,7 @@ class DecisionDomain(UniformRandomCPD):
     Under the hood it becomes a UniformRandomCPD, to satisfy BayesianModel.check_model()
     """
 
-    def __init__(self, variable: str, domain: Sequence[State]):
+    def __init__(self, variable: str, domain: Sequence[Outcome]):
         """Create a DecisionDomain
 
         Call `initialize_tabular_cpd` to complete the initialization.

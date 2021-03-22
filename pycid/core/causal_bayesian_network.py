@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Tuple, Union, Sequence
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -10,9 +10,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import FunctionCPD, ParentsNotReadyException, State, StochasticFunctionCPD, UniformRandomCPD
-
-AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
+from pycid.core.cpd import FunctionCPD, ParentsNotReadyException, Outcome, StochasticFunctionCPD, UniformRandomCPD
 
 
 class CausalBayesianNetwork(BayesianModel):
@@ -32,25 +30,23 @@ class CausalBayesianNetwork(BayesianModel):
         super().__init__(ebunch=edges)
 
         self._cpds_to_add: Dict[str, TabularCPD] = {}
-        self.state_names: Dict[str, State] = {}
+        self.state_names: Dict[str, Sequence[Outcome]] = {}
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
-        # remove_edge can be called during __init__ when cpds are not yet defined
-        if not hasattr(self, "cpds"):
-            return
-        cpd = self.get_cpds(v)
-        if isinstance(cpd, UniformRandomCPD):
-            self.add_cpds(cpd)
+        # remove_edge can be called before cpds have been defined
+        if hasattr(self, "cpds"):
+            cpd = self.get_cpds(v)
+            if isinstance(cpd, UniformRandomCPD):
+                self.add_cpds(cpd)
 
     def add_edge(self, u: str, v: str) -> None:
         super().add_edge(u, v)
-        # add_edge can be called during __init__ when cpds is not yet defined
-        if not hasattr(self, "cpds"):
-            return
-        cpd = self.get_cpds(v)
-        if isinstance(cpd, UniformRandomCPD):
-            self.add_cpds(cpd)
+        # add_edge can be called before cpds have been defined
+        if hasattr(self, "cpds"):
+            cpd = self.get_cpds(v)
+            if isinstance(cpd, UniformRandomCPD):
+                self.add_cpds(cpd)
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
@@ -98,7 +94,7 @@ class CausalBayesianNetwork(BayesianModel):
                     del self._cpds_to_add[var]
 
     def query(
-        self, query: Iterable[str], context: Dict[str, Any], intervention: Dict[str, Any] = None
+        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -109,14 +105,14 @@ class CausalBayesianNetwork(BayesianModel):
         ----------
         query: A set of nodes to query.
 
-        context: Node values to condition upon. A dictionary mapping of node => value.
+        context: Node values to condition upon. A dictionary mapping of node => outcome.
 
-        intervention: Interventions to apply. A dictionary mapping node => value.
+        intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
 
-        for variable, value in context.items():
-            if value not in self.state_names[variable]:
-                raise ValueError(f"The value {value} is not in the domain of {variable}")
+        for variable, outcome in context.items():
+            if outcome not in self.state_names[variable]:
+                raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:
             intervention = {}
@@ -159,7 +155,7 @@ class CausalBayesianNetwork(BayesianModel):
         factor.state_names = updated_state_names  # reintroduce the state_names
         return factor
 
-    def intervene(self, intervention: Dict[str, Any]) -> None:
+    def intervene(self, intervention: Dict[str, Outcome]) -> None:
         """Given a dictionary of interventions, replace the CPDs for the relevant nodes.
 
         Soft interventions can be achieved by using self.add_cpds() directly.
@@ -176,8 +172,8 @@ class CausalBayesianNetwork(BayesianModel):
     def expected_value(
         self,
         variables: Iterable[str],
-        context: Dict[str, Any],
-        intervention: Dict[str, Any] = None,
+        context: Dict[str, Outcome],
+        intervention: Dict[str, Outcome] = None,
     ) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
@@ -229,18 +225,18 @@ class CausalBayesianNetwork(BayesianModel):
         # all nodes in a CBN are chance nodes
         return "o"
 
-    def _get_label(self, node: str) -> Any:
+    def _get_label(self, node: str) -> str:
         cpd = self.get_cpds(node)
         if hasattr(cpd, "label"):
-            return cpd.label
+            return cpd.label  # type: ignore
         elif hasattr(cpd, "__name__"):
-            return cpd.__name__
+            return cpd.__name__  # type: ignore
         else:
             return ""
 
     def draw(
         self,
-        node_color: Callable[[str], str] = None,
+        node_color: Callable[[str], Union[str, np.ndarray]] = None,
         node_shape: Callable[[str], str] = None,
         node_label: Callable[[str], str] = None,
     ) -> None:
@@ -274,7 +270,7 @@ class CausalBayesianNetwork(BayesianModel):
     def draw_property(self, node_property: Callable[[str], bool], color: str = "red") -> None:
         """Draw a CBN, CID, or MACID with the nodes satisfying node_property highlighted"""
 
-        def node_color(node: str) -> Any:
+        def node_color(node: str) -> Union[np.ndarray, str]:
             if node_property(node):
                 return color
             else:

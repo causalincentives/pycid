@@ -4,7 +4,6 @@ import itertools
 import random
 from functools import lru_cache
 from typing import (
-    Any,
     Callable,
     Collection,
     Dict,
@@ -27,7 +26,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 
 from pycid.core.causal_bayesian_network import CausalBayesianNetwork
-from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
+from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD, Outcome
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -94,26 +93,29 @@ class MACIDBase(CausalBayesianNetwork):
 
     def make_decision(self, node: str, agent: AgentLabel = 0) -> None:
         """"Turn a chance or utility node into a decision node."""
+        self.make_chance(node)
+        self.agent_decisions[agent].append(node)
+        self.decision_agent[node] = agent
         cpd = self.get_cpds(node)
-        if cpd is None:
-            raise ValueError(f"node {node} has not yet been assigned a domain.")
-        elif isinstance(cpd, DecisionDomain):
-            # Already a decision
-            pass
-        else:
-            cpd_new = DecisionDomain(node, cpd.state_names[node])
-            self.agent_decisions[agent].append(node)
-            self.decision_agent[node] = agent
-            self.add_cpds(cpd_new)
+        if cpd and not isinstance(cpd, DecisionDomain):
+            self.add_cpds(DecisionDomain(node, cpd.state_names[node]))
+
+    def make_utility(self, node: str, agent: AgentLabel = 0) -> None:
+        """"Turn a chance or utility node into a decision node."""
+        self.make_chance(node)
+        self.agent_utilities[agent].append(node)
+        self.utility_agent[node] = agent
 
     def make_chance(self, node: str) -> None:
         """Turn a decision node into a chance node."""
         if node not in self.nodes():
             raise KeyError(f"The node {node} is not in the (MA)CID")
-        if node not in self.decisions:
-            raise ValueError(f"{node} is already a chance (or utility) node.")
-        agent = self.decision_agent.pop(node)
-        self.agent_decisions[agent].remove(node)
+        elif node in set(self.decisions):
+            agent = self.decision_agent.pop(node)
+            self.agent_decisions[agent].remove(node)
+        elif node in set(self.utilities):
+            agent = self.utility_agent.pop(node)
+            self.agent_utilities[agent].remove(node)
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
@@ -129,7 +131,7 @@ class MACIDBase(CausalBayesianNetwork):
         super().add_cpds(*cpds)
 
     def query(
-        self, query: Iterable[str], context: Dict[str, Any], intervention: Dict[str, Any] = None
+        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -140,14 +142,14 @@ class MACIDBase(CausalBayesianNetwork):
         ----------
         query: A set of nodes to query.
 
-        context: Node values to condition upon. A dictionary mapping of node => value.
+        context: Node values to condition upon. A dictionary mapping of node => outcome.
 
-        intervention: Interventions to apply. A dictionary mapping node => value.
+        intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
 
-        for variable, value in context.items():
-            if value not in self.state_names[variable]:
-                raise ValueError(f"The value {value} is not in the domain of {variable}")
+        for variable, outcome in context.items():
+            if outcome not in self.state_names[variable]:
+                raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:
             intervention = {}
@@ -177,7 +179,7 @@ class MACIDBase(CausalBayesianNetwork):
         return super().query(query, context, intervention)
 
     def expected_utility(
-        self, context: Dict[str, Any], intervention: Dict[str, Any] = None, agent: AgentLabel = 0
+        self, context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None, agent: AgentLabel = 0
     ) -> float:
         """Compute the expected utility of an agent for a given context and optional intervention
 
@@ -282,11 +284,11 @@ class MACIDBase(CausalBayesianNetwork):
         number_of_decision_contexts = int(np.product(parent_cardinalities))
         functions_as_tuples = itertools.product(domain, repeat=number_of_decision_contexts)
 
-        def arg2idx(pv: Dict[str, Any]) -> int:
+        def arg2idx(pv: Dict[str, Outcome]) -> int:
             """Convert a decision context into an index for the function list"""
             idx = 0
             for i, parent in enumerate(parents):
-                name_to_no: Dict[Any, int] = self.get_cpds(parent).name_to_no[parent]
+                name_to_no: Dict[Outcome, int] = self.get_cpds(parent).name_to_no[parent]
                 idx += name_to_no[pv[parent.lower()]] * int(np.product(parent_cardinalities[:i]))
             assert 0 <= idx <= number_of_decision_contexts
             return idx
@@ -401,11 +403,11 @@ class MACIDBase(CausalBayesianNetwork):
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
         # TODO: Move to analyze, as this is not really a core feature?
-        parents = self.get_parents(d)
+        parents: List[str] = self.get_parents(d)
         new = self.copy()
 
         @lru_cache(maxsize=1000)
-        def cond_exp_policy(**pv: tuple) -> float:
+        def cond_exp_policy(**pv: Outcome) -> float:
             context = {p: pv[p.lower()] for p in parents}
             return new.expected_value([y], context)[0]
 

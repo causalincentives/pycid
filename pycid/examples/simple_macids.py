@@ -167,8 +167,8 @@ def two_agent_one_pne() -> MACID:
     agent1_payoff = np.array([[1, 3], [0, 2]])
     agent2_payoff = np.array([[2, 0], [3, 2]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])  # type: ignore
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])  # type: ignore
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
@@ -278,8 +278,8 @@ def two_agents_three_actions() -> MACID:
     agent1_payoff = np.array([[4, 5, 6], [2, 8, 3], [3, 9, 2]])
     agent2_payoff = np.array([[3, 1, 2], [1, 4, 6], [0, 6, 8]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)])
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)])
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)])  # type: ignore
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)])  # type: ignore
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
     return macid
@@ -301,8 +301,8 @@ def basic_different_dec_cardinality() -> MACID:
     agent1_payoff = np.array([[3, 1, 0], [1, 2, 3]])
     agent2_payoff = np.array([[1, 2, 1], [1, 0, 3]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])
+    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])  # type: ignore
+    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])  # type: ignore
 
     macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
 

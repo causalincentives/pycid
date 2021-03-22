@@ -20,10 +20,10 @@ def get_introduced_bias() -> CID:
 
     cpd_a = UniformRandomCPD("A", [0, 1])
     cpd_z = UniformRandomCPD("Z", [0, 1])
-    cpd_x = FunctionCPD("X", lambda a, z: a * z)
+    cpd_x = FunctionCPD("X", lambda a, z: a * z)  # type: ignore
     cpd_d = DecisionDomain("D", [0, 1])
-    cpd_y = FunctionCPD("Y", lambda x, z: x + z)
-    cpd_u = FunctionCPD("U", lambda d, y: -((d - y) ** 2))
+    cpd_y = FunctionCPD("Y", lambda x, z: x + z)  # type: ignore
+    cpd_u = FunctionCPD("U", lambda d, y: -((d - y) ** 2))  # type: ignore
 
     cid.add_cpds(cpd_a, cpd_d, cpd_z, cpd_x, cpd_y, cpd_u)
     return cid

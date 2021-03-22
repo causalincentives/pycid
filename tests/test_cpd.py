@@ -27,7 +27,7 @@ class TestCPD(unittest.TestCase):
         self.assertTrue(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
         self.assertEqual(cpd_a.get_state_names("A", 0), 2)
-        cpd_b = FunctionCPD("B", lambda a: a)
+        cpd_b = FunctionCPD("B", lambda a: a)  # type: ignore
         cpd_b.initialize_tabular_cpd(cid)
         self.assertTrue(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
