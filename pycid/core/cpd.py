@@ -3,12 +3,12 @@ from __future__ import annotations
 import inspect
 import itertools
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Callable, Dict, Hashable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-Outcome = Hashable
+Outcome = Any
 
 if TYPE_CHECKING:
     from pycid import MACIDBase
