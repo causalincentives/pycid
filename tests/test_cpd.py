@@ -8,6 +8,8 @@ from pycid.core.cpd import FunctionCPD, UniformRandomCPD
 from pycid.examples.simple_cids import get_minimal_cid
 from pycid.examples.story_cids import get_introduced_bias
 
+# TODO: add tests for StochasticFunctionCPD and DecisionDomain
+
 
 class TestCPD(unittest.TestCase):
     def test_initialize_uniform_random_cpd(self) -> None:
