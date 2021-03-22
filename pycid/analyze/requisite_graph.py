@@ -41,7 +41,7 @@ def requisite_graph(cid: MACIDBase) -> MACIDBase:
     ("Representing and Solving Decision Problems with Limited Information", Lauritzen and Nielsen, 2001)
     """
     requisite_graph = cid.copy()
-    decisions = cid.get_valid_order()
+    decisions = cid.get_valid_order(cid.decisions)
 
     for decision in reversed(decisions):
         non_requisite_nodes = set(cid.get_parents(decision)) - set(requisite_list(requisite_graph, decision))

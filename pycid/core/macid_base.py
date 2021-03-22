@@ -197,24 +197,6 @@ class MACIDBase(CausalBayesianNetwork):
         """
         return sum(self.expected_value(self.agent_utilities[agent], context, intervention=intervention))
 
-    def get_valid_order(self, nodes: Optional[Iterable[str]] = None) -> List[str]:
-        """Get a topological order of the specified set of nodes (this may not be unique).
-
-        By default, a topological ordering of the decision nodes is given"""
-        if not nx.is_directed_acyclic_graph(self):
-            raise ValueError("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
-
-        if nodes is None:
-            nodes = self.decisions
-        else:
-            nodes = set(nodes)
-            for node in nodes:
-                if node not in self.nodes:
-                    raise KeyError(f"{node} is not in the (MA)CID.")
-
-        srt = [node for node in nx.topological_sort(self) if node in nodes]
-        return srt
-
     def is_s_reachable(self, d1: Union[str, Iterable[str]], d2: Union[str, Iterable[str]]) -> bool:
         """
         Determine whether 'D2' is s-reachable from 'D1' (Koller and Milch, 2001)

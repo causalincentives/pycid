@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -48,50 +47,137 @@ class CausalBayesianNetwork(BayesianModel):
             if isinstance(cpd, UniformRandomCPD):
                 self.add_cpds(cpd)
 
+    def get_cpd(self, node: str) -> TabularCPD:
+        if node in self._cpds_to_add:
+            return self._cpds_to_add[node]
+        elif super().get_cpds(node):
+            return super().get_cpds(node)
+        else:
+            raise KeyError(f"No CPD specified for {node}")
+
+    # def get_cpds(self, node : Optional[str] = None) -> Optional[Union[TabularCPD, List[TabularCPD]]]:
+    #     if node:
+    #         return self.get_cpd(node)
+    #     else:
+    #         return super().get_cpds()
+
+    def get_domain(self, node: str) -> List[Outcome]:
+        try:
+            return self.get_cpd(node).state_names[node]  # type: ignore
+        except AttributeError:
+            raise KeyError(f"No domain known for {node} yet")
+
+    def get_cardinality(self, node: str) -> int:
+        return len(self.get_domain(node))
+
+    def get_valid_order(self, nodes: Iterable[str] = None) -> List[str]:
+        """Get a topological order of the specified set of nodes (this may not be unique).
+
+        By default, a topological ordering of all nodes is given"""
+        if not nx.is_directed_acyclic_graph(self):
+            raise ValueError("A topological ordering of nodes can only be returned if the (MA)CID is acyclic")
+
+        if nodes is None:
+            nodes = set(self.nodes)
+        else:
+            nodes = set(nodes)
+            for node in nodes:
+                if node not in self.nodes:
+                    raise KeyError(f"{node} is not in the (MA)CID.")
+
+        srt = [node for node in nx.topological_sort(self) if node in nodes]
+        return srt
+
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
         Add the given CPDs and initialize FunctionCPDs, UniformRandomCPDs etc
         """
 
-        # Add each cpd to self._cpds_to_add after doing some checks
+        # Step 1. Remove previous cpds
+        for cpd in cpds:
+            try:
+                self.remove_cpds(cpd.variable)
+            except ValueError:
+                pass
+
+        # Step 2. Add each cpd to self._cpds_to_add or super after doing some checks
         for cpd in cpds:
             assert cpd.variable in self.nodes
-            assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, StochasticFunctionCPD):
                 cpd.check_function_arguments_match_parent_names(self)
-            self._cpds_to_add[cpd.variable] = cpd
+                self._cpds_to_add[cpd.variable] = cpd
+            elif isinstance(cpd, TabularCPD):
+                super().add_cpds(cpd)
+            else:
+                raise ValueError(f"I don't know how to add cpd {cpd} of type {type(cpd)}")
 
-        # Initialize CPDs in topological order. Call super().add_cpds if initialized
-        # successfully. Otherwise leave in self._cpds_to_add.
-        for var in nx.topological_sort(self):
-            if var in self._cpds_to_add:
-                cpd_to_add = self._cpds_to_add[var]
-                if hasattr(cpd_to_add, "initialize_tabular_cpd"):
-                    try:
-                        cpd_to_add.initialize_tabular_cpd(self)
-                    except ParentsNotReadyException:
-                        pass
-                if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
-                    # if the domains have changed, remember to update all descendants:
-                    previous_cpd = self.get_cpds(var)
-                    if (
-                        previous_cpd
-                        and hasattr(previous_cpd, "domain")
-                        and previous_cpd.state_names[var] != cpd_to_add.state_names[var]
-                    ):
-                        for descendant in nx.descendants(self, var):
-                            if descendant not in self._cpds_to_add and self.get_cpds(descendant):
-                                self._cpds_to_add[descendant] = self.get_cpds(descendant)
+        # Step 3. Initialize CPDs in topological order
+        initalized_cpds = []
+        for var in self.get_valid_order(self._cpds_to_add.keys()):
+            try:
+                self._cpds_to_add[var].initialize_tabular_cpd(self)
+            except ParentsNotReadyException:
+                pass
+            else:
+                initalized_cpds.append(self._cpds_to_add[var])
 
-                    # add cpd to BayesianModel, and remove it from _cpds_to_add
-                    #
-                    # pgmpy produces warnings when overwriting an existing CPD
-                    # It writes warnings directly to the 'root' context so
-                    # to suppress those we disable warnings for all loggers
-                    logging.disable(logging.WARN)
-                    super().add_cpds(cpd_to_add)
-                    logging.disable(logging.NOTSET)  # Unset
-                    del self._cpds_to_add[var]
+        # Step 3. Call super
+        for cpd in initalized_cpds:
+            super().add_cpds(cpd)
+            del self._cpds_to_add[cpd.variable]
+
+        # Step 4. Sync state_names
+        # try:
+        #     state_names = {var: self.get_domain(var) for var in self.nodes}
+        #     for cpd in self.get_cpds():
+        #         cpd.store_state_names(None, None, state_names)
+        # except:
+        #     print()
+
+    # def add_cpds(self, *cpds: TabularCPD) -> None:
+    #     """
+    #     Add the given CPDs and initialize FunctionCPDs, UniformRandomCPDs etc
+    #     """
+    #
+    #     # Add each cpd to self._cpds_to_add after doing some checks
+    #     for cpd in cpds:
+    #         assert cpd.variable in self.nodes
+    #         assert isinstance(cpd, TabularCPD)
+    #         if isinstance(cpd, StochasticFunctionCPD):
+    #             cpd.check_function_arguments_match_parent_names(self)
+    #         self._cpds_to_add[cpd.variable] = cpd
+    #
+    #     # Initialize CPDs in topological order. Call super().add_cpds if initialized
+    #     # successfully. Otherwise leave in self._cpds_to_add.
+    #     for var in nx.topological_sort(self):
+    #         if var in self._cpds_to_add:
+    #             cpd_to_add = self._cpds_to_add[var]
+    #             if hasattr(cpd_to_add, "initialize_tabular_cpd"):
+    #                 try:
+    #                     cpd_to_add.initialize_tabular_cpd(self)
+    #                 except ParentsNotReadyException:
+    #                     pass
+    #             if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
+    #                 # if the domains have changed, remember to update all descendants:
+    #                 previous_cpd = self.get_cpds(var)
+    #                 if (
+    #                     previous_cpd
+    #                     and hasattr(previous_cpd, "domain")
+    #                     and previous_cpd.state_names[var] != cpd_to_add.state_names[var]
+    #                 ):
+    #                     for descendant in nx.descendants(self, var):
+    #                         if descendant not in self._cpds_to_add and self.get_cpds(descendant):
+    #                             self._cpds_to_add[descendant] = self.get_cpds(descendant)
+    #
+    #                 # add cpd to BayesianModel, and remove it from _cpds_to_add
+    #                 #
+    #                 # pgmpy produces warnings when overwriting an existing CPD
+    #                 # It writes warnings directly to the 'root' context so
+    #                 # to suppress those we disable warnings for all loggers
+    #                 logging.disable(logging.WARN)
+    #                 super().add_cpds(cpd_to_add)
+    #                 logging.disable(logging.NOTSET)  # Unset
+    #                 del self._cpds_to_add[var]
 
     def query(
         self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None

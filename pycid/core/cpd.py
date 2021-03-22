@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import itertools
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union, Set
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -75,6 +75,9 @@ class StochasticFunctionCPD(TabularCPD):
         self.force_domain: Optional[Sequence[Outcome]] = domain
         self.domain: Optional[Sequence[Outcome]] = domain
 
+        if domain:
+            self.store_state_names(None, None, {variable: domain})
+
         assert isinstance(label, (str, type(None)))
         self.label = label if label is not None else self.compute_label(stochastic_function)
         # we call super().__init__() in initialize_tabular_cpd instead
@@ -118,7 +121,7 @@ class StochasticFunctionCPD(TabularCPD):
     def parents_instantiated(self, cid: MACIDBase) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
         for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
+            p_cpd = cid.get_cpd(p)
             if not (p_cpd and hasattr(p_cpd, "state_names")):
                 return False
         return True
@@ -128,18 +131,27 @@ class StochasticFunctionCPD(TabularCPD):
         assert self.parents_instantiated(cid)
         parent_values = []
         for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
-            if p_cpd and hasattr(p_cpd, "state_names"):
+            try:
+                p_cpd = cid.get_cpd(p)
                 parent_values.append(p_cpd.state_names[p])
+            except KeyError:
+                raise ParentsNotReadyException(f"Parent {p} not ready for {self.variable}")
         pv_list = list(itertools.product(*parent_values))
         return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
 
-    def possible_values(self, cid: MACIDBase) -> List[Outcome]:
+    def possible_values(self, cid: MACIDBase) -> Sequence[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
-        return sorted(
-            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)])  # type: ignore
+        possible_values : Set[Outcome] = set().union(
+            *[self.stochastic_function(**x).keys() for x in self.parent_values(cid)]  # type: ignore
         )
+        if self.force_domain:
+            assert possible_values.issubset(set(self.force_domain))
+            return self.force_domain
+        else:
+            self.domain = sorted(possible_values)
+            self.store_state_names(None, None, {self.variable: self.domain})
+            return self.domain
 
     def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
         """Initialize the probability table for the inherited TabularCPD.

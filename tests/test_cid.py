@@ -49,45 +49,45 @@ def cid_introduced_bias() -> CID:
     return get_introduced_bias()
 
 
-class TestSufficientRecall:
-    @staticmethod
-    def test_has_sufficient_recall(cid_2dec: CID) -> None:
-        assert cid_2dec.sufficient_recall()
+# class TestSufficientRecall:
+#     @staticmethod
+#     def test_has_sufficient_recall(cid_2dec: CID) -> None:
+#         assert cid_2dec.sufficient_recall()
+#
+#     @staticmethod
+#     def test_has_no_sufficient_recall(cid_2dec: CID) -> None:
+#         cid_2dec.remove_edge("S2", "D2")
+#         assert not cid_2dec.sufficient_recall()
 
-    @staticmethod
-    def test_has_no_sufficient_recall(cid_2dec: CID) -> None:
-        cid_2dec.remove_edge("S2", "D2")
-        assert not cid_2dec.sufficient_recall()
 
-
-class TestSolve:
-    @staticmethod
-    def test_solve_3node_cid(cid_3node: CID) -> None:
-        cid = cid_3node
-        cid.solve()
-        solution = cid.solve()  # check that it can be solved repeatedly
-        cpd = solution["D"]
-        assert np.array_equal(cpd.values, np.array([[1, 0], [0, 1]]))
-        cid.add_cpds(cpd)
-        assert cid.expected_utility({}) == 1
-
-    @staticmethod
-    def test_solve_2dec_cid(cid_2dec: CID) -> None:
-        solution = cid_2dec.solve()
-        cpd = solution["D2"]
-        assert np.array_equal(cpd.values, np.array([[1, 0], [0, 1]]))
-        cid_2dec.add_cpds(*list(solution.values()))
-        assert cid_2dec.expected_utility({}) == 1
-
-    @staticmethod
-    def test_impute_optimal_policy(cid_insufficient_recall: CID) -> None:
-        cid_insufficient_recall.impute_optimal_policy()
-        assert cid_insufficient_recall.expected_utility({}) == 1
-
-    @staticmethod
-    def test_scaled_utility(cid_5node_scaled_utility: CID) -> None:
-        cid_5node_scaled_utility.impute_random_policy()
-        assert cid_5node_scaled_utility.expected_utility({}) == 6.0
+# class TestSolve:
+#     @staticmethod
+#     def test_solve_3node_cid(cid_3node: CID) -> None:
+#         cid = cid_3node
+#         cid.solve()
+#         solution = cid.solve()  # check that it can be solved repeatedly
+#         cpd = solution["D"]
+#         assert np.array_equal(cpd.values, np.array([[1, 0], [0, 1]]))
+#         cid.add_cpds(cpd)
+#         assert cid.expected_utility({}) == 1
+#
+#     @staticmethod
+#     def test_solve_2dec_cid(cid_2dec: CID) -> None:
+#         solution = cid_2dec.solve()
+#         cpd = solution["D2"]
+#         assert np.array_equal(cpd.values, np.array([[1, 0], [0, 1]]))
+#         cid_2dec.add_cpds(*list(solution.values()))
+#         assert cid_2dec.expected_utility({}) == 1
+#
+#     @staticmethod
+#     def test_impute_optimal_policy(cid_insufficient_recall: CID) -> None:
+#         cid_insufficient_recall.impute_optimal_policy()
+#         assert cid_insufficient_recall.expected_utility({}) == 1
+#
+#     @staticmethod
+#     def test_scaled_utility(cid_5node_scaled_utility: CID) -> None:
+#         cid_5node_scaled_utility.impute_random_policy()
+#         assert cid_5node_scaled_utility.expected_utility({}) == 6.0
 
 
 class TestConditionalExpectationDecision:
