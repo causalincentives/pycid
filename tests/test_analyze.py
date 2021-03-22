@@ -104,7 +104,7 @@ class TestAdmitsVoi:
         assert admits_voi(cid_introduced_bias, "D", "A")
 
     @staticmethod
-    def test_no_void_grade_predictor(cid_grade_predictor: CID) -> None:
+    def test_no_voi_grade_predictor(cid_grade_predictor: CID) -> None:
         assert not admits_voi(cid_grade_predictor, "P", "Ge")
 
     @staticmethod
