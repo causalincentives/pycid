@@ -26,7 +26,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 
 from pycid.core.causal_bayesian_network import CausalBayesianNetwork
-from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD, Outcome
+from pycid.core.cpd import DecisionDomain, FunctionCPD, Outcome, UniformRandomCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill

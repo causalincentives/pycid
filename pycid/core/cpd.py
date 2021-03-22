@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import itertools
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence, Union, Hashable
+from typing import TYPE_CHECKING, Callable, Dict, Hashable, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -137,8 +137,9 @@ class StochasticFunctionCPD(TabularCPD):
     def possible_values(self, cid: MACIDBase) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
         assert self.parents_instantiated(cid)
-        return sorted(set().union(*[self.stochastic_function(**x).keys()  # type: ignore
-                                    for x in self.parent_values(cid)]))
+        return sorted(
+            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)])  # type: ignore
+        )
 
     def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
         """Initialize the probability table for the inherited TabularCPD.

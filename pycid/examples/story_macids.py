@@ -74,10 +74,12 @@ def battle_of_the_sexes() -> MACID:
     macid.add_cpds(
         DecisionDomain("D_F", d_f_domain),
         DecisionDomain("D_M", d_m_domain),
-        FunctionCPD("U_F", lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f),  # type: ignore
-                                                           d_m_domain.index(d_m)]),
-        FunctionCPD("U_M", lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f),  # type: ignore
-                                                           d_m_domain.index(d_m)]),
+        FunctionCPD(
+            "U_F", lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)]  # type: ignore
+        ),
+        FunctionCPD(
+            "U_M", lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)]  # type: ignore
+        ),
     )
     return macid
 

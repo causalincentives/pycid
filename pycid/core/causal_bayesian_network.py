@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, Iterable, List, Tuple, Union, Sequence
+from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -10,7 +10,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import FunctionCPD, ParentsNotReadyException, Outcome, StochasticFunctionCPD, UniformRandomCPD
+from pycid.core.cpd import FunctionCPD, Outcome, ParentsNotReadyException, StochasticFunctionCPD, UniformRandomCPD
 
 
 class CausalBayesianNetwork(BayesianModel):
