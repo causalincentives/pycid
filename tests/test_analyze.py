@@ -16,11 +16,12 @@ from pycid.analyze.value_of_control import (
     admits_indir_voc_list,
     admits_voc,
     admits_voc_list,
+    quantitative_voc,
 )
 from pycid.analyze.value_of_information import admits_voi, admits_voi_list, quantitative_voi
 from pycid.core.cpd import FunctionCPD
 from pycid.core.macid import MACID
-from pycid.examples.simple_cids import get_minimal_cid, get_quantitative_voi_cid, get_trim_example_cid
+from pycid.examples.simple_cids import get_3node_cid, get_minimal_cid, get_quantitative_voi_cid, get_trim_example_cid
 from pycid.examples.story_cids import (
     get_content_recommender,
     get_fitness_tracker,
@@ -31,6 +32,11 @@ from pycid.examples.story_cids import (
 
 if TYPE_CHECKING:
     from pycid import CID
+
+
+@pytest.fixture
+def cid_3node() -> CID:
+    return get_3node_cid()
 
 
 @pytest.fixture
@@ -250,6 +256,25 @@ class TestAdmitsVocList:
     def test_macid_raises(macid: MACID) -> None:
         with pytest.raises(ValueError):
             admits_voc_list(macid)
+
+
+class TestQuantitativeVoc:
+    @staticmethod
+    def test_no_quantitative_voc(cid_3node: CID) -> None:
+        assert set(admits_voc_list(cid_3node)) == {"U", "S"}
+        assert quantitative_voc(cid_3node, "S") == pytest.approx(
+            0
+        )  # in this parameterisation, S has no value of control
+
+    @staticmethod
+    def test_positive_quantitative_voc(cid_3node: CID) -> None:
+        cid_3node.remove_edge("S", "D")
+        assert quantitative_voc(cid_3node, "S") == pytest.approx(1)  # the agent at D no longer knows the value of S
+
+    @staticmethod
+    def test_invalid_target(cid_3node: CID) -> None:
+        with pytest.raises(KeyError):
+            quantitative_voc(cid_3node, "_")
 
 
 class TestAdmitsIci:
