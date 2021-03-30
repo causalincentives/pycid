@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import inspect
 import itertools
+import types
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union, Iterator
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -16,6 +17,17 @@ if TYPE_CHECKING:
 
 class ParentsNotReadyException(ValueError):
     pass
+
+
+def function_copy(f: Callable) -> Callable:
+    """
+    return a function with same code, globals, defaults, closure, and
+    name (or provide a new name)
+    """
+    fn = types.FunctionType(f.__code__, f.__globals__, f.__name__, f.__defaults__, f.__closure__)  # type: ignore
+    # in case f was given attrs (note this dict is a shallow copy):
+    fn.__dict__.update(f.__dict__)
+    return fn
 
 
 class StochasticFunctionCPD(TabularCPD):
@@ -123,16 +135,17 @@ class StochasticFunctionCPD(TabularCPD):
                 return False
         return True
 
-    def parent_values(self, cid: MACIDBase) -> List[Dict[str, Outcome]]:
+    def parent_values(self, cid: MACIDBase) -> Iterator[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         assert self.parents_instantiated(cid)
-        parent_values = []
+        parent_values_list = []
         for p in cid.get_parents(self.variable):
             p_cpd = cid.get_cpds(p)
             if p_cpd and hasattr(p_cpd, "state_names"):
-                parent_values.append(p_cpd.state_names[p])
-        pv_list = list(itertools.product(*parent_values))
-        return [{p.lower(): pv[i] for i, p in enumerate(cid.get_parents(self.variable))} for pv in pv_list]
+                parent_values_list.append(p_cpd.state_names[p])
+
+        for parent_values in itertools.product(*parent_values_list):
+            yield {p.lower(): parent_values[i] for i, p in enumerate(cid.get_parents(self.variable))}
 
     def possible_values(self, cid: MACIDBase) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
@@ -183,7 +196,11 @@ class StochasticFunctionCPD(TabularCPD):
         super().__init__(self.variable, card, probability_matrix, evidence, evidence_card, state_names=cid.state_names)
 
     def copy(self) -> StochasticFunctionCPD:
-        return StochasticFunctionCPD(self.variable, self.stochastic_function, domain=self.force_domain)
+        return StochasticFunctionCPD(
+            str(self.variable),
+            function_copy(self.stochastic_function),
+            domain=list(self.force_domain) if self.force_domain else None,
+        )
 
     def __repr__(self) -> str:
         if self.cid and self.parents_instantiated(self.cid):
@@ -272,7 +289,7 @@ class UniformRandomCPD(StochasticFunctionCPD):
         )
 
     def copy(self) -> UniformRandomCPD:
-        return UniformRandomCPD(self.variable, self.domain, label=self.label)  # type: ignore
+        return UniformRandomCPD(str(self.variable), list(self.domain), label=str(self.label))  # type: ignore
 
     def __repr__(self) -> str:
         return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
@@ -298,7 +315,7 @@ class DecisionDomain(UniformRandomCPD):
         super().__init__(variable, domain, label=f"Dec({domain})")
 
     def copy(self) -> DecisionDomain:
-        return DecisionDomain(self.variable, domain=self.domain)  # type: ignore
+        return DecisionDomain(str(self.variable), domain=list(self.domain) if self.domain else None)  # type: ignore
 
     def __repr__(self) -> str:
         return f"<DecisionDomain {self.variable}:{self.domain}>"

@@ -31,6 +31,7 @@ class CID(MACIDBase):
 
     def impute_optimal_policy(self) -> None:
         """Impute an optimal policy to all decision nodes"""
+        self.impute_random_policy()
         if self.sufficient_recall():
             decisions = self.get_valid_order(self.decisions)
             for d in reversed(decisions):
