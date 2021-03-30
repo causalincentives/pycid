@@ -9,7 +9,6 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
-    Iterator,
     KeysView,
     List,
     Mapping,
@@ -17,6 +16,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    Iterator,
 )
 
 import matplotlib.cm as cm
@@ -272,7 +272,7 @@ class MACIDBase(CausalBayesianNetwork):
                 return False
         return True
 
-    def pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
+    def pure_decision_rules(self, decision: str) -> Iterator[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
         domain = self.get_cpds(decision).state_names[decision]
@@ -293,16 +293,13 @@ class MACIDBase(CausalBayesianNetwork):
             assert 0 <= idx <= number_of_decision_contexts
             return idx
 
-        function_cpds: List[FunctionCPD] = []
         for func_list in functions_as_tuples:
 
             def produce_function(early_eval_func_list: tuple = func_list) -> Callable:
                 # using a default argument is a trick to get func_list to evaluate early
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            function_cpds.append(FunctionCPD(decision, produce_function(), domain=domain))
-
-        return function_cpds
+            yield FunctionCPD(decision, produce_function(), domain=domain)
 
     def pure_policies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
         """

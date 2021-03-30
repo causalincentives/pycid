@@ -27,4 +27,5 @@ def random_cpd(variable: str, domain: List = [0, 1], smoothness: float = 1.0) ->
         variable,
         lambda **pv: {domain[i]: prob for i, prob in enumerate(prob_vector())},
         domain=domain if domain else [0, 1],
+        label="random cpd",
     )

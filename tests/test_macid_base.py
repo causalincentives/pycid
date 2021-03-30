@@ -89,7 +89,7 @@ class TestBASE(unittest.TestCase):
     # @unittest.skip("")
     def test_possible_pure_decision_rules(self) -> None:
         cid = get_minimal_cid()
-        possible_pure_decision_rules = cid.pure_decision_rules("A")
+        possible_pure_decision_rules = list(cid.pure_decision_rules("A"))
         self.assertEqual(len(possible_pure_decision_rules), 2)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
@@ -99,7 +99,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(set(expected_utilities), {0, 1})
 
         cid = get_3node_cid()
-        possible_pure_decision_rules = cid.pure_decision_rules("D")
+        possible_pure_decision_rules = list(cid.pure_decision_rules("D"))
         self.assertEqual(len(possible_pure_decision_rules), 4)
         expected_utilities = []
         matrices = set()
@@ -112,7 +112,7 @@ class TestBASE(unittest.TestCase):
         self.assertEqual(len(matrices), 4)
 
         five_node = get_5node_cid()
-        possible_pure_decision_rules = five_node.pure_decision_rules("D")
+        possible_pure_decision_rules = list(five_node.pure_decision_rules("D"))
         self.assertEqual(len(possible_pure_decision_rules), 16)
         expected_utilities = []
         for decision_rule in possible_pure_decision_rules:
