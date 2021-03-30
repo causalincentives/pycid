@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-import random
 from functools import lru_cache
 from typing import (
     Callable,
@@ -376,26 +375,26 @@ class MACIDBase(CausalBayesianNetwork):
 
     def impute_optimal_decision(self, d: str) -> None:
         """Impute an optimal policy to the given decision node"""
-        self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
-        # self.impute_random_decision(d)
-        # cpd = self.get_cpds(d)
-        # parents = cpd.variables[1:]
-        # idx2name = cpd.no_to_name[d]
-        # utility_nodes = self.agent_utilities[self.decision_agent[d]]
-        # descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
-        # new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
-        #
-        # @lru_cache(maxsize=1000)
-        # def opt_policy(*parent_values: tuple) -> Any:
-        #     nonlocal descendant_utility_nodes
-        #     context: Dict[str, Any] = {parents[i]: parent_values[i] for i in range(len(parents))}
-        #     eu = []
-        #     for d_idx in range(new.get_cardinality(d)):
-        #         context[d] = idx2name[d_idx]
-        #         eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
-        #     return idx2name[np.argmax(eu)]
-        #
-        # self.add_cpds(FunctionCPD(d, opt_policy, parents, state_names=cpd.state_names, label="opt"))
+        # self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
+        self.impute_random_decision(d)
+        cpd = self.get_cpds(d)
+        parents = cpd.variables[1:]
+        idx2name = cpd.no_to_name[d]
+        utility_nodes = self.agent_utilities[self.decision_agent[d]]
+        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
+        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
+
+        @lru_cache(maxsize=1000)
+        def opt_policy(**parent_values: Outcome) -> Outcome:
+            nonlocal descendant_utility_nodes
+            context: Dict[str, Outcome] = {p: parent_values[p.lower()] for p in parents}
+            eu = []
+            for d_idx in range(new.get_cardinality(d)):
+                context[d] = idx2name[d_idx]
+                eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
+            return idx2name[np.argmax(eu)]
+
+        self.add_cpds(FunctionCPD(d, opt_policy, domain=cpd.state_names[d], label="opt"))
 
     def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
         """Imputes a policy for d = the expectation of y conditioning on d's parents"""
@@ -405,8 +404,11 @@ class MACIDBase(CausalBayesianNetwork):
 
         @lru_cache(maxsize=1000)
         def cond_exp_policy(**pv: Outcome) -> float:
-            context = {p: pv[p.lower()] for p in parents}
-            return new.expected_value([y], context)[0]
+            if y.lower() in pv:
+                return pv[y.lower()]  # type: ignore
+            else:
+                context = {p: pv[p.lower()] for p in parents}
+                return new.expected_value([y], context)[0]
 
         self.add_cpds(FunctionCPD(d, cond_exp_policy, label="cond_exp({})".format(y)))
 
