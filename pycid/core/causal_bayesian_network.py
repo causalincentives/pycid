@@ -55,7 +55,7 @@ class CausalBayesianNetwork(BayesianModel):
 
         # Add each cpd to self._cpds_to_add after doing some checks
         for cpd in cpds:
-            assert cpd.variable in self.nodes
+            # assert cpd.variable in self.nodes
             assert isinstance(cpd, TabularCPD)
             if isinstance(cpd, StochasticFunctionCPD):
                 cpd.check_function_arguments_match_parent_names(self)

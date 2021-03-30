@@ -17,7 +17,7 @@ def test_random_cids_create_one() -> None:
         cid.check_model()
 
 
-def test_random_dag_create_one():
+def test_random_dag_create_one() -> None:
     dag = random_dag(number_of_nodes=5, edge_density=0.4, max_in_degree=4)
     assert nx.is_directed_acyclic_graph(dag)
 
