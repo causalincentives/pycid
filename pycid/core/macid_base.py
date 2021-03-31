@@ -147,7 +147,7 @@ class MACIDBase(CausalBayesianNetwork):
         """
 
         for variable, outcome in context.items():
-            if outcome not in self.state_names[variable]:
+            if outcome not in self.get_cpds(variable).state_names[variable]:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union, Set
+from typing import Callable, Dict, Iterable, List, Tuple, Union, Set
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -30,7 +30,6 @@ class CausalBayesianNetwork(BayesianModel):
         super().__init__(ebunch=edges)
 
         self._cpds_to_add: Dict[str, TabularCPD] = {}
-        self.state_names: Dict[str, Sequence[Outcome]] = {}
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
@@ -118,7 +117,7 @@ class CausalBayesianNetwork(BayesianModel):
         """
 
         for variable, outcome in context.items():
-            if outcome not in self.state_names[variable]:
+            if outcome not in self.get_cpds(variable).state_names[variable]:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         if intervention is None:
@@ -144,7 +143,6 @@ class CausalBayesianNetwork(BayesianModel):
             raise ValueError(f"query {query} contains nodes in disconnected components")
 
         bp = BeliefPropagation(cbn)
-        # TODO: check for probability 0 queries
 
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
             factor = bp.query(query, context, show_progress=False)
@@ -162,7 +160,11 @@ class CausalBayesianNetwork(BayesianModel):
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
-            self.add_cpds(FunctionCPD(variable, lambda: intervention[variable], domain=self.state_names[variable]))
+            self.add_cpds(
+                FunctionCPD(
+                    variable, lambda: intervention[variable], domain=self.get_cpds(variable).state_names[variable]
+                )
+            )
 
     def expected_value(
         self,

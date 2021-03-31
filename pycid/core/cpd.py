@@ -191,9 +191,10 @@ class StochasticFunctionCPD(TabularCPD):
         if (probability_matrix < 0).any() or (probability_matrix > 1).any():
             raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
         self.domain = domain
-        cid.state_names[self.variable] = self.domain
 
-        super().__init__(self.variable, card, probability_matrix, evidence, evidence_card, state_names=cid.state_names)
+        super().__init__(
+            self.variable, card, probability_matrix, evidence, evidence_card, state_names={self.variable: self.domain}
+        )
 
     def copy(self) -> StochasticFunctionCPD:
         return StochasticFunctionCPD(
