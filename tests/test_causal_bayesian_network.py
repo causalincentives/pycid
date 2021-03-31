@@ -6,11 +6,10 @@ import numpy as np
 import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
+from pycid import CID, MACID, CausalBayesianNetwork, RandomCPD
 from pycid.examples.simple_cbns import get_3node_cbn
 from pycid.examples.simple_cids import get_3node_cid, get_minimal_cid
 from pycid.examples.story_macids import taxi_competition
-
-from pycid import CID, MACID, CausalBayesianNetwork, random_cpd
 
 
 @pytest.fixture
@@ -61,7 +60,7 @@ class TestQuery:
     @staticmethod
     def test_query_disconnected_components() -> None:
         cbn = CausalBayesianNetwork([("A", "B")])
-        cbn.add_cpds(random_cpd("A"), random_cpd("B"))
+        cbn.add_cpds(RandomCPD("A"), RandomCPD("B"))
         cbn.query(["A"], {}, intervention={"B": 0})  # the intervention separates A and B into separare components
 
     @staticmethod
