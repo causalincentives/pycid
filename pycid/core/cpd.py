@@ -217,7 +217,7 @@ class StochasticFunctionCPD(TabularCPD):
             mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         else:
             mapping = ""
-        return f"<FunctionCPD {self.variable}:{self.stochastic_function}> \n{mapping}"
+        return f"{type(self).__name__}<{self.variable}:{self.stochastic_function}> \n{mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()

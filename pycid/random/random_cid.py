@@ -4,7 +4,7 @@ from typing import List, Tuple
 from pycid.core.cid import CID
 from pycid.core.cpd import DecisionDomain
 from pycid.core.get_paths import find_active_path
-from pycid.random.random_cpd import random_cpd
+from pycid.random.random_cpd import RandomCPD
 
 # TODO add a random_macid function
 
@@ -40,7 +40,7 @@ def random_cid(
             if node in cid.decisions:
                 cid.add_cpds(DecisionDomain(node, [0, 1]))
             else:
-                cid.add_cpds(random_cpd(node))
+                cid.add_cpds(RandomCPD(node))
     return cid
 
 
