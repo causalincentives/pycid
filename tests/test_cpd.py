@@ -20,7 +20,7 @@ class TestCPD(unittest.TestCase):
         self.assertEqual(cpd_a.get_state_names("A", 1), 2)
         cpd_b = UniformRandomCPD("B", [0, 1])
         cpd_b.initialize_tabular_cpd(cid)
-        self.assertTrue((cpd_a.get_values() == np.array([[0.5, 0.5], [0.5, 0.5]])).all())
+        self.assertTrue((cpd_b.get_values() == np.array([[0.5, 0.5], [0.5, 0.5]])).all())
 
     def test_initialize_function_cpd(self) -> None:
         cid = get_minimal_cid()

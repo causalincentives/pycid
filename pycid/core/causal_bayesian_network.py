@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, Iterable, List, Tuple, Union, Set
+from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx

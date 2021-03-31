@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
+    Iterator,
     KeysView,
     List,
     Mapping,
@@ -15,7 +16,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    Iterator,
 )
 
 import matplotlib.cm as cm

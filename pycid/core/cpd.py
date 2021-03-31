@@ -4,7 +4,7 @@ import inspect
 import itertools
 import types
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union, Iterator
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -12,7 +12,7 @@ from pgmpy.factors.discrete import TabularCPD  # type: ignore
 Outcome = Any
 
 if TYPE_CHECKING:
-    from pycid import MACIDBase
+    from pycid import CausalBayesianNetwork
 
 
 class ParentsNotReadyException(ValueError):
@@ -81,7 +81,7 @@ class StochasticFunctionCPD(TabularCPD):
         """
         self.variable = variable
         self.stochastic_function = stochastic_function
-        self.cid: Optional[MACIDBase] = None
+        self.cbn: Optional[CausalBayesianNetwork] = None
 
         assert isinstance(domain, (list, type(None)))
         self.force_domain: Optional[Sequence[Outcome]] = domain
@@ -115,58 +115,58 @@ class StochasticFunctionCPD(TabularCPD):
             return function.__name__
         return ""
 
-    def check_function_arguments_match_parent_names(self, cid: MACIDBase) -> None:
+    def check_function_arguments_match_parent_names(self, cbn: CausalBayesianNetwork) -> None:
         """Raises a ValueError if the parents in the CID don't match the argument to the specified function"""
         sig = inspect.signature(self.stochastic_function).parameters
         arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
         args = set(sig)
-        lower_case_parents = {p.lower() for p in cid.get_parents(self.variable)}
+        lower_case_parents = {p.lower() for p in cbn.get_parents(self.variable)}
         if "VAR_KEYWORD" not in arg_kinds and args != lower_case_parents:
             raise ValueError(
                 f"function for {self.variable} mismatch parents on"
                 f" {args.symmetric_difference(lower_case_parents)}, "
             )
 
-    def parents_instantiated(self, cid: MACIDBase) -> bool:
+    def parents_instantiated(self, cbn: CausalBayesianNetwork) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
-        for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
+        for p in cbn.get_parents(self.variable):
+            p_cpd = cbn.get_cpds(p)
             if not (p_cpd and hasattr(p_cpd, "state_names")):
                 return False
         return True
 
-    def parent_values(self, cid: MACIDBase) -> Iterator[Dict[str, Outcome]]:
+    def parent_values(self, cbn: CausalBayesianNetwork) -> Iterator[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
-        assert self.parents_instantiated(cid)
+        assert self.parents_instantiated(cbn)
         parent_values_list = []
-        for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
+        for p in cbn.get_parents(self.variable):
+            p_cpd = cbn.get_cpds(p)
             if p_cpd and hasattr(p_cpd, "state_names"):
                 parent_values_list.append(p_cpd.state_names[p])
 
         for parent_values in itertools.product(*parent_values_list):
-            yield {p.lower(): parent_values[i] for i, p in enumerate(cid.get_parents(self.variable))}
+            yield {p.lower(): parent_values[i] for i, p in enumerate(cbn.get_parents(self.variable))}
 
-    def possible_values(self, cid: MACIDBase) -> List[Outcome]:
+    def possible_values(self, cbn: CausalBayesianNetwork) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
-        assert self.parents_instantiated(cid)
+        assert self.parents_instantiated(cbn)
         return sorted(
-            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)])  # type: ignore
+            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cbn)])  # type: ignore
         )
 
-    def initialize_tabular_cpd(self, cid: MACIDBase) -> None:
+    def initialize_tabular_cpd(self, cbn: CausalBayesianNetwork) -> None:
         """Initialize the probability table for the inherited TabularCPD.
 
         Requires that all parents in the CID have already been instantiated.
         """
-        if not self.parents_instantiated(cid):
+        if not self.parents_instantiated(cbn):
             raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
-        self.cid = cid
+        self.cbn = cbn
         if self.force_domain:
-            if not set(self.possible_values(cid)).issubset(self.force_domain):
+            if not set(self.possible_values(cbn)).issubset(self.force_domain):
                 raise ValueError("variable {} can take value outside given state_names".format(self.variable))
 
-        domain: Sequence[Outcome] = self.force_domain if self.force_domain else self.possible_values(cid)
+        domain: Sequence[Outcome] = self.force_domain if self.force_domain else self.possible_values(cbn)
 
         def complete_prob_dictionary(
             prob_dictionary: Dict[Outcome, Union[int, float]]
@@ -179,10 +179,10 @@ class StochasticFunctionCPD(TabularCPD):
             return prob_dictionary
 
         card = len(domain)
-        evidence = cid.get_parents(self.variable)
-        evidence_card = [cid.get_cardinality(p) for p in evidence]
+        evidence = cbn.get_parents(self.variable)
+        evidence_card = [cbn.get_cardinality(p) for p in evidence]
         probability_list = []
-        for pv in self.parent_values(cid):
+        for pv in self.parent_values(cbn):
             probabilities = complete_prob_dictionary(self.stochastic_function(**pv))
             probability_list.append([probabilities[t] for t in domain])
         probability_matrix = np.array(probability_list).T
@@ -204,9 +204,9 @@ class StochasticFunctionCPD(TabularCPD):
         )
 
     def __repr__(self) -> str:
-        if self.cid and self.parents_instantiated(self.cid):
+        if self.cbn and self.parents_instantiated(self.cbn):
             dictionary: Dict[str, Union[Dict, Outcome]] = {}
-            for pv in self.parent_values(self.cid):
+            for pv in self.parent_values(self.cbn):
                 probabilities = self.stochastic_function(**pv)
                 for outcome in probabilities:
                     if probabilities[outcome] == 1:

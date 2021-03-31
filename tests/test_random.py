@@ -1,7 +1,7 @@
 import sys
 
-import pytest
 import networkx as nx
+import pytest
 
 from pycid.random.random_cid import random_cid, random_cids
 from pycid.random.random_dag import random_dag
