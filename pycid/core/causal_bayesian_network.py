@@ -132,8 +132,8 @@ class CausalBayesianNetwork(BayesianModel):
 
         # query fails if graph includes nodes not in a connected component, so we remove them
         undirected = cbn.to_undirected()
-        connected_nodes: Set[str] = set().union(
-            *[nx.node_connected_component(undirected, var) for var in query]  # type: ignore
+        connected_nodes: Set[str] = set().union(  # type: ignore
+            *[nx.node_connected_component(undirected, var) for var in query]
         )
         context = {k: v for k, v in context.items() if k in connected_nodes}
         for node in list(cbn.nodes):
