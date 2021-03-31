@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING
 
 import pytest
 
+from pycid import CID, CausalBayesianNetwork, UniformRandomCPD
 from pycid.analyze.effects import introduced_total_effect, total_effect
 from pycid.analyze.instrumental_control_incentive import admits_ici, admits_ici_list
 from pycid.analyze.requisite_graph import requisite, requisite_graph
@@ -29,9 +29,6 @@ from pycid.examples.story_cids import (
     get_introduced_bias,
     get_modified_content_recommender,
 )
-
-if TYPE_CHECKING:
-    from pycid import CID
 
 
 @pytest.fixture
@@ -200,6 +197,17 @@ class TestIntroducedTotalEffect:
         cid.add_cpds(FunctionCPD("Y", lambda x, z: z))  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(1 / 3)
+
+    def test_introduced_bias_reversed_sign(self) -> None:
+        cbn = CausalBayesianNetwork([("A", "D"), ("A", "Y")])
+        cbn.add_cpds(
+            UniformRandomCPD("A", [0, 1]),
+            FunctionCPD("D", lambda a: 0),
+            FunctionCPD("Y", lambda a: a),
+        )
+        assert introduced_total_effect(cbn, "A", "D", "Y") == pytest.approx(-1)
+        cbn.add_cpds(FunctionCPD("Y", lambda a: -a))
+        assert introduced_total_effect(cbn, "A", "D", "Y", adapt_marginalized=True) == pytest.approx(-1)
 
 
 class TestRequisite:
