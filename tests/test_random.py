@@ -23,14 +23,15 @@ def test_random_dag_create_one() -> None:
     assert nx.is_directed_acyclic_graph(dag)
 
 
-def test_random_cpd() -> None:
-    cbn = CausalBayesianNetwork([("Y", "A"), ("Y", "D")])
+def test_random_cpd_copy() -> None:
+    """check that a copy of a random cpd yields the same distribution"""
+    cbn = CausalBayesianNetwork([("A", "B")])
     cbn.add_cpds(
-        RandomCPD("Y"),
-        FunctionCPD("A", lambda y: y),
-        FunctionCPD("D", lambda y: y),
+        RandomCPD("A"),
+        FunctionCPD("B", lambda a: a),
     )
-    assert cbn.expected_value(["D"], {}, intervention={"A": 0}) == cbn.expected_value(["D"], {}, intervention={"A": 1})
+    cbn2 = cbn.copy()
+    assert cbn.expected_value(["B"], {}) == cbn2.expected_value(["B"], {})
 
 
 if __name__ == "__main__":

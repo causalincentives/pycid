@@ -4,7 +4,7 @@ import inspect
 import itertools
 import types
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Union, Iterator
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -217,7 +217,7 @@ class StochasticFunctionCPD(TabularCPD):
             mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         else:
             mapping = ""
-        return f"<FunctionCPD {self.variable}:{self.stochastic_function}> \n{mapping}"
+        return f"{type(self).__name__}<{self.variable}:{self.stochastic_function}> \n{mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()

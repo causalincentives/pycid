@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import contextlib
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, Sequence
 
 import numpy as np
 
@@ -22,7 +24,9 @@ class RandomCPD(StochasticFunctionCPD):
     Sample a random CPD, with outcomes in the given domain
     """
 
-    def __init__(self, variable: str, domain: List = [0, 1], smoothness: float = 1.0, seed: int = None) -> None:
+    def __init__(
+        self, variable: str, domain: Sequence[Outcome] = [0, 1], smoothness: float = 1.0, seed: int = None
+    ) -> None:
         """
         Parameters
         ----------
@@ -50,3 +54,6 @@ class RandomCPD(StochasticFunctionCPD):
             domain=domain if domain else [0, 1],
             label=f"RandomCPD({self.smoothness}, {self.seed})",
         )
+
+    def copy(self) -> RandomCPD:
+        return RandomCPD(self.variable, self.domain, self.smoothness, self.seed)  # type: ignore
