@@ -93,6 +93,13 @@ class CausalBayesianNetwork(BayesianModel):
                     logging.disable(logging.NOTSET)  # Unset
                     del self._cpds_to_add[var]
 
+        # Sync state_names, trusting that each CPD has up-to-date knowledge about itself
+        state_names = {}
+        for cpd in self.get_cpds():
+            state_names[cpd.variable] = cpd.state_names[cpd.variable]
+        for cpd in self.get_cpds():
+            cpd.store_state_names(None, None, state_names)
+
     def query(
         self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
     ) -> BeliefPropagation:
@@ -132,27 +139,11 @@ class CausalBayesianNetwork(BayesianModel):
         #         cid.remove_node(node)
         # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
 
-        updated_state_names = {}
-        for v in query:
-            cpd = cbn.get_cpds(v)
-            updated_state_names[v] = cpd.state_names[v]
-
-        # Make a copy of self and revise the context without state_names (to handle a pgmpy bug),
-        copy = cbn.copy_without_cpds()
-        for cpd in cbn.cpds:
-            evidence = cpd.variables[1:] if len(cpd.variables) > 1 else None
-            evidence_card = cpd.cardinality[1:] if len(cpd.variables) > 1 else None
-            copy.add_cpds(TabularCPD(cpd.variable, cpd.variable_card, cpd.get_values(), evidence, evidence_card))
-        revised_context = {  # state_names are switched to their state number
-            variable: self.get_cpds(variable).name_to_no[variable][value] for variable, value in context.items()
-        }
-
-        bp = BeliefPropagation(copy)
+        bp = BeliefPropagation(cbn)
         # TODO: check for probability 0 queries
 
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
-            factor = bp.query(query, revised_context, show_progress=False)
-        factor.state_names = updated_state_names  # reintroduce the state_names
+            factor = bp.query(query, context, show_progress=False)
         return factor
 
     def intervene(self, intervention: Dict[str, Outcome]) -> None:
