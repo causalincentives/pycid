@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union, Set
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -131,13 +131,17 @@ class CausalBayesianNetwork(BayesianModel):
         else:
             cbn = self
 
-        # query fails if graph includes nodes not in moralized graph, so we remove them
-        # cid = self.copy()
-        # mm = MarkovModel(cid.moralize().edges())
-        # for node in self.nodes:
-        #     if node not in mm.nodes:
-        #         cid.remove_node(node)
-        # filtered_context = {k:v for k,v in context.items() if k in mm.nodes}
+        # query fails if graph includes nodes not in a connected component, so we remove them
+        undirected = cbn.to_undirected()
+        connected_nodes: Set[str] = set().union(
+            *[nx.node_connected_component(undirected, var) for var in query]  # type: ignore
+        )
+        context = {k: v for k, v in context.items() if k in connected_nodes}
+        for node in list(cbn.nodes):
+            if node not in connected_nodes:
+                cbn.remove_node(node)
+        if not nx.is_connected(cbn.to_undirected()):
+            raise ValueError(f"query {query} contains nodes in disconnected components")
 
         bp = BeliefPropagation(cbn)
         # TODO: check for probability 0 queries
