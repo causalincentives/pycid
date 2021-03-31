@@ -153,21 +153,17 @@ class MACIDBase(CausalBayesianNetwork):
         if intervention is None:
             intervention = {}
 
-        # First apply the intervention, if any
-        if intervention:
-            cid = self.copy()
-            cid.intervene(intervention)
-        else:
-            cid = self
-
         # Check that strategically relevant decisions have a policy specified
-        mech_graph = MechanismGraph(cid)
-        for decision in cid.decisions:
+        mech_graph = MechanismGraph(self)
+        for intervention_var in intervention:
+            for parent in self.get_parents(intervention_var):
+                mech_graph.remove_edge(parent, intervention_var)
+        for decision in self.decisions:
             for query_node in query:
                 if mech_graph.is_active_trail(
                     decision + "mec", query_node, observed=list(context.keys()) + list(intervention.keys())
                 ):
-                    cpd = cid.get_cpds(decision)
+                    cpd = self.get_cpds(decision)
                     if not cpd:
                         raise ValueError(f"no DecisionDomain specified for {decision}")
                     elif isinstance(cpd, DecisionDomain):
