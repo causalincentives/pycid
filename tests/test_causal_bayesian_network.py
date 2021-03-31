@@ -7,7 +7,7 @@ import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
 from pycid import CID, MACID, CausalBayesianNetwork, random_cpd
-from pycid.examples.simple_cbns import get_3node_cbn
+from pycid.examples.simple_cbns import get_3node_cbn, get_3node_uniform_cbn
 from pycid.examples.simple_cids import get_3node_cid, get_minimal_cid
 from pycid.examples.story_macids import taxi_competition
 
@@ -23,6 +23,11 @@ def cbn_3node() -> CausalBayesianNetwork:
 
 
 @pytest.fixture
+def cbn_3node_uniform() -> CausalBayesianNetwork:
+    return get_3node_uniform_cbn()
+
+
+@pytest.fixture
 def cid_minimal() -> CID:
     return get_minimal_cid()
 
@@ -34,12 +39,15 @@ def macid_taxi_comp() -> MACID:
 
 class TestRemoveAddEdge:
     @staticmethod
-    def test_remove_add_edge(cid_3node: CID) -> None:
-        cid = cid_3node
-        cid.remove_edge("S", "D")
-        assert cid.check_model()
-        cid.add_edge("S", "D")
-        assert cid.check_model()
+    def test_remove_add_edge(cbn_3node_uniform: CausalBayesianNetwork) -> None:
+        cbn = cbn_3node_uniform
+        cbn.remove_edge("A", "B")
+        assert cbn.check_model()
+        cbn.add_edge("A", "B")
+        assert cbn.check_model()
+        with pytest.raises(ValueError):
+            cbn.remove_edge("A", "C")  # the CPD for C relies on knowing the value of A
+            assert cbn.check_model()
 
 
 class TestAssignCpd:

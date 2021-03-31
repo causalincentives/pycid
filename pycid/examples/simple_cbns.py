@@ -9,3 +9,12 @@ def get_3node_cbn() -> CausalBayesianNetwork:
     cpd_d = FunctionCPD("D", lambda s: s + 1)  # type: ignore
     cbn.add_cpds(cpd_d, cpd_s, cpd_u)
     return cbn
+
+
+def get_3node_uniform_cbn() -> CausalBayesianNetwork:
+    cbn = CausalBayesianNetwork([("A", "C"), ("A", "B"), ("B", "C")])
+    cpd_a = UniformRandomCPD("A", [0, 1])
+    cpd_b = UniformRandomCPD("B", [0, 1])
+    cpd_c = FunctionCPD("C", lambda a, b: a * b)  # type: ignore
+    cbn.add_cpds(cpd_a, cpd_b, cpd_c)
+    return cbn
