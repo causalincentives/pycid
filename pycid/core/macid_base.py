@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
+    Iterator,
     KeysView,
     List,
     Mapping,
@@ -15,7 +16,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    Iterator,
 )
 
 import matplotlib.cm as cm
@@ -146,12 +146,12 @@ class MACIDBase(CausalBayesianNetwork):
         intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
 
+        self._fix_lowercase_variables(context)
         for variable, outcome in context.items():
             if outcome not in self.get_cpds(variable).state_names[variable]:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
-        if intervention is None:
-            intervention = {}
+        intervention = intervention or {}
 
         # Check that strategically relevant decisions have a policy specified
         mech_graph = MechanismGraph(self)
@@ -369,44 +369,38 @@ class MACIDBase(CausalBayesianNetwork):
             else:
                 self.add_cpds(DecisionDomain(d, cpd.domain))
 
-    def impute_optimal_decision(self, d: str) -> None:
+    def impute_optimal_decision(self, decision: str) -> None:
         """Impute an optimal policy to the given decision node"""
         # self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
-        self.impute_random_decision(d)
-        cpd = self.get_cpds(d)
-        parents = cpd.variables[1:]
-        idx2name = cpd.no_to_name[d]
-        utility_nodes = self.agent_utilities[self.decision_agent[d]]
-        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, d)))
-        new = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
+        self.impute_random_decision(decision)
+        domain = self.get_cpds(decision).state_names[decision]
+        utility_nodes = self.agent_utilities[self.decision_agent[decision]]
+        descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
+        copy = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
 
         @lru_cache(maxsize=1000)
         def opt_policy(**parent_values: Outcome) -> Outcome:
-            nonlocal descendant_utility_nodes
-            context: Dict[str, Outcome] = {p: parent_values[p.lower()] for p in parents}
-            eu = []
-            for d_idx in range(new.get_cardinality(d)):
-                context[d] = idx2name[d_idx]
-                eu.append(sum(new.expected_value(descendant_utility_nodes, context)))
-            return idx2name[np.argmax(eu)]
+            eu = {}
+            for d in domain:
+                parent_values[decision] = d
+                eu[d] = sum(copy.expected_value(descendant_utility_nodes, parent_values))
+            return max(eu, key=eu.get)  # type: ignore
 
-        self.add_cpds(FunctionCPD(d, opt_policy, domain=cpd.state_names[d], label="opt"))
+        self.add_cpds(FunctionCPD(decision, opt_policy, domain=domain, label="opt"))
 
-    def impute_conditional_expectation_decision(self, d: str, y: str) -> None:
-        """Imputes a policy for d = the expectation of y conditioning on d's parents"""
+    def impute_conditional_expectation_decision(self, decision: str, y: str) -> None:
+        """Imputes a policy for decision = the expectation of y conditioning on d's parents"""
         # TODO: Move to analyze, as this is not really a core feature?
-        parents: List[str] = self.get_parents(d)
-        new = self.copy()
+        copy = self.copy()
 
         @lru_cache(maxsize=1000)
         def cond_exp_policy(**pv: Outcome) -> float:
             if y.lower() in pv:
                 return pv[y.lower()]  # type: ignore
             else:
-                context = {p: pv[p.lower()] for p in parents}
-                return new.expected_value([y], context)[0]
+                return copy.expected_value([y], pv)[0]
 
-        self.add_cpds(FunctionCPD(d, cond_exp_policy, label="cond_exp({})".format(y)))
+        self.add_cpds(FunctionCPD(decision, cond_exp_policy, label="cond_exp({})".format(y)))
 
     # Wrapper around DAG.active_trail_nodes to accept arbitrary iterables for observed.
     # Really, DAG.active_trail_nodes should accept Sets, especially since it does
