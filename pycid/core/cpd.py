@@ -130,8 +130,7 @@ class StochasticFunctionCPD(TabularCPD):
     def parents_instantiated(self, cid: MACIDBase) -> bool:
         """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
         for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
-            if not (p_cpd and hasattr(p_cpd, "state_names")):
+            if not cid.get_domain(p):
                 return False
         return True
 
@@ -140,11 +139,9 @@ class StochasticFunctionCPD(TabularCPD):
         assert self.parents_instantiated(cid)
         parent_values_list = []
         for p in cid.get_parents(self.variable):
-            p_cpd = cid.get_cpds(p)
-            if p_cpd and hasattr(p_cpd, "state_names"):
-                parent_values_list.append(p_cpd.state_names[p])
+            parent_values_list.append(cid.get_domain(p))
 
-        for parent_values in itertools.product(*parent_values_list):
+        for parent_values in itertools.product(*parent_values_list):  # type: ignore
             yield {p.lower(): parent_values[i] for i, p in enumerate(cid.get_parents(self.variable))}
 
     def possible_values(self, cid: MACIDBase) -> List[Outcome]:
@@ -159,6 +156,7 @@ class StochasticFunctionCPD(TabularCPD):
 
         Requires that all parents in the CID have already been instantiated.
         """
+        self.check_function_arguments_match_parent_names(cid)
         if not self.parents_instantiated(cid):
             raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid

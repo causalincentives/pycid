@@ -28,18 +28,18 @@ import pycid
 
 # Specify the nodes and edges of a simple CID
 cid = pycid.CID([
-    ('S', 'D'),   # add nodes S and D, and a link S -> D
-    ('S', 'U'),   # add node U, and a link S -> U
-    ('D', 'U'),   # add a link D -> U
-    ],
-    decisions=['D'],   # D is a decision node
-    utilities=['U'])   # U is a utility node
+    ('S', 'D'),  # add nodes S and D, and a link S -> D
+    ('S', 'U'),  # add node U, and a link S -> U
+    ('D', 'U'),  # add a link D -> U
+],
+    decisions=['D'],  # D is a decision node
+    utilities=['U'])  # U is a utility node
 
 # specify the causal relationships
 cid.add_cpds(
-    pycid.UniformRandomCPD('S', [-1, 1]),     # S is -1 or 1 with equal probability
-    pycid.DecisionDomain('D', [-1, 1]),       # the permitted choices for D are -1 and 1
-    pycid.FunctionCPD('U', lambda s, d: s*d)  # U is the product of S and D (arguments lowercase the variable names)
+    pycid.UniformRandomCPD('S', [-1, 1]),  # S is -1 or 1 with equal probability
+    pycid.DecisionDomain('D', [-1, 1]),  # the permitted choices for D are -1 and 1
+    pycid.FunctionCPD('U', lambda s, d: s * d)  # U is the product of S and D (arguments lowercase the variable names)
 )
 
 # Draw the result

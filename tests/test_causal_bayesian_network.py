@@ -42,6 +42,15 @@ class TestRemoveAddEdge:
         assert cid.check_model()
 
 
+class TestRemoveNode:
+    @staticmethod
+    def remove_node(cbn_3node: CausalBayesianNetwork) -> None:
+        cbn_3node.remove_node("S")
+        cbn_3node.remove_cpds("D")
+        cbn_3node.remove_cpds("U")
+        assert cbn_3node.nodes == []
+
+
 class TestAssignCpd:
     @staticmethod
     def test_add_cpds(cbn_3node: CausalBayesianNetwork) -> None:
@@ -50,6 +59,14 @@ class TestAssignCpd:
         assert cbn.check_model()
         cpd = cbn.get_cpds("D").values
         assert np.array_equal(cpd, np.array([[1, 0], [0, 1]]))
+
+    @staticmethod
+    def test_remove_cpds(cbn_3node: CausalBayesianNetwork) -> None:
+        cbn_3node.remove_cpds("S")
+        assert "S" not in cbn_3node.model
+        assert cbn_3node.get_cpds("S") is None
+        cbn_3node.remove_cpds("D")
+        cbn_3node.remove_cpds("U")
 
 
 class TestQuery:

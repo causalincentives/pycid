@@ -5,6 +5,7 @@ import itertools
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import networkx as nx
+from pgmpy.factors.discrete import TabularCPD
 
 from pycid.core.cpd import DecisionDomain, FunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -71,9 +72,9 @@ class MACID(MACIDBase):
     def policy_profile_assignment(self, partial_policy: Iterable[FunctionCPD]) -> Dict:
         """Return a dictionary with the joint or partial policy profile assigned -
         ie a decision rule for each of the MACIM's decision nodes."""
-        new_macid = self.copy_without_cpds()
-        new_macid.add_cpds(*partial_policy)  # TODO: James, why does it add them to a new MACID? (Tom wonders)
-        return {d: new_macid.get_cpds(d) for d in new_macid.decisions}
+        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
+        pp.update({cpd.variable: cpd for cpd in partial_policy})
+        return pp
 
     def get_all_pure_spe(self) -> List[List[FunctionCPD]]:
         """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM
