@@ -127,26 +127,19 @@ class StochasticFunctionCPD(TabularCPD):
                 f" {args.symmetric_difference(lower_case_parents)}, "
             )
 
-    def parents_instantiated(self, cid: MACIDBase) -> bool:
-        """Checks that all parents have been instantiated, which is a pre-condition for instantiating self"""
-        for p in cid.get_parents(self.variable):
-            if not cid.get_domain(p):
-                return False
-        return True
-
     def parent_values(self, cid: MACIDBase) -> Iterator[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
-        assert self.parents_instantiated(cid)
         parent_values_list = []
         for p in cid.get_parents(self.variable):
-            parent_values_list.append(cid.get_domain(p))
-
-        for parent_values in itertools.product(*parent_values_list):  # type: ignore
+            try:
+                parent_values_list.append(cid.model.domain[p])
+            except KeyError:
+                raise ParentsNotReadyException(f"Parent {p} of {self.variable} not yet instantiated")
+        for parent_values in itertools.product(*parent_values_list):
             yield {p.lower(): parent_values[i] for i, p in enumerate(cid.get_parents(self.variable))}
 
     def possible_values(self, cid: MACIDBase) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
-        assert self.parents_instantiated(cid)
         return sorted(
             set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cid)])  # type: ignore
         )
@@ -157,8 +150,6 @@ class StochasticFunctionCPD(TabularCPD):
         Requires that all parents in the CID have already been instantiated.
         """
         self.check_function_arguments_match_parent_names(cid)
-        if not self.parents_instantiated(cid):
-            raise ParentsNotReadyException(f"Parents of {self.variable} are not yet instantiated.")
         self.cid = cid
         if self.force_domain:
             if not set(self.possible_values(cid)).issubset(self.force_domain):
@@ -202,9 +193,9 @@ class StochasticFunctionCPD(TabularCPD):
         )
 
     def __repr__(self) -> str:
-        if self.cid and self.parents_instantiated(self.cid):
-            dictionary: Dict[str, Union[Dict, Outcome]] = {}
-            for pv in self.parent_values(self.cid):
+        dictionary: Dict[str, Union[Dict, Outcome]] = {}
+        try:
+            for pv in self.parent_values(self.cid):  # type: ignore
                 probabilities = self.stochastic_function(**pv)
                 for outcome in probabilities:
                     if probabilities[outcome] == 1:
@@ -212,9 +203,9 @@ class StochasticFunctionCPD(TabularCPD):
                         break
                 else:
                     dictionary[str(pv)] = probabilities
-            mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
-        else:
-            mapping = ""
+        except ParentsNotReadyException:
+            pass
+        mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         return f"{type(self).__name__}<{self.variable}:{self.stochastic_function}> \n{mapping}"
 
     def __str__(self) -> str:
