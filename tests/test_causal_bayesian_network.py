@@ -6,15 +6,8 @@ import numpy as np
 import pytest
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-from pycid import CID, MACID, CausalBayesianNetwork, RandomCPD
-from pycid.examples.simple_cbns import get_3node_cbn, get_3node_uniform_cbn
-from pycid.examples.simple_cids import get_3node_cid, get_minimal_cid
-from pycid.examples.story_macids import taxi_competition
-
-
-@pytest.fixture
-def cid_3node() -> CID:
-    return get_3node_cid()
+from pycid import CausalBayesianNetwork, RandomCPD
+from pycid.examples.simple_cbns import get_3node_cbn, get_3node_uniform_cbn, get_fork_cbn, get_minimal_cbn
 
 
 @pytest.fixture
@@ -28,13 +21,13 @@ def cbn_3node_uniform() -> CausalBayesianNetwork:
 
 
 @pytest.fixture
-def cid_minimal() -> CID:
-    return get_minimal_cid()
+def cbn_minimal() -> CausalBayesianNetwork:
+    return get_minimal_cbn()
 
 
 @pytest.fixture
-def macid_taxi_comp() -> MACID:
-    return taxi_competition()
+def cbn_fork() -> CausalBayesianNetwork:
+    return get_fork_cbn()
 
 
 class TestRemoveAddEdge:
@@ -96,21 +89,19 @@ class TestQuery:
 
 class TestIntervention:
     @staticmethod
-    def test_cid_single_intervention(cid_minimal: CID) -> None:
-        cid = cid_minimal
-        cid.impute_random_policy()
-        assert cid.expected_value(["B"], {})[0] == 0.5
+    def test_cbn_single_intervention(cbn_minimal: CausalBayesianNetwork) -> None:
+        cbn = cbn_minimal
+        assert cbn.expected_value(["B"], {})[0] == 0.5
         for a in [0, 1]:
-            cid.intervene({"A": a})
-            assert cid.expected_value(["B"], {})[0] == a
-        assert cid.expected_value(["B"], {}, intervention={"A": 1})[0] == 1
+            cbn.intervene({"A": a})
+            assert cbn.expected_value(["B"], {})[0] == a
+        assert cbn.expected_value(["B"], {}, intervention={"A": 1})[0] == 1
 
     @staticmethod
-    def test_macid_double_intervention(macid_taxi_comp: MACID) -> None:
-        macid = macid_taxi_comp
-        macid.impute_fully_mixed_policy_profile()
-        assert macid.expected_value(["U1"], {}, intervention={"D1": "c", "D2": "e"})[0] == 3
-        assert macid.expected_value(["U2"], {}, intervention={"D1": "c", "D2": "e"})[0] == 5
+    def test_cbn_double_intervention(cbn_fork: CausalBayesianNetwork) -> None:
+        cbn = cbn_fork
+        assert cbn.expected_value(["C"], {}, intervention={"A": 1, "B": 3})[0] == 3
+        assert cbn.expected_value(["C"], {}, intervention={"A": 2, "B": 4})[0] == 8
 
 
 class TestCopyWithoutCpds:
