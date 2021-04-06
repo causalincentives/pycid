@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import logging
-from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
+import collections
+from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -20,6 +20,57 @@ class CausalBayesianNetwork(BayesianModel):
     between the Bayesian Network's variables.
     """
 
+    class Model(collections.UserDict):
+        """
+        This class keeps track of all CPDs and their domains in the form of a dictionary,
+        and makes sure that whenever a CPD is added or removed, it is also added/removed from
+        the BayesianModel list.
+        """
+
+        def __init__(self, cbn: CausalBayesianNetwork, *args: Any, **kwargs: Any) -> None:
+            super().__init__(*args, **kwargs)
+            self.cbn = cbn
+            self.domain: Dict[str, List[Outcome]] = {}
+
+        def __setitem__(self, variable: str, cpd: TabularCPD, sync_state_names: bool = True) -> None:
+
+            # Update the keys
+            if variable in self.keys():
+                self.__delitem__(variable)
+            super().__setitem__(variable, cpd)
+
+            # If the CPD can be initialized, try doing so. If it fails, do nothing
+            if isinstance(cpd, StochasticFunctionCPD):
+                try:
+                    cpd.initialize_tabular_cpd(self.cbn)
+                except ParentsNotReadyException:
+                    return
+
+            # add cpd to BayesianModel, and update domain dictionary
+            BayesianModel.add_cpds(self.cbn, cpd)
+            old_domain = self.domain.get(variable, None)
+            self.domain[variable] = cpd.state_names[variable]
+
+            # if the domain has changed, update all descendants, and sync the state_names
+            if not (old_domain and old_domain == self.domain[variable]):
+                for child in self.cbn.get_children(variable):
+                    if child in self.keys():
+                        self.__setitem__(child, self[child], sync_state_names=False)  # type: ignore
+                if sync_state_names:
+                    self.sync_state_names()
+
+        def __delitem__(self, variable: str) -> None:
+            super().__delitem__(variable)
+            try:
+                BayesianModel.remove_cpds(self.cbn, variable)
+            except ValueError:
+                pass
+
+        def sync_state_names(self) -> None:
+            """Inform each CPD about the domains of other variables"""
+            for cpd in self.cbn.get_cpds():
+                cpd.store_state_names(None, None, self.domain)
+
     def __init__(self, edges: Iterable[Tuple[str, str]]):
         """Initialize a Causal Bayesian Network
 
@@ -27,77 +78,48 @@ class CausalBayesianNetwork(BayesianModel):
         ----------
         edges: A set of directed edges. Each is a pair of node labels (tail, head).
         """
+        self.model = self.Model(self)
         super().__init__(ebunch=edges)
 
-        self._cpds_to_add: Dict[str, TabularCPD] = {}
+        self._lowercase_to_variable: Dict[str, str] = {}
+        for node in self.nodes:
+            if node.lower() in self._lowercase_to_variable:
+                raise ValueError(
+                    f'Name conflict: Both "{node}" and "{self._lowercase_to_variable[node.lower()]}" '
+                    f'have the same lowercase "{node.lower()}".'
+                )
+            self._lowercase_to_variable[node.lower()] = node
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
-        # remove_edge can be called before cpds have been defined
-        if hasattr(self, "cpds"):
-            cpd = self.get_cpds(v)
-            if isinstance(cpd, UniformRandomCPD):
-                self.add_cpds(cpd)
+        if v in self.model and isinstance(self.model[v], UniformRandomCPD):
+            self.model[v] = self.model[v]
 
     def add_edge(self, u: str, v: str) -> None:
         super().add_edge(u, v)
-        # add_edge can be called before cpds have been defined
-        if hasattr(self, "cpds"):
-            cpd = self.get_cpds(v)
-            if isinstance(cpd, UniformRandomCPD):
-                self.add_cpds(cpd)
+        if v in self.model and isinstance(self.model[v], UniformRandomCPD):
+            self.model[v] = self.model[v]
 
     def add_cpds(self, *cpds: TabularCPD) -> None:
         """
-        Add the given CPDs and initialize FunctionCPDs, UniformRandomCPDs etc
+        Add the given CPDs and initialize StochasticFunctionCPDs
         """
-
-        # Add each cpd to self._cpds_to_add after doing some checks
         for cpd in cpds:
-            # assert cpd.variable in self.nodes
-            assert isinstance(cpd, TabularCPD)
-            if isinstance(cpd, StochasticFunctionCPD):
-                cpd.check_function_arguments_match_parent_names(self)
-            self._cpds_to_add[cpd.variable] = cpd
+            self.model.__setitem__(cpd.variable, cpd, sync_state_names=False)  # type: ignore
+        self.model.sync_state_names()
 
-        # Initialize CPDs in topological order. Call super().add_cpds if initialized
-        # successfully. Otherwise leave in self._cpds_to_add.
-        for var in nx.topological_sort(self):
-            if var in self._cpds_to_add:
-                cpd_to_add = self._cpds_to_add[var]
-                if hasattr(cpd_to_add, "initialize_tabular_cpd"):
-                    try:
-                        cpd_to_add.initialize_tabular_cpd(self)
-                    except ParentsNotReadyException:
-                        pass
-                if hasattr(cpd_to_add, "values"):  # cpd_to_add has been initialized
-                    # if the domains have changed, remember to update all descendants:
-                    previous_cpd = self.get_cpds(var)
-                    if (
-                        previous_cpd
-                        and hasattr(previous_cpd, "domain")
-                        and previous_cpd.state_names[var] != cpd_to_add.state_names[var]
-                    ):
-                        for descendant in nx.descendants(self, var):
-                            if descendant not in self._cpds_to_add and self.get_cpds(descendant):
-                                self._cpds_to_add[descendant] = self.get_cpds(descendant)
+    def remove_cpds(self, *cpds: Union[str, TabularCPD]) -> None:
+        for cpd in cpds:
+            del self.model[cpd.variable if isinstance(cpd, TabularCPD) else cpd]
 
-                    # add cpd to BayesianModel, and remove it from _cpds_to_add
-                    #
-                    # pgmpy produces warnings when overwriting an existing CPD
-                    # It writes warnings directly to the 'root' context so
-                    # to suppress those we disable warnings for all loggers
-                    logging.disable(logging.WARN)
-                    super().add_cpds(cpd_to_add)
-                    logging.disable(logging.NOTSET)  # Unset
-                    del self._cpds_to_add[var]
-
-        # Sync state_names, trusting that each CPD has up-to-date knowledge about itself
-        state_names = {}
-        for cpd in self.get_cpds():
-            state_names[cpd.variable] = cpd.state_names[cpd.variable]
-        for cpd in self.get_cpds():
-            cpd.store_state_names(None, None, state_names)
+    def _fix_lowercase_variables(self, outcome_dict: Dict[str, Outcome]) -> None:
+        """
+        Outcomes are sometimes specified in terms of lowercase versions of variable names.
+        They need to be converted, before passed to factor.query
+        """
+        for var in set(outcome_dict).intersection(self._lowercase_to_variable):
+            outcome_dict[self._lowercase_to_variable[var]] = outcome_dict[var]
+            del outcome_dict[var]
 
     def query(
         self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
@@ -115,15 +137,13 @@ class CausalBayesianNetwork(BayesianModel):
 
         intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
+        self._fix_lowercase_variables(context)
 
         for variable, outcome in context.items():
-            if outcome not in self.get_cpds(variable).state_names[variable]:
+            if outcome not in self.model.domain[variable]:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
-        if intervention is None:
-            intervention = {}
-
-        # First, apply the intervention (if any)
+        # Apply the intervention (if any)
         if intervention:
             cbn = self.copy()
             cbn.intervene(intervention)
@@ -157,13 +177,12 @@ class CausalBayesianNetwork(BayesianModel):
         ----------
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
+        self._fix_lowercase_variables(intervention)
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
             self.add_cpds(
-                FunctionCPD(
-                    variable, lambda: intervention[variable], domain=self.get_cpds(variable).state_names[variable]
-                )
+                FunctionCPD(variable, lambda: intervention[variable], domain=self.model.domain.get(variable, None))
             )
 
     def expected_value(
