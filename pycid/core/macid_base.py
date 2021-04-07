@@ -248,7 +248,7 @@ class MACIDBase(CausalBayesianNetwork):
         """
         Finds whether a (MA)CID has sufficient recall.
 
-        Agent i in the MAID has sufficient recall if the relevance graph
+        Agent i in the (MA)CID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
 
         If an agent is specified, sufficient recall is checked only for that agent.
