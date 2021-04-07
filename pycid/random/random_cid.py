@@ -76,9 +76,9 @@ def random_cid(
 def random_macidbase(
     number_of_nodes: int = 8,
     number_of_agents: int = 2,
-    max_decision_nodes_for_agent: int = 1,
-    max_utility_nodes_for_agent: int = 1,
-    max_resampling_attempts: int = 100,
+    max_decisions_for_agent: int = 1,
+    max_utilities_for_agent: int = 1,
+    max_resampling_attempts: int = 1000,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
     add_cpds: bool = True,
@@ -94,12 +94,12 @@ def random_macidbase(
         dag = random_dag(number_of_nodes=number_of_nodes, edge_density=edge_density, max_in_degree=max_in_degree)
 
         barren_nodes = [node for node in dag.nodes if not list(dag.successors(node))]
-        if max_utility_nodes_for_agent * number_of_agents > len(barren_nodes):
+        if max_utilities_for_agent * number_of_agents > len(barren_nodes):
             # there are not enough barren_nodes: resample a new random DAG.
             continue
 
         agent_utilities, util_nodes_name_change = _create_random_utility_nodes(
-            number_of_agents, max_decision_nodes_for_agent, barren_nodes
+            number_of_agents, max_utilities_for_agent, barren_nodes
         )
         dag = nx.relabel_nodes(dag, util_nodes_name_change)
 
@@ -116,11 +116,9 @@ def random_macidbase(
                 - used_nodes
             )
             if not possible_dec_nodes:
-                # there are no possible decision nodes for this agent: resample a new random DAG.
+                # this agent has no possible decision nodes: resample a new random DAG.
                 break
-            sample_dec_nodes = random.sample(
-                possible_dec_nodes, min(len(possible_dec_nodes), max_decision_nodes_for_agent)
-            )
+            sample_dec_nodes = random.sample(possible_dec_nodes, min(len(possible_dec_nodes), max_decisions_for_agent))
             used_nodes.update(sample_dec_nodes)
 
             agent_dec_name_change = {
@@ -200,13 +198,13 @@ def _add_random_cpds(mb: MACIDBase) -> None:
 
 
 def _create_random_utility_nodes(
-    number_of_agents: int, max_utility_nodes_for_agent: int, barren_nodes: List[str]
+    number_of_agents: int, max_utilities_for_agent: int, barren_nodes: List[str]
 ) -> Tuple[Mapping[AgentLabel, Iterable[str]], Dict[str, str]]:
     """
     Create random utility nodes for each agent based on the barren nodes available, a fixed number of agents,
     and a maximum number of utility nodes for each agent.
     """
-    sample_util_nodes = random.sample(barren_nodes, max_utility_nodes_for_agent * number_of_agents)
+    sample_util_nodes = random.sample(barren_nodes, max_utilities_for_agent * number_of_agents)
     sample_util_nodes_partition = np.array_split(sample_util_nodes, number_of_agents)
 
     agent_utilities: Mapping[AgentLabel, Iterable[str]] = {}

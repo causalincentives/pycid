@@ -4,13 +4,24 @@ import networkx as nx
 import pytest
 
 from pycid import CausalBayesianNetwork, FunctionCPD, RandomCPD
-from pycid.random.random_cid import random_cid, random_cids
+from pycid.random.random_cid import random_cid, random_cids, random_macidbase
 from pycid.random.random_dag import random_dag
 
 
-@pytest.mark.parametrize("n_all,n_decisions,n_utilities", [(4, 1, 1), (8, 2, 2), (12, 3, 3)])
-def test_random_cid_create(n_all: int, n_decisions: int, n_utilities: int) -> None:
-    random_cid(n_all, n_decisions, n_utilities).check_model()
+@pytest.mark.parametrize("number_of_nodes,number_of_decisions,number_of_utilities", [(4, 1, 1), (8, 2, 2), (12, 3, 3)])
+def test_random_cid_create(number_of_nodes: int, number_of_decisions: int, number_of_utilities: int) -> None:
+    random_cid(number_of_nodes, number_of_decisions, number_of_utilities).check_model()
+
+
+@pytest.mark.parametrize(
+    "number_of_nodes,number_of_agents,max_decisions_for_agent,max_utilities_for_agent",
+    [(10, 2, 1, 1), (14, 3, 1, 2), (18, 3, 2, 2)],
+)
+def test_random_macidbase(
+    number_of_nodes: int, number_of_agents: int, max_decisions_for_agent: int, max_utilities_for_agent: int
+) -> None:
+    macid = random_macidbase(number_of_nodes, number_of_agents, max_decisions_for_agent, max_utilities_for_agent)
+    macid.check_model()
 
 
 def test_random_cids_create_one() -> None:
