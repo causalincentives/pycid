@@ -97,7 +97,7 @@ class MACIDBase(CausalBayesianNetwork):
         self.decision_agent[node] = agent
         cpd = self.get_cpds(node)
         if cpd and not isinstance(cpd, DecisionDomain):
-            self.add_cpds(DecisionDomain(node, cpd.state_names[node]))
+            self.add_cpds(DecisionDomain(node, cpd.domain))
 
     def make_utility(self, node: str, agent: AgentLabel = 0) -> None:
         """"Turn a chance or utility node into a decision node."""
@@ -148,7 +148,7 @@ class MACIDBase(CausalBayesianNetwork):
 
         self._fix_lowercase_variables(context)
         for variable, outcome in context.items():
-            if outcome not in self.get_cpds(variable).state_names[variable]:
+            if outcome not in self.get_cpds(variable).domain:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
 
         intervention = intervention or {}
@@ -270,7 +270,7 @@ class MACIDBase(CausalBayesianNetwork):
     def pure_decision_rules(self, decision: str) -> Iterator[FunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
-        domain = self.get_cpds(decision).state_names[decision]
+        domain = self.get_cpds(decision).domain
         parents = self.get_parents(decision)
         parent_cardinalities = [self.get_cardinality(parent) for parent in parents]
 
@@ -340,7 +340,7 @@ class MACIDBase(CausalBayesianNetwork):
 
     def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
         """
-        Return a list of all optimal decision rules for a given decision
+        Return a list of all optimal pure decision rules for a given decision
         """
         return [policy[0] for policy in self.optimal_pure_policies([decision])]
 
@@ -348,7 +348,7 @@ class MACIDBase(CausalBayesianNetwork):
         """Impute a random policy to the given decision node"""
         current_cpd = self.get_cpds(d)
         if current_cpd:
-            sn = current_cpd.state_names[d]
+            sn = current_cpd.domain
         else:
             raise ValueError(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         self.add_cpds(UniformRandomCPD(d, sn))
@@ -373,7 +373,7 @@ class MACIDBase(CausalBayesianNetwork):
         """Impute an optimal policy to the given decision node"""
         # self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
         self.impute_random_decision(decision)
-        domain = self.get_cpds(decision).state_names[decision]
+        domain = self.get_cpds(decision).domain
         utility_nodes = self.agent_utilities[self.decision_agent[decision]]
         descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
         copy = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions

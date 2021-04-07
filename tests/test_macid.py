@@ -44,7 +44,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(joint_policy_assignment["D1"])
         self.assertTrue(joint_policy_assignment["D2"])
         d1_cpd = joint_policy_assignment["D1"]
-        self.assertEqual(d1_cpd.state_names["D1"], ["e", "c"])
+        self.assertEqual(d1_cpd.domain, ["e", "c"])
         # print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
