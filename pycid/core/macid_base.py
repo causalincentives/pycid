@@ -246,7 +246,7 @@ class MACIDBase(CausalBayesianNetwork):
 
     def sufficient_recall(self, agent: Optional[AgentLabel] = None) -> bool:
         """
-        Finds whether a (MA)CID has sufficient recall.
+        Returns true if the agent has sufficient recall in the (MA)CID.
 
         Agent i in the (MA)CID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
