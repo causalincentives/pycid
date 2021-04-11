@@ -5,10 +5,12 @@ from typing import Dict, Iterable, List, Mapping, Set, Tuple
 
 import networkx as nx
 import numpy as np
+from pgmpy.base.DAG import DAG
 
 from pycid.core.cid import CID
 from pycid.core.cpd import DecisionDomain
 from pycid.core.get_paths import find_active_path, get_motif
+from pycid.core.macid import MACID
 from pycid.core.macid_base import AgentLabel, MACIDBase, MechanismGraph
 from pycid.random.random_cpd import RandomCPD
 from pycid.random.random_dag import random_dag
@@ -18,59 +20,74 @@ def random_cid(
     number_of_nodes: int = 8,
     number_of_decisions: int = 1,
     number_of_utilities: int = 1,
+    add_cpds: bool = True,
+    sufficient_recall: bool = False,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
     max_resampling_attempts: int = 100,
-    add_cpds: bool = True,
-    sufficient_recall: bool = False,
 ) -> CID:
     """
-    Generate a random CID with the specified number of nodes, decisions utilities.
+    Generate a random CID with the specified number of nodes, decisions, and utilities.
     """
+    mb = random_macidbase(
+        number_of_nodes=number_of_nodes,
+        number_of_agents=1,
+        max_decisions_for_agent=number_of_decisions,
+        max_utilities_for_agent=number_of_utilities,
+        add_cpds=False,
+        sufficient_recall=sufficient_recall,
+        edge_density=edge_density,
+        max_in_degree=max_in_degree,
+        max_resampling_attempts=max_resampling_attempts,
+    )
 
-    for _ in range(max_resampling_attempts):
+    dag = DAG(mb.edges)
+    decision_nodes = mb.decisions
+    utility_nodes = mb.utilities
 
-        dag = random_dag(number_of_nodes=number_of_nodes, edge_density=edge_density, max_in_degree=max_in_degree)
+    # change the naming style of decision and utility nodes
+    dec_name_change = {old_dec_name: "D" + str(i) for i, old_dec_name in enumerate(decision_nodes)}
+    util_name_change = {old_util_name: "U" + str(i) for i, old_util_name in enumerate(utility_nodes)}
+    node_name_change_map = {**dec_name_change, **util_name_change}
+    dag = nx.relabel_nodes(dag, node_name_change_map)
 
-        barren_nodes = [node for node in dag.nodes if not list(dag.successors(node))]
-        if number_of_utilities > len(barren_nodes):
-            # there are not enough barren_nodes: resample a new random DAG.
-            continue
-        util_nodes = random.sample(barren_nodes, number_of_utilities)
+    cid = CID(dag.edges, decisions=list(dec_name_change.values()), utilities=list(util_name_change.values()))
 
-        # a decision node must be an ancestor of a utility node
-        ancestors = set()  # type: Set[str]
-        possible_dec_nodes = ancestors.union(*[set(dag._get_ancestors_of(node)) for node in util_nodes]) - set(
-            util_nodes
-        )
+    if add_cpds:
+        _add_random_cpds(cid)
 
-        if number_of_decisions > len(possible_dec_nodes):
-            # there are not enough possible decision nodes: resample a new random DAG
-            continue
-        dec_nodes = random.sample(possible_dec_nodes, number_of_decisions)
+    return cid
 
-        dec_name_change = {old_dec_name: "D" + str(i) for i, old_dec_name in enumerate(dec_nodes)}
-        decision_nodes = list(dec_name_change.values())
-        util_name_change = {old_util_name: "U" + str(i) for i, old_util_name in enumerate(util_nodes)}
-        utility_nodes = list(util_name_change.values())
-        node_name_change_map = {**dec_name_change, **util_name_change}
-        dag = nx.relabel_nodes(dag, node_name_change_map)
 
-        cid = CID(dag.edges, decisions=decision_nodes, utilities=utility_nodes)
+def random_macid(
+    number_of_nodes: int = 10,
+    number_of_agents: int = 2,
+    max_decisions_for_agent: int = 1,
+    max_utilities_for_agent: int = 1,
+    add_cpds: bool = True,
+    sufficient_recall: bool = False,
+    edge_density: float = 0.4,
+    max_in_degree: int = 4,
+    max_resampling_attempts: int = 1000,
+) -> MACID:
 
-        if sufficient_recall:
-            add_sufficient_recalls(cid)
-            if not _check_max_in_degree(cid, max_in_degree):
-                # adding edges to meet sufficient recall requirement violates max_in_degree: resample a new random DAG
-                continue
-        if add_cpds:
-            _add_random_cpds(cid)
+    mb = random_macidbase(
+        number_of_nodes=number_of_nodes,
+        number_of_agents=number_of_agents,
+        max_decisions_for_agent=max_decisions_for_agent,
+        max_utilities_for_agent=max_utilities_for_agent,
+        add_cpds=False,
+        sufficient_recall=sufficient_recall,
+        edge_density=edge_density,
+        max_in_degree=max_in_degree,
+        max_resampling_attempts=max_resampling_attempts,
+    )
+    macid = MACID(mb.edges, agent_decisions=mb.agent_decisions, agent_utilities=mb.agent_utilities)
 
-        return cid  # random CID has satisfied all of the requirements.
-    else:
-        raise ValueError(
-            f"Could not create a CID that satisfied all constraints in {max_resampling_attempts} sampling attempts"
-        )
+    if add_cpds:
+        _add_random_cpds(macid)
+
+    return macid
 
 
 def random_macidbase(
@@ -78,17 +95,16 @@ def random_macidbase(
     number_of_agents: int = 2,
     max_decisions_for_agent: int = 1,
     max_utilities_for_agent: int = 1,
-    max_resampling_attempts: int = 1000,
+    add_cpds: bool = False,
+    sufficient_recall: bool = False,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
-    add_cpds: bool = True,
-    sufficient_recall: bool = False,
+    max_resampling_attempts: int = 1000,
 ) -> MACIDBase:
     """
     Generate a random MACIDBAse with the specified number of nodes, number of agents, and a maximum number of decision
     and utility nodes for each agent.
     """
-
     for _ in range(max_resampling_attempts):
 
         dag = random_dag(number_of_nodes=number_of_nodes, edge_density=edge_density, max_in_degree=max_in_degree)
@@ -118,17 +134,32 @@ def random_macidbase(
             if not possible_dec_nodes:
                 # this agent has no possible decision nodes: resample a new random DAG.
                 break
-            sample_dec_nodes = random.sample(possible_dec_nodes, min(len(possible_dec_nodes), max_decisions_for_agent))
-            used_nodes.update(sample_dec_nodes)
 
-            agent_dec_name_change = {
+            # in the single-agent CID setting, we want the number of decisions to be equal to what we we specified:
+            if number_of_agents == 1:
+                number_of_decisions = max_decisions_for_agent
+                if number_of_decisions > len(possible_dec_nodes):
+                    # there are not enough possible decision nodes: resample a new random DAG
+                    break
+                sample_dec_nodes = random.sample(possible_dec_nodes, number_of_decisions)
+
+            # in the multi-agent CID setting, the number of decisions for each agent can vary, but should never be
+            # more than the max_decisions_for_agent we specified.
+            else:
+                sample_dec_nodes = random.sample(
+                    possible_dec_nodes, min(len(possible_dec_nodes), max_decisions_for_agent)
+                )
+                used_nodes.update(sample_dec_nodes)
+
+            dec_name_change = {
                 old_dec_name: "D^" + str(agent) + "_" + str(i) for i, old_dec_name in enumerate(sample_dec_nodes)
             }
-            agent_decisions[agent] = list(agent_dec_name_change.values())  # type: ignore
-            all_dec_name_change.update(agent_dec_name_change)
+            agent_decisions[agent] = list(dec_name_change.values())  # type: ignore
+            all_dec_name_change.update(dec_name_change)
 
         else:
             dag = nx.relabel_nodes(dag, all_dec_name_change)
+
             mb = MACIDBase(dag.edges, agent_decisions=agent_decisions, agent_utilities=agent_utilities)
 
             if sufficient_recall:
@@ -153,13 +184,12 @@ def random_cids(
     n_all_range: Tuple[int, int] = (10, 15),
     nd_range: Tuple[int, int] = (2, 4),
     nu_range: Tuple[int, int] = (2, 4),
+    add_cpds: bool = True,
+    sufficient_recall: bool = True,
     edge_density: float = 0.4,
     n_cids: int = 10,
-    sufficient_recall: bool = True,
 ) -> List[CID]:
-    """generates a bunch of CIDs with sufficient recall
-    if add_sr_edges=True, then sufficient recall is ensured by adding edges
-    otherwise it is ensured by resampling graphs"""
+    """Generates a number of CIDs with sufficient recall"""
     cids: List[CID] = []
 
     while len(cids) < n_cids:
@@ -167,7 +197,14 @@ def random_cids(
         n_decisions = random.randint(*nd_range)
         n_utilities = random.randint(*nu_range)
 
-        cid = random_cid(n_all, n_decisions, n_utilities, edge_density, sufficient_recall=sufficient_recall)
+        cid = random_cid(
+            number_of_nodes=n_all,
+            number_of_decisions=n_decisions,
+            number_of_utilities=n_utilities,
+            add_cpds=add_cpds,
+            sufficient_recall=sufficient_recall,
+            edge_density=edge_density,
+        )
 
         if cid.sufficient_recall():
             cids.append(cid)
@@ -220,7 +257,7 @@ def _create_random_utility_nodes(
 
 
 def _add_sufficient_recall(cid: CID, d1: str, d2: str, utility_node: str) -> None:
-    """Add edges to a cid until `d2` has sufficient recall of `d1` (to optimize utility)
+    """Add edges to a (MA)CID until `d2` has sufficient recall of `d1` (to optimize utility)
 
     `d2' has sufficient recall of `d1' if d2 does not strategically rely on d1. This means
     that d1 is not s-reachable from d2.
@@ -247,7 +284,7 @@ def _add_sufficient_recall(cid: CID, d1: str, d2: str, utility_node: str) -> Non
 
 
 def add_sufficient_recalls(mb: MACIDBase) -> None:
-    """add edges to a macid until all agents have sufficient recall of all previous decisions"""
+    """add edges to a macid until all agents have sufficient recall of all of their previous decisions"""
     agents = mb.agents
     for agent in agents:
         decisions = mb.agent_decisions[agent]

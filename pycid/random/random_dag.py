@@ -20,7 +20,7 @@ def add_random_edge(dag: DAG, node_order: List[str], max_in_degree: int = 4) -> 
 def random_dag(number_of_nodes: int = 5, edge_density: float = 0.4, max_in_degree: int = 4) -> DAG:
     """Create a connected, random directed acyclic graph (DAG), with the given number of nodes,
     the given edge density, and with no node exceeding having too high in degree"""
-    node_names = [f"S{i}" for i in range(number_of_nodes)]
+    node_names = [f"X{i}" for i in range(number_of_nodes)]
     dag = DAG()
 
     # First make sure the dag is connected
