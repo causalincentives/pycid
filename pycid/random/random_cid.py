@@ -27,7 +27,35 @@ def random_cid(
     max_resampling_attempts: int = 100,
 ) -> CID:
     """
-    Generate a random CID with the specified number of nodes, decisions, and utilities.
+    Generate a random CID.
+
+    Parameters:
+    -----------
+    number_of nodes: The total number of nodes in the CID.
+
+    number_of_decisions: The number of decisions in the CID.
+
+    number_of_utilities: The number of utilities in the CID.
+
+    add_cpds: True if we should pararemeterise the CID as a model.
+    This adds [0,1] domains to every decision node and RandomCPDs to every utility and chance node in the CID.
+
+    sufficient_recall: True the agent should have sufficient recall of all of its previous decisions.
+    An Agent has sufficient recall in a CID if the relevance graph is acyclic.
+
+    edge_density: The density of edges in the CID's DAG as a proportion of the maximum possible number of nodes
+    in the DAG - n*(n-1)/2
+
+    max_in_degree: The maximal number of edges incident to a node in the CID's DAG.
+
+    max_resampling_attempts: The maxmimum number of resampling of random DAGs attempts in order to try
+    to satisfy all constraints.
+
+    Returns
+    -------
+    A CID that satisfies the given constraints or a ValueError if it was unable to meet the constraints in the
+    specified number of attempts.
+
     """
     mb = random_macidbase(
         number_of_nodes=number_of_nodes,
@@ -70,6 +98,42 @@ def random_macid(
     max_in_degree: int = 4,
     max_resampling_attempts: int = 1000,
 ) -> MACID:
+    """
+    Generate a random MACID.
+
+    Parameters:
+    -----------
+    number_of nodes: The total number of nodes in the MACID.
+
+    number_of_agents: The number of agents in the MACID.
+
+    max_decisions_for_agent: The maximum number of decisions for each agent.
+    In general, the number of decisions for an agent is between 1 and max_decisions_for_agent.
+
+    max_utilities_for_agent: The maximum number of utilities for each agent.
+    In general, the number of utilities for an agent is between 1 and max_utilities_for_agent.
+
+    add_cpds: True if we should pararemeterise the MACID as a model.
+    This adds [0,1] domains to every decision node and RandomCPDs to every utility and chance node in the MACID.
+
+    sufficient_recall: True if all of the agents should have sufficient recall of all of their previous
+    decisions. Agent i has sufficient recall in a MACID if the relevance graph restricted to
+    just agent i's decision nodes is acyclic.
+
+    edge_density: The density of edges in the MACID's DAG as a proportion of the maximum possible number
+     of nodes in the DAG - n*(n-1)/2
+
+    max_in_degree: The maximal number of edges incident to a node in the MACID's DAG.
+
+    max_resampling_attempts: The maxmimum number of resampling of random DAGs attempts in order to try to
+     satisfy all constraints.
+
+    Returns
+    -------
+    A MACID that satisfies the given constraints or a ValueError if it was unable to meet the constraints in the
+     specified number of attempts.
+
+    """
 
     mb = random_macidbase(
         number_of_nodes=number_of_nodes,
@@ -102,8 +166,13 @@ def random_macidbase(
     max_resampling_attempts: int = 1000,
 ) -> MACIDBase:
     """
-    Generate a random MACIDBAse with the specified number of nodes, number of agents, and a maximum number of decision
-    and utility nodes for each agent.
+    Generate a random MACIDBase
+
+    Returns
+    -------
+    A MACIDBase that satisfies the given constraints or a ValueError if it was unable to meet
+     the constraints in the specified number of attempts.
+
     """
     for _ in range(max_resampling_attempts):
 
