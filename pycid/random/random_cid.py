@@ -325,8 +325,10 @@ def _create_random_utility_nodes(
     return agent_utilities, all_util_name_change
 
 
-def _add_sufficient_recall(cid: CID, d1: str, d2: str, utility_node: str) -> None:
-    """Add edges to a (MA)CID until `d2` has sufficient recall of `d1` (to optimize utility)
+def _add_sufficient_recall(mb: MACIDBase, d1: str, d2: str, utility_node: str) -> None:
+    """Add edges to a (MA)CID until an agent at `d2` has sufficient recall of `d1` to optimise utility_node.
+
+    d1, d2 and utility node all belong to the same agent.
 
     `d2' has sufficient recall of `d1' if d2 does not strategically rely on d1. This means
     that d1 is not s-reachable from d2.
@@ -335,10 +337,10 @@ def _add_sufficient_recall(cid: CID, d1: str, d2: str, utility_node: str) -> Non
     somue utilty node descended from d2 until recall is sufficient.
     """
 
-    if d2 in cid._get_ancestors_of(d1):
+    if d2 in mb._get_ancestors_of(d1):
         raise ValueError("{} is an ancestor of {}".format(d2, d1))
 
-    mg = MechanismGraph(cid)
+    mg = MechanismGraph(mb)
     while mg.is_active_trail(d1 + "mec", utility_node, observed=mg.get_parents(d2) + [d2]):
         path = find_active_path(mg, d1 + "mec", utility_node, {d2, *mg.get_parents(d2)})
         if path is None:
@@ -347,7 +349,7 @@ def _add_sufficient_recall(cid: CID, d1: str, d2: str, utility_node: str) -> Non
             idx = random.randrange(1, len(path) - 1)
             if get_motif(mg, path, idx) != "collider":
                 if d2 not in mg._get_ancestors_of(path[idx]):  # to prevent cycles
-                    cid.add_edge(path[idx], d2)
+                    mb.add_edge(path[idx], d2)
                     mg.add_edge(path[idx], d2)
                     break
 
