@@ -36,7 +36,7 @@ def test_random_macidbase(
 
 @pytest.mark.parametrize(
     "number_of_nodes,number_of_agents,max_decisions_for_agent,max_utilities_for_agent",
-    [(10, 2, 1, 1), (14, 3, 1, 2), (18, 3, 2, 2)],
+    [(10, 2, 1, 1), (14, 2, 1, 2), (18, 3, 2, 2)],
 )
 def test_random_macid(
     number_of_nodes: int,
