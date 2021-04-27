@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from pycid import CID, CausalBayesianNetwork, UniformRandomCPD
+from pycid import CID, CausalBayesianNetwork
 from pycid.analyze.effects import introduced_total_effect, total_effect
 from pycid.analyze.instrumental_control_incentive import admits_ici, admits_ici_list
 from pycid.analyze.requisite_graph import requisite, requisite_graph
@@ -19,7 +19,7 @@ from pycid.analyze.value_of_control import (
     quantitative_voc,
 )
 from pycid.analyze.value_of_information import admits_voi, admits_voi_list, quantitative_voi
-from pycid.core.cpd import FunctionCPD
+from pycid.core.cpd import discrete_uniform
 from pycid.core.macid import MACID
 from pycid.examples.simple_cids import get_3node_cid, get_minimal_cid, get_quantitative_voi_cid, get_trim_example_cid
 from pycid.examples.story_cids import (
@@ -178,7 +178,7 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_x_nodep_z(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where X doesn't depend on Z
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("X", lambda a, z: a))  # type: ignore
+        cid.add_cpds(X=lambda a, z: a)  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
 
@@ -186,7 +186,7 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_y_nodep_z(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where Y doesn't depend on Z
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: x))  # type: ignore
+        cid.add_cpds(Y=lambda x, z: x)  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(0)
 
@@ -194,19 +194,15 @@ class TestIntroducedTotalEffect:
     def test_introduced_bias_y_nodep_x(imputed_cid_introduced_bias: CID) -> None:
         # Modified model where Y doesn't depend on X
         cid = imputed_cid_introduced_bias
-        cid.add_cpds(FunctionCPD("Y", lambda x, z: z))  # type: ignore
+        cid.add_cpds(Y=lambda x, z: z)  # type: ignore
         cid.impute_conditional_expectation_decision("D", "Y")
         assert introduced_total_effect(cid, "A", "D", "Y", 0, 1) == pytest.approx(1 / 3)
 
     def test_introduced_bias_reversed_sign(self) -> None:
         cbn = CausalBayesianNetwork([("A", "D"), ("A", "Y")])
-        cbn.add_cpds(
-            UniformRandomCPD("A", [0, 1]),
-            FunctionCPD("D", lambda a: 0),
-            FunctionCPD("Y", lambda a: a),
-        )
+        cbn.add_cpds(A=discrete_uniform([0, 1]), D=lambda a: 0, Y=lambda a: a)
         assert introduced_total_effect(cbn, "A", "D", "Y") == pytest.approx(-1)
-        cbn.add_cpds(FunctionCPD("Y", lambda a: -a))
+        cbn.add_cpds(Y=lambda a: -a)
         assert introduced_total_effect(cbn, "A", "D", "Y", adapt_marginalized=True) == pytest.approx(-1)
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD, StochasticFunctionCPD
+from pycid.core.cpd import noisy_copy
 from pycid.core.macid import MACID
 
 
@@ -34,10 +34,10 @@ def prisoners_dilemma() -> MACID:
     agent2_payoff = np.transpose(agent1_payoff)
 
     macid.add_cpds(
-        DecisionDomain("D1", d1_domain),
-        DecisionDomain("D2", d2_domain),
-        FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)]),  # type: ignore
-        FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)]),  # type: ignore
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
@@ -72,14 +72,10 @@ def battle_of_the_sexes() -> MACID:
     agent_m_payoff = np.array([[2, 0], [0, 3]])
 
     macid.add_cpds(
-        DecisionDomain("D_F", d_f_domain),
-        DecisionDomain("D_M", d_m_domain),
-        FunctionCPD(
-            "U_F", lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)]  # type: ignore
-        ),
-        FunctionCPD(
-            "U_M", lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)]  # type: ignore
-        ),
+        D_F=d_f_domain,
+        D_M=d_m_domain,
+        U_F=lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
+        U_M=lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
     )
     return macid
 
@@ -114,10 +110,10 @@ def matching_pennies() -> MACID:
     agent2_payoff = np.array([[-1, 1], [1, -1]])
 
     macid.add_cpds(
-        DecisionDomain("D1", d1_domain),
-        DecisionDomain("D2", d2_domain),
-        FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)]),  # type: ignore
-        FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)]),  # type: ignore
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
@@ -147,7 +143,7 @@ def taxi_competition() -> MACID:
         | cheap    |     3    |   1      |
         +----------+----------+----------+
 
-    There are 3 pure startegy NE and 1 pure SPE.
+    There are 3 pure strategy NE and 1 pure SPE.
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
@@ -158,13 +154,13 @@ def taxi_competition() -> MACID:
     d1_domain = ["e", "c"]
     d2_domain = ["e", "c"]
     agent1_payoff = np.array([[2, 3], [5, 1]])
-    agent2_payoff = np.array([[2, 5], [3, 1]])
+    agent2_payoff = agent1_payoff.T
 
     macid.add_cpds(
-        DecisionDomain("D1", d1_domain),
-        DecisionDomain("D2", d2_domain),
-        FunctionCPD("U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)]),  # type: ignore
-        FunctionCPD("U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)]),  # type: ignore
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
@@ -208,10 +204,10 @@ def modified_taxi_competition() -> MACID:
     agent2_payoff = np.array([[2, 5], [3, 5]])
 
     macid.add_cpds(
-        DecisionDomain("D1", d1_domain),
-        DecisionDomain("D2", d2_domain),
-        FunctionCPD("U1", lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)]),  # type: ignore
-        FunctionCPD("U2", lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)]),  # type: ignore
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
@@ -256,20 +252,14 @@ def robot_warehouse() -> MACID:
     )
 
     macid.add_cpds(
-        DecisionDomain("D1", domain=[0, 1]),
-        DecisionDomain("D2", domain=[0, 1]),
-        # Q copies the value of D1 with 90% probability
-        StochasticFunctionCPD("Q", lambda d1: {d1: 0.9}, domain=[0, 1]),
-        # B copies the value of D1 with 30% probability
-        StochasticFunctionCPD("B", lambda d1: {d1: 0.3}, domain=[0, 1]),
-        # R = not B or D2
-        FunctionCPD("R", lambda b, d2: int(not b or d2)),
-        # O copies the value of D2 with 60% probability
-        StochasticFunctionCPD("O", lambda d2: {d2: 0.6}, domain=[0, 1]),
-        # U1 = (Q and not O) - B
-        FunctionCPD("U1", lambda q, b, o: int(q and not o) - int(b)),
-        # U2 = R
-        FunctionCPD("U2", lambda r: r),  # type: ignore
+        D1=[0, 1],
+        D2=[0, 1],
+        Q=lambda d1: noisy_copy(d1, domain=[0, 1]),
+        B=lambda d1: noisy_copy(d1, probability=0.3, domain=[0, 1]),
+        R=lambda b, d2: int(not b or d2),
+        O=lambda d2: noisy_copy(d2, probability=0.6, domain=[0, 1]),
+        U1=lambda q, b, o: int(q and not o) - int(b),
+        U2=lambda r: r,
     )
     return macid
 
@@ -417,11 +407,10 @@ def umbrella() -> MACID:
 
     cpd_w = TabularCPD("W", 2, np.array([[0.6], [0.4]]))
     cpd_f = TabularCPD("F", 2, np.array([[0.8, 0.3], [0.2, 0.7]]), evidence=["W"], evidence_card=[2])
-    cpd_um = DecisionDomain("UM", [0, 1])
     cpd_a = TabularCPD(
         "A", 3, np.array([[0, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 1]]), evidence=["W", "UM"], evidence_card=[2, 2]
     )
-    macid.add_cpds(cpd_w, cpd_f, cpd_um, cpd_a)
+    macid.add_cpds(cpd_w, cpd_f, cpd_a, UM=[0, 1])
     return macid
 
 
@@ -441,8 +430,6 @@ def signal() -> MACID:
         agent_utilities={0: ["U1"], 1: ["U2"]},
     )
     cpd_x = TabularCPD("X", 2, np.array([[0.5], [0.5]]))
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D1", [0, 1])
 
     u1_cpd_array = np.array(
         [
@@ -469,7 +456,7 @@ def signal() -> MACID:
     cpd_u1 = TabularCPD("U1", 6, u1_cpd_array, evidence=["X", "D1", "D2"], evidence_card=[2, 2, 2])
     cpd_u2 = TabularCPD("U2", 6, u2_cpd_array, evidence=["X", "D1", "D2"], evidence_card=[2, 2, 2])
 
-    macid.add_cpds(cpd_x, cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(cpd_x, cpd_u1, cpd_u2, D1=[0, 1], D2=[0, 1])
 
     return macid
 

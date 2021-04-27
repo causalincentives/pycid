@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pycid.core.cpd import FunctionCPD, UniformRandomCPD
+from pycid.core.cpd import ConstantCPD, StochasticFunctionCPD
 from pycid.examples.simple_cids import get_minimal_cid
 from pycid.examples.story_cids import get_introduced_bias
 
@@ -14,26 +14,23 @@ from pycid.examples.story_cids import get_introduced_bias
 class TestCPD(unittest.TestCase):
     def test_initialize_uniform_random_cpd(self) -> None:
         cid = get_minimal_cid()
-        cpd_a = UniformRandomCPD("A", [0, 2])
-        cpd_a.initialize_tabular_cpd(cid)
+        cpd_a = ConstantCPD("A", {}, cid, [0, 2])
         self.assertTrue((cpd_a.get_values() == np.array([[0.5], [0.5]])).all())
         self.assertEqual(cpd_a.get_state_names("A", 1), 2)
-        cpd_b = UniformRandomCPD("B", [0, 1])
-        cpd_b.initialize_tabular_cpd(cid)
+        cpd_b = ConstantCPD("B", {}, cid, [0, 1])
         self.assertTrue((cpd_b.get_values() == np.array([[0.5, 0.5], [0.5, 0.5]])).all())
 
     def test_initialize_function_cpd(self) -> None:
         cid = get_minimal_cid()
-        cpd_a = FunctionCPD("A", lambda: 2)
-        cpd_a.initialize_tabular_cpd(cid)
-        self.assertTrue(cpd_a.get_values(), np.array([[1]]))
+        cpd_a = StochasticFunctionCPD("A", lambda: 2, cid)
+        self.assertEqual(cpd_a.get_values(), np.array([[1]]))
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
         self.assertEqual(cpd_a.get_state_names("A", 0), 2)
-        cpd_b = FunctionCPD("B", lambda a: a)  # type: ignore
-        cpd_b.initialize_tabular_cpd(cid)
-        self.assertTrue(cpd_a.get_values(), np.array([[1]]))
-        self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
-        self.assertEqual(cpd_a.get_state_names("A", 0), 2)
+        cid.add_cpds(cpd_a)
+        cpd_b = StochasticFunctionCPD("B", lambda a: a, cid)
+        self.assertEqual(cpd_b.get_values(), np.array([[1]]))
+        self.assertEqual(cpd_b.get_cardinality(["B"])["B"], 1)
+        self.assertEqual(cpd_b.get_state_names("B", 0), 2)
 
     def test_updated_decision_names(self) -> None:
         cid = get_introduced_bias()

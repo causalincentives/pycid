@@ -2,7 +2,6 @@ import random
 from typing import List, Tuple
 
 from pycid.core.cid import CID
-from pycid.core.cpd import DecisionDomain
 from pycid.core.get_paths import find_active_path
 from pycid.random.random_cpd import RandomCPD
 
@@ -38,9 +37,9 @@ def random_cid(
     if add_cpds:
         for node in cid.nodes:
             if node in cid.decisions:
-                cid.add_cpds(DecisionDomain(node, [0, 1]))
+                cid.add_cpds(node=[0, 1])
             else:
-                cid.add_cpds(RandomCPD(node))
+                cid.add_cpds(node=RandomCPD())
     return cid
 
 

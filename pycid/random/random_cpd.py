@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Dict, Iterator, Sequence
+from typing import Iterator, Mapping, Sequence
 
 import numpy as np
 
-from pycid import StochasticFunctionCPD
 from pycid.core.cpd import Outcome
 
 
@@ -19,14 +18,12 @@ def temp_seed(seed: int) -> Iterator[None]:
         np.random.set_state(state)
 
 
-class RandomCPD(StochasticFunctionCPD):
+class RandomCPD:
     """
     Sample a random CPD, with outcomes in the given domain
     """
 
-    def __init__(
-        self, variable: str, domain: Sequence[Outcome] = [0, 1], smoothness: float = 1.0, seed: int = None
-    ) -> None:
+    def __init__(self, domain: Sequence[Outcome] = None, smoothness: float = 1.0, seed: int = None) -> None:
         """
         Parameters
         ----------
@@ -42,18 +39,12 @@ class RandomCPD(StochasticFunctionCPD):
         """
         self.seed = seed or np.random.randint(0, 10000)
         self.smoothness = smoothness
+        self.domain = domain or [0, 1]
 
-        def random_stochastic_function(**pv: Outcome) -> Dict[Outcome, float]:
-            with temp_seed(self.seed + hash(frozenset(pv.items())) % 2 ** 31 - 1):
-                prob_vec = np.random.dirichlet(np.ones(len(self.domain)) * self.smoothness, size=1).flat  # type: ignore
-            return {self.domain[i]: prob for i, prob in enumerate(prob_vec)}  # type: ignore
+    def __call__(self, **parent_values: Outcome) -> Mapping[Outcome, float]:
+        with temp_seed(self.seed + hash(frozenset(parent_values.items())) % 2 ** 31 - 1):
+            prob_vec = np.random.dirichlet(np.ones(len(self.domain)) * self.smoothness, size=1).flat  # type: ignore
+        return {self.domain[i]: prob for i, prob in enumerate(prob_vec)}  # type: ignore
 
-        super().__init__(
-            variable,
-            random_stochastic_function,
-            domain=domain if domain else [0, 1],
-            label=f"RandomCPD({self.smoothness}, {self.seed})",
-        )
-
-    def copy(self) -> RandomCPD:
-        return RandomCPD(self.variable, self.domain, self.smoothness, self.seed)  # type: ignore
+    def __name__(self) -> str:
+        return f"RandomCPD({self.domain})"

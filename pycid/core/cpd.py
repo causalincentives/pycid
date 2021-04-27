@@ -4,7 +4,7 @@ import inspect
 import itertools
 import types
 from inspect import getsourcelines
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Union
 
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
@@ -57,7 +57,8 @@ class StochasticFunctionCPD(TabularCPD):
     def __init__(
         self,
         variable: str,
-        stochastic_function: Callable[..., Dict[Outcome, Union[int, float]]],
+        stochastic_function: Callable[..., Union[Outcome, Mapping[Outcome, Union[int, float]]]],
+        cbn: CausalBayesianNetwork,
         domain: Optional[Sequence[Outcome]] = None,
         label: str = None,
     ) -> None:
@@ -80,19 +81,61 @@ class StochasticFunctionCPD(TabularCPD):
         label: An optional label used to describe this distribution.
         """
         self.variable = variable
-        self.stochastic_function = stochastic_function
-        self.cbn: Optional[CausalBayesianNetwork] = None
+        self.func = stochastic_function
+        self.cbn = cbn
 
         assert isinstance(domain, (list, type(None)))
         self.force_domain: Optional[Sequence[Outcome]] = domain
-        self.domain: Optional[Sequence[Outcome]] = domain
 
         assert isinstance(label, (str, type(None)))
         self.label = label if label is not None else self.compute_label(stochastic_function)
-        # we call super().__init__() in initialize_tabular_cpd instead
+
+        self.check_function_arguments_match_parent_names()
+        if self.force_domain:
+            if not set(self.possible_values()).issubset(self.force_domain):
+                raise ValueError("variable {} can take value outside given state_names".format(self.variable))
+
+        self.domain = self.force_domain if self.force_domain else self.possible_values()
+
+        def complete_prob_dictionary(
+            prob_dictionary: Mapping[Outcome, Union[int, float]]
+        ) -> Mapping[Outcome, Union[int, float]]:
+            """Complete a probability dictionary with probabilities for missing outcomes"""
+            prob_dictionary = {key: value for key, value in prob_dictionary.items() if value is not None}
+            missing_outcomes = set(self.domain) - set(prob_dictionary.keys())
+            missing_prob_mass = 1 - sum(prob_dictionary.values())  # type: ignore
+            for outcome in missing_outcomes:
+                prob_dictionary[outcome] = missing_prob_mass / len(missing_outcomes)
+            return prob_dictionary
+
+        card = len(self.domain)
+        evidence = cbn.get_parents(self.variable)
+        evidence_card = [cbn.get_cardinality(p) for p in evidence]
+        probability_list = []
+        for pv in self.parent_values():
+            probabilities = complete_prob_dictionary(self.stochastic_function(**pv))
+            probability_list.append([probabilities[t] for t in self.domain])
+        probability_matrix = np.array(probability_list).T
+        if not np.allclose(probability_matrix.sum(axis=0), 1, atol=0.01):
+            raise ValueError(f"The values for {self.variable} do not sum to 1 \n{probability_matrix}")
+        if (probability_matrix < 0).any() or (probability_matrix > 1).any():
+            raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
+
+        super().__init__(
+            self.variable, card, probability_matrix, evidence, evidence_card, state_names={self.variable: self.domain}
+        )
+
+    def stochastic_function(self, **pv: Outcome) -> Mapping[Outcome, float]:
+        ret = self.func(**pv)
+        if isinstance(ret, Mapping):
+            return ret
+        else:
+            return {ret: 1}
 
     @staticmethod
     def compute_label(function: Callable) -> str:
+        if hasattr(function, "__name__"):
+            return function.__name__
         sl = ""
         try:
             sl = getsourcelines(function)[0][0]
@@ -111,91 +154,49 @@ class StochasticFunctionCPD(TabularCPD):
                 if seen_parenthesis == 0 and sl[i] == "," or seen_parenthesis == -1:
                     return sl[colon + 2 : i]
             return sl[colon + 2 : len(sl)]
-        elif hasattr(function, "__name__"):
-            return function.__name__
         return ""
 
-    def check_function_arguments_match_parent_names(self, cbn: CausalBayesianNetwork) -> None:
+    def check_function_arguments_match_parent_names(self) -> None:
         """Raises a ValueError if the parents in the CID don't match the argument to the specified function"""
         sig = inspect.signature(self.stochastic_function).parameters
         arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
         args = set(sig)
-        lower_case_parents = {p.lower() for p in cbn.get_parents(self.variable)}
+        lower_case_parents = {p.lower() for p in self.cbn.get_parents(self.variable)}
         if "VAR_KEYWORD" not in arg_kinds and args != lower_case_parents:
             raise ValueError(
                 f"function for {self.variable} mismatch parents on"
                 f" {args.symmetric_difference(lower_case_parents)}, "
             )
 
-    def parent_values(self, cbn: CausalBayesianNetwork) -> Iterator[Dict[str, Outcome]]:
+    def parent_values(self) -> Iterator[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values_list = []
-        for p in cbn.get_parents(self.variable):
+        for p in self.cbn.get_parents(self.variable):
             try:
-                parent_values_list.append(cbn.model.domain[p])
+                parent_values_list.append(self.cbn.model.domain[p])
             except KeyError:
                 raise ParentsNotReadyException(f"Parent {p} of {self.variable} not yet instantiated")
         for parent_values in itertools.product(*parent_values_list):
-            yield {p.lower(): parent_values[i] for i, p in enumerate(cbn.get_parents(self.variable))}
+            yield {p.lower(): parent_values[i] for i, p in enumerate(self.cbn.get_parents(self.variable))}
 
-    def possible_values(self, cbn: CausalBayesianNetwork) -> List[Outcome]:
+    def possible_values(self) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""
         return sorted(
-            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values(cbn)])  # type: ignore
-        )
-
-    def initialize_tabular_cpd(self, cbn: CausalBayesianNetwork) -> None:
-        """Initialize the probability table for the inherited TabularCPD.
-
-        Requires that all parents in the CID have already been instantiated.
-        """
-        self.check_function_arguments_match_parent_names(cbn)
-        self.cbn = cbn
-        if self.force_domain:
-            if not set(self.possible_values(cbn)).issubset(self.force_domain):
-                raise ValueError("variable {} can take value outside given state_names".format(self.variable))
-
-        domain: Sequence[Outcome] = self.force_domain if self.force_domain else self.possible_values(cbn)
-
-        def complete_prob_dictionary(
-            prob_dictionary: Dict[Outcome, Union[int, float]]
-        ) -> Dict[Outcome, Union[int, float]]:
-            """Complete a probability dictionary with probabilities for missing outcomes"""
-            missing_outcomes = set(domain) - set(prob_dictionary.keys())
-            missing_prob_mass = 1 - sum(prob_dictionary.values())  # type: ignore
-            for outcome in missing_outcomes:
-                prob_dictionary[outcome] = missing_prob_mass / len(missing_outcomes)
-            return prob_dictionary
-
-        card = len(domain)
-        evidence = cbn.get_parents(self.variable)
-        evidence_card = [cbn.get_cardinality(p) for p in evidence]
-        probability_list = []
-        for pv in self.parent_values(cbn):
-            probabilities = complete_prob_dictionary(self.stochastic_function(**pv))
-            probability_list.append([probabilities[t] for t in domain])
-        probability_matrix = np.array(probability_list).T
-        if not np.allclose(probability_matrix.sum(axis=0), 1, atol=0.01):
-            raise ValueError(f"The values for {self.variable} do not sum to 1 \n{probability_matrix}")
-        if (probability_matrix < 0).any() or (probability_matrix > 1).any():
-            raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
-        self.domain = domain
-
-        super().__init__(
-            self.variable, card, probability_matrix, evidence, evidence_card, state_names={self.variable: self.domain}
+            set().union(*[self.stochastic_function(**x).keys() for x in self.parent_values()])  # type: ignore
         )
 
     def copy(self) -> StochasticFunctionCPD:
         return StochasticFunctionCPD(
             str(self.variable),
-            function_copy(self.stochastic_function),
+            self.func,
+            self.cbn,
             domain=list(self.force_domain) if self.force_domain else None,
         )
 
     def __repr__(self) -> str:
         dictionary: Dict[str, Union[Dict, Outcome]] = {}
         try:
-            for pv in self.parent_values(self.cbn):  # type: ignore
+            for pv in self.parent_values():  # type: ignore
                 probabilities = self.stochastic_function(**pv)
                 for outcome in probabilities:
                     if probabilities[outcome] == 1:
@@ -212,86 +213,25 @@ class StochasticFunctionCPD(TabularCPD):
         return self.__repr__()
 
 
-class FunctionCPD(StochasticFunctionCPD):
-    """FunctionCPD class used to specify relationship between variables with a function rather than
-    a probability matrix
-
-    Once inserted into a CID, initialize_tabular_cpd converts the function
-    into a probability matrix for the TabularCPD. It is necessary to wait with this until the values
-    of the parents have been computed, since the state names depends on the values of the parents.
-    """
-
+class ConstantCPD(StochasticFunctionCPD):
     def __init__(
         self,
         variable: str,
-        function: Callable[..., Outcome],
-        domain: Optional[Sequence[Outcome]] = None,
-        label: str = None,
-    ) -> None:
-        """Initialize FunctionCPD with a variable name and a function
+        dictionary: Mapping,
+        cbn: CausalBayesianNetwork,
+        domain: Sequence[Outcome] = None,
+        label: Optional[str] = None,
+    ):
+        super().__init__(variable, lambda **pv: dictionary, cbn, domain=domain, label=label or str(dictionary))
 
 
-        Parameters
-        ----------
-        variable: The variable name.
-
-        function: A function mapping parent outcomes to an outcome for this variable.
-        The different parents are identified by name: the arguments to the function must
-        be lowercase versions of the names of the parent variables. For example, if X has
-        parents Y, S1, and Obs, the arguments to function must be y, s1, and obs.
-
-        domain: An optional specification of the variable's domain.
-            Must include all values this variable can take as a result of its function.
-
-        label: An optional label used to describe this distribution.
-        """
-        self.function = function
-        super().__init__(
-            variable,
-            lambda **x: {function(**x): 1},
-            domain=domain,
-            label=label if label is not None else StochasticFunctionCPD.compute_label(function),
-        )
-
-
-class UniformRandomCPD(StochasticFunctionCPD):
-    """UniformRandomPD class creates a uniform random CPD given parents in graph
-
-    It only becomes a fully initialized TabularCPD once the method initializeTabularCPD
-    is run.
-    """
-
-    def __init__(self, variable: str, domain: Sequence[Outcome], label: Optional[str] = None):
-        """Create a UniformRandomCPD
-
-        Call `initialize_tabular_cpd` to complete the initialization.
-
-        Parameters
-        ----------
-        variable: The variable name.
-
-        domain: The possible outcomes of the variable.
-
-        label: An optional label used to describe this distribution.
-        """
-        super().__init__(
-            variable, lambda **pv: {}, domain=domain, label=label if label is not None else f"DiscUni({domain})"
-        )
-
-    def copy(self) -> UniformRandomCPD:
-        return UniformRandomCPD(str(self.variable), list(self.domain), label=str(self.label))  # type: ignore
-
-    def __repr__(self) -> str:
-        return f"<UniformRandomCPD {self.variable}:{self.variable_card}>"
-
-
-class DecisionDomain(UniformRandomCPD):
+class DecisionDomain(ConstantCPD):
     """DecisionDomain is used to specify the domain for a decision
 
     Under the hood it becomes a UniformRandomCPD, to satisfy BayesianModel.check_model()
     """
 
-    def __init__(self, variable: str, domain: Sequence[Outcome]):
+    def __init__(self, variable: str, cbn: CausalBayesianNetwork, domain: Sequence[Outcome]):
         """Create a DecisionDomain
 
         Call `initialize_tabular_cpd` to complete the initialization.
@@ -302,10 +242,24 @@ class DecisionDomain(UniformRandomCPD):
 
         domain: The allowed decisions.
         """
-        super().__init__(variable, domain, label=f"Dec({domain})")
+        super().__init__(variable, {}, cbn, domain, label=f"Dec({domain})")
 
     def copy(self) -> DecisionDomain:
-        return DecisionDomain(str(self.variable), domain=list(self.domain) if self.domain else None)  # type: ignore
+        return DecisionDomain(str(self.variable), self.cbn, domain=list(self.domain))
 
     def __repr__(self) -> str:
         return f"<DecisionDomain {self.variable}:{self.domain}>"
+
+
+def bernoulli(p: float) -> Dict[Outcome, float]:
+    return {0: 1 - p, 1: p}
+
+
+def discrete_uniform(domain: List[Outcome]) -> Dict[Outcome, float]:
+    return dict.fromkeys(domain)
+
+
+def noisy_copy(value: Outcome, probability: float = 0.9, domain: List[Outcome] = None) -> Dict[Outcome, float]:
+    dist = dict.fromkeys(domain) if domain else {}
+    dist[value] = probability
+    return dist

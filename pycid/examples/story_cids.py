@@ -1,5 +1,5 @@
 from pycid.core.cid import CID
-from pycid.core.cpd import DecisionDomain, FunctionCPD, UniformRandomCPD
+from pycid.core.cpd import discrete_uniform
 
 
 def get_introduced_bias() -> CID:
@@ -18,14 +18,14 @@ def get_introduced_bias() -> CID:
         utilities=["U"],
     )
 
-    cpd_a = UniformRandomCPD("A", [0, 1])
-    cpd_z = UniformRandomCPD("Z", [0, 1])
-    cpd_x = FunctionCPD("X", lambda a, z: a * z)  # type: ignore
-    cpd_d = DecisionDomain("D", [0, 1])
-    cpd_y = FunctionCPD("Y", lambda x, z: x + z)  # type: ignore
-    cpd_u = FunctionCPD("U", lambda d, y: -((d - y) ** 2))  # type: ignore
-
-    cid.add_cpds(cpd_a, cpd_d, cpd_z, cpd_x, cpd_y, cpd_u)
+    cid.add_cpds(
+        A=discrete_uniform([0, 1]),
+        Z=discrete_uniform([0, 1]),
+        X=lambda a, z: a * z,
+        D=[0, 1],
+        Y=lambda x, z: x + z,
+        U=lambda d, y: -((d - y) ** 2),
+    )
     return cid
 
 

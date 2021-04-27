@@ -1,7 +1,6 @@
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD  # type: ignore
 
-from pycid.core.cpd import DecisionDomain, FunctionCPD
 from pycid.core.macid import MACID
 
 
@@ -119,8 +118,8 @@ def basic2agent_tie_break() -> MACID:
         agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D2", [0, 1])
+    cpd_d1 = [0, 1]
+    cpd_d2 = [0, 1]
     cpd_u1 = TabularCPD(
         "U1",
         6,
@@ -136,7 +135,7 @@ def basic2agent_tie_break() -> MACID:
         evidence_card=[2, 2],
     )
 
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(D1=cpd_d1, D2=cpd_d2, U1=cpd_u1, U2=cpd_u2)
 
     return macid
 
@@ -161,16 +160,12 @@ def two_agent_one_pne() -> MACID:
         agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D2", [0, 1])
-
     agent1_payoff = np.array([[1, 3], [0, 2]])
     agent2_payoff = np.array([[2, 0], [3, 2]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])  # type: ignore
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])  # type: ignore
-
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(
+        D1=[0, 1], D2=[0, 1], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
+    )
     return macid
 
 
@@ -194,9 +189,6 @@ def two_agent_two_pne() -> MACID:
         agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D2", [0, 1])
-
     cpd_u1 = TabularCPD(
         "U1",
         5,
@@ -212,7 +204,7 @@ def two_agent_two_pne() -> MACID:
         evidence_card=[2, 2],
     )
 
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(cpd_u1, cpd_u2, D1=[0, 1], D2=[0, 1])
     return macid
 
 
@@ -236,13 +228,10 @@ def two_agent_no_pne() -> MACID:
         agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D2", [0, 1])
-
     cpd_u1 = TabularCPD("U1", 2, np.array([[0, 1, 1, 0], [1, 0, 0, 1]]), evidence=["D1", "D2"], evidence_card=[2, 2])
     cpd_u2 = TabularCPD("U2", 2, np.array([[1, 0, 0, 1], [0, 1, 1, 0]]), evidence=["D1", "D2"], evidence_card=[2, 2])
 
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(cpd_u1, cpd_u2, D1=[0, 1], D2=[0, 1])
     return macid
 
 
@@ -272,16 +261,16 @@ def two_agents_three_actions() -> MACID:
 
     d1_domain = ["T", "M", "B"]
     d2_domain = ["L", "C", "R"]
-    cpd_d1 = DecisionDomain("D1", d1_domain)
-    cpd_d2 = DecisionDomain("D2", d2_domain)
 
     agent1_payoff = np.array([[4, 5, 6], [2, 8, 3], [3, 9, 2]])
     agent2_payoff = np.array([[3, 1, 2], [1, 4, 6], [0, 6, 8]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)])  # type: ignore
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)])  # type: ignore
-
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+    )
     return macid
 
 
@@ -295,15 +284,11 @@ def basic_different_dec_cardinality() -> MACID:
         agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
-    cpd_d1 = DecisionDomain("D1", [0, 1])
-    cpd_d2 = DecisionDomain("D2", [0, 1, 2])
-
     agent1_payoff = np.array([[3, 1, 0], [1, 2, 3]])
     agent2_payoff = np.array([[1, 2, 1], [1, 0, 3]])
 
-    cpd_u1 = FunctionCPD("U1", lambda d1, d2: agent1_payoff[d1, d2])  # type: ignore
-    cpd_u2 = FunctionCPD("U2", lambda d1, d2: agent2_payoff[d1, d2])  # type: ignore
-
-    macid.add_cpds(cpd_d1, cpd_d2, cpd_u1, cpd_u2)
+    macid.add_cpds(
+        D1=[0, 1], D2=[0, 1], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
+    )
 
     return macid

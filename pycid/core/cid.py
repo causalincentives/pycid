@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import Dict, Iterable, List, Tuple
 
-from pycid.core.cpd import FunctionCPD
+from pycid.core.cpd import StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
 
 
@@ -39,7 +39,7 @@ class CID(MACIDBase):
         else:
             self.add_cpds(*random.choice(self.optimal_policies()))
 
-    def optimal_policies(self) -> List[Tuple[FunctionCPD, ...]]:
+    def optimal_policies(self) -> List[Tuple[StochasticFunctionCPD, ...]]:
         """
         Return a list of all deterministic optimal policies.
         # TODO: Subgame perfectness option
