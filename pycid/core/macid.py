@@ -61,10 +61,10 @@ class MACID(MACIDBase):
                 eu_pp_agent_a = macid.expected_utility({}, agent=a)
                 macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
                 max_eu_agent_a = macid.expected_utility({}, agent=a)
-
                 if max_eu_agent_a > eu_pp_agent_a:  # not an NE
                     break
-            else:  # it's an NE
+            else:
+                # it's an NE
                 all_pure_ne_in_sg.append(list(pp))
 
         return all_pure_ne_in_sg
