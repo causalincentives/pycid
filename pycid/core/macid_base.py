@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import math
 from functools import lru_cache
 from typing import (
     Callable,
@@ -303,11 +304,12 @@ class MACIDBase(CausalBayesianNetwork):
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return itertools.product(*possible_dec_rules)
 
-    def optimal_pure_policies(self, decisions: Iterable[str], eps: float = 1e-8) -> List[Tuple[FunctionCPD, ...]]:
+    def optimal_pure_policies(self, decisions: Iterable[str], rel_tol: float = 1e-9) -> List[Tuple[FunctionCPD, ...]]:
         """Find all optimal policies for a given set of decisions.
 
         - All decisions must belong to the same agent.
-        - eps is the margin of error when comparing utilities for equality.
+        - rel_tol: is the relative tolerance. It is the amount of error allowed, relative to the larger
+        absolute value of the two values it is comparing (the two utilities.)
         """
         if not decisions:
             return []
@@ -331,7 +333,7 @@ class MACIDBase(CausalBayesianNetwork):
         for policy in macid.pure_policies(decisions):
             macid.add_cpds(*policy)
             expected_utility = macid.expected_utility({}, agent=agent)
-            if abs(expected_utility - max_utility) < eps:
+            if math.isclose(expected_utility, max_utility, rel_tol=rel_tol):
                 optimal_policies.append(policy)
             elif expected_utility > max_utility:
                 optimal_policies = [policy]
