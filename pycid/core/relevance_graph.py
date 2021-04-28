@@ -110,7 +110,7 @@ class CondensedRelevanceGraph(nx.DiGraph):
         return decs_in_each_scc
 
     def get_decisions_in_scc(self) -> Dict[int, List[str]]:
-        """ Return a dictionary matching each SCC with a list of decision nodes that it contains"""
+        """Return a dictionary matching each SCC with a list of decision nodes that it contains"""
         scc_dec_mapping: Dict[int, List[str]] = {}
         # invert the dictionary to match each scc with the decision nodes in it
         for k, v in self.graph["mapping"].items():

@@ -92,7 +92,7 @@ class MACIDBase(CausalBayesianNetwork):
         return self.agent_utilities.keys()
 
     def make_decision(self, node: str, agent: AgentLabel = 0) -> None:
-        """"Turn a chance or utility node into a decision node."""
+        """ "Turn a chance or utility node into a decision node."""
         self.make_chance(node)
         self.agent_decisions[agent].append(node)
         self.decision_agent[node] = agent
@@ -101,7 +101,7 @@ class MACIDBase(CausalBayesianNetwork):
             self.add_cpds(DecisionDomain(node, cpd.domain))
 
     def make_utility(self, node: str, agent: AgentLabel = 0) -> None:
-        """"Turn a chance or utility node into a decision node."""
+        """ "Turn a chance or utility node into a decision node."""
         self.make_chance(node)
         self.agent_utilities[agent].append(node)
         self.utility_agent[node] = agent
@@ -361,7 +361,7 @@ class MACIDBase(CausalBayesianNetwork):
             self.impute_random_decision(d)
 
     def remove_all_decision_rules(self) -> None:
-        """ Remove the decision rules from all decisions in the (MA)CID"""
+        """Remove the decision rules from all decisions in the (MA)CID"""
         for d in self.decisions:
             cpd = self.get_cpds(d)
             if cpd is None:
