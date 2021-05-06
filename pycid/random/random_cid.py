@@ -59,9 +59,8 @@ def random_cid(
     """
     mb = random_macidbase(
         number_of_nodes=number_of_nodes,
-        number_of_agents=1,
-        max_decisions_for_agent=number_of_decisions,
-        max_utilities_for_agent=number_of_utilities,
+        agent_decisions_num=(number_of_decisions,),
+        agent_utilities_num=(number_of_utilities,),
         add_cpds=False,
         sufficient_recall=sufficient_recall,
         edge_density=edge_density,
@@ -89,14 +88,13 @@ def random_cid(
 
 def random_macid(
     number_of_nodes: int = 10,
-    number_of_agents: int = 2,
-    max_decisions_for_agent: int = 1,
-    max_utilities_for_agent: int = 1,
-    add_cpds: bool = True,
+    agent_decisions_num: Tuple[int, ...] = (1, 2),
+    agent_utilities_num: Tuple[int, ...] = (2, 1),
+    add_cpds: bool = False,
     sufficient_recall: bool = False,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
-    max_resampling_attempts: int = 1000,
+    max_resampling_attempts: int = 5000,
 ) -> MACID:
     """
     Generate a random MACID.
@@ -107,11 +105,11 @@ def random_macid(
 
     number_of_agents: The number of agents in the MACID.
 
-    max_decisions_for_agent: The maximum number of decisions for each agent.
-    In general, the number of decisions for an agent is between 1 and max_decisions_for_agent.
+    agent_decisions_num: A Tuple giving the number of decision nodes for each agent. For example, (1,2,1)
+    means that the first agent has 1 decision, the second agent has two, and the third agent has 1.
 
-    max_utilities_for_agent: The maximum number of utilities for each agent.
-    In general, the number of utilities for an agent is between 1 and max_utilities_for_agent.
+    agent_utilities_num: A Tuple giving the number of utilities for each agent. For example, (1,2,1)
+    means that the first agent has 1 utility node, the second agent has two, and the third agent has 1.
 
     add_cpds: True if we should pararemeterise the MACID as a model.
     This adds [0,1] domains to every decision node and RandomCPDs to every utility and chance node in the MACID.
@@ -131,15 +129,14 @@ def random_macid(
     Returns
     -------
     A MACID that satisfies the given constraints or a ValueError if it was unable to meet the constraints in the
-     specified number of attempts.
+    specified number of attempts.
 
     """
 
     mb = random_macidbase(
         number_of_nodes=number_of_nodes,
-        number_of_agents=number_of_agents,
-        max_decisions_for_agent=max_decisions_for_agent,
-        max_utilities_for_agent=max_utilities_for_agent,
+        agent_decisions_num=agent_decisions_num,
+        agent_utilities_num=agent_utilities_num,
         add_cpds=False,
         sufficient_recall=sufficient_recall,
         edge_density=edge_density,
@@ -155,15 +152,14 @@ def random_macid(
 
 
 def random_macidbase(
-    number_of_nodes: int = 8,
-    number_of_agents: int = 2,
-    max_decisions_for_agent: int = 1,
-    max_utilities_for_agent: int = 1,
+    number_of_nodes: int = 10,
+    agent_decisions_num: Tuple[int, ...] = (1, 2),
+    agent_utilities_num: Tuple[int, ...] = (2, 1),
     add_cpds: bool = False,
     sufficient_recall: bool = False,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
-    max_resampling_attempts: int = 1000,
+    max_resampling_attempts: int = 5000,
 ) -> MACIDBase:
     """
     Generate a random MACIDBase
@@ -178,57 +174,54 @@ def random_macidbase(
 
         dag = random_dag(number_of_nodes=number_of_nodes, edge_density=edge_density, max_in_degree=max_in_degree)
 
+        # assign utility nodes to each agent based on the barren nodes in the random dag
         barren_nodes = [node for node in dag.nodes if not list(dag.successors(node))]
-        if max_utilities_for_agent * number_of_agents > len(barren_nodes):
+        if sum(agent_utilities_num) > len(barren_nodes):
             # there are not enough barren_nodes: resample a new random DAG.
             continue
+        np.random.shuffle(barren_nodes)  # randomise
+        util_node_candidates = iter(barren_nodes)
+        agent_utilities_old_name = {
+            agent: [next(util_node_candidates) for _ in range(num)] for agent, num in enumerate(agent_utilities_num)
+        }
 
-        agent_utilities, util_nodes_name_change = _create_random_utility_nodes(
-            number_of_agents, max_utilities_for_agent, barren_nodes
-        )
-        dag = nx.relabel_nodes(dag, util_nodes_name_change)
-
-        agent_decisions: Mapping[AgentLabel, Iterable[str]] = {}
-        all_dec_name_change: Dict[str, str] = {}
         used_nodes = set()  # type: Set[str]
-        for agent in range(number_of_agents):
-            agent_utils = agent_utilities[agent]
+        agent_decisions: Mapping[AgentLabel, Iterable[str]] = {}
+        agent_utilities: Mapping[AgentLabel, Iterable[str]] = {}
+        node_name_change_map: Dict[str, str] = {}
 
-            ancestors = set()  # type: Set[str]
-            possible_dec_nodes = (
-                ancestors.union(*[set(dag._get_ancestors_of(node)) for node in agent_utils])
+        for agent in agent_utilities_old_name.keys():
+            # assign decision nodes to agent
+            num_decs = agent_decisions_num[agent]
+            agent_utils = agent_utilities_old_name[agent]
+            possible_dec_nodes: Set[str] = (
+                set().union(*[set(dag._get_ancestors_of(node)) for node in agent_utils])
                 - set(agent_utils)
-                - used_nodes
+                - used_nodes  # type: ignore
             )
-            if not possible_dec_nodes:
-                # this agent has no possible decision nodes: resample a new random DAG.
+            if num_decs > len(possible_dec_nodes):
                 break
+            agent_decs = random.sample(possible_dec_nodes, num_decs)
+            used_nodes.update(agent_decs)
 
-            # in the single-agent CID setting, we want the number of decisions to be equal to what we we specified:
-            if number_of_agents == 1:
-                number_of_decisions = max_decisions_for_agent
-                if number_of_decisions > len(possible_dec_nodes):
-                    # there are not enough possible decision nodes: resample a new random DAG
-                    break
-                sample_dec_nodes = random.sample(possible_dec_nodes, number_of_decisions)
-
-            # in the multi-agent CID setting, the number of decisions for each agent can vary, but should never be
-            # more than the max_decisions_for_agent we specified.
-            else:
-                sample_dec_nodes = random.sample(
-                    possible_dec_nodes, min(len(possible_dec_nodes), max_decisions_for_agent)
-                )
-                used_nodes.update(sample_dec_nodes)
-
-            dec_name_change = {
-                old_dec_name: "D^" + str(agent) + "_" + str(i) for i, old_dec_name in enumerate(sample_dec_nodes)
+            # rename decision and utility nodes
+            agent_util_name_change = {
+                old_util_name: "U^" + str(agent) + "_" + str(i) for i, old_util_name in enumerate(agent_utils)
             }
-            agent_decisions[agent] = list(dec_name_change.values())  # type: ignore
-            all_dec_name_change.update(dec_name_change)
+            agent_dec_name_change = {
+                old_dec_name: "D^" + str(agent) + "_" + str(i) for i, old_dec_name in enumerate(agent_decs)
+            }
+            agent_utilities[agent] = list(agent_util_name_change.values())  # type: ignore
+            agent_decisions[agent] = list(agent_dec_name_change.values())  # type: ignore
+            node_name_change_map.update(**agent_util_name_change, **agent_dec_name_change)
 
         else:
-            dag = nx.relabel_nodes(dag, all_dec_name_change)
+            # rename chance nodes
+            chance_nodes = [node for node in dag.nodes if node not in node_name_change_map.keys()]
+            chance_name_change = {old_chance_name: "X_" + str(i) for i, old_chance_name in enumerate(chance_nodes)}
+            node_name_change_map.update(chance_name_change)
 
+            dag = nx.relabel_nodes(dag, node_name_change_map)
             mb = MACIDBase(dag.edges, agent_decisions=agent_decisions, agent_utilities=agent_utilities)
 
             if sufficient_recall:
@@ -241,7 +234,6 @@ def random_macidbase(
                 _add_random_cpds(mb)
 
             return mb
-
         continue
     else:
         raise ValueError(
@@ -250,9 +242,9 @@ def random_macidbase(
 
 
 def random_cids(
-    n_all_range: Tuple[int, int] = (10, 15),
-    nd_range: Tuple[int, int] = (2, 4),
-    nu_range: Tuple[int, int] = (2, 4),
+    total_nodes_range: Tuple[int, int] = (10, 15),
+    num_decs_range: Tuple[int, int] = (2, 4),
+    num_utils_range: Tuple[int, int] = (2, 4),
     add_cpds: bool = True,
     sufficient_recall: bool = True,
     edge_density: float = 0.4,
@@ -262,9 +254,9 @@ def random_cids(
     cids: List[CID] = []
 
     while len(cids) < n_cids:
-        n_all = random.randint(*n_all_range)
-        n_decisions = random.randint(*nd_range)
-        n_utilities = random.randint(*nu_range)
+        n_all = random.randint(*total_nodes_range)
+        n_decisions = random.randint(*num_decs_range)
+        n_utilities = random.randint(*num_utils_range)
 
         cid = random_cid(
             number_of_nodes=n_all,
@@ -279,6 +271,39 @@ def random_cids(
             cids.append(cid)
 
     return cids
+
+
+def random_macids(
+    total_nodes_range: Tuple[int, int] = (13, 17),
+    num_decs_range: Tuple[int, int] = (1, 3),
+    num_utils_range: Tuple[int, int] = (1, 3),
+    add_cpds: bool = True,
+    sufficient_recall: bool = False,
+    edge_density: float = 0.4,
+    n_macids: int = 10,
+) -> List[MACID]:
+    """Generates a number of CIDs with sufficient recall"""
+    macids: List[MACID] = []
+
+    while len(macids) < n_macids:
+        n_all = random.randint(*total_nodes_range)
+        num_agents = random.randint(1, 3)
+        agent_n_decisions = tuple(random.choices(range(*num_decs_range), k=num_agents))
+        agent_n_utilities = tuple(random.choices(range(*num_utils_range), k=num_agents))
+
+        macid = random_macid(
+            number_of_nodes=n_all,
+            agent_decisions_num=agent_n_decisions,
+            agent_utilities_num=agent_n_utilities,
+            add_cpds=add_cpds,
+            sufficient_recall=sufficient_recall,
+            edge_density=edge_density,
+        )
+
+        if macid.sufficient_recall():
+            macids.append(macid)
+
+    return macids
 
 
 def _check_max_in_degree(mb: MACIDBase, max_in_degree: int) -> bool:
@@ -301,28 +326,6 @@ def _add_random_cpds(mb: MACIDBase) -> None:
             mb.add_cpds(DecisionDomain(node, [0, 1]))
         else:
             mb.add_cpds(RandomCPD(node))
-
-
-def _create_random_utility_nodes(
-    number_of_agents: int, max_utilities_for_agent: int, barren_nodes: List[str]
-) -> Tuple[Mapping[AgentLabel, Iterable[str]], Dict[str, str]]:
-    """
-    Create random utility nodes for each agent based on the barren nodes available, a fixed number of agents,
-    and a maximum number of utility nodes for each agent.
-    """
-    sample_util_nodes = random.sample(barren_nodes, max_utilities_for_agent * number_of_agents)
-    sample_util_nodes_partition = np.array_split(sample_util_nodes, number_of_agents)
-
-    agent_utilities: Mapping[AgentLabel, Iterable[str]] = {}
-    all_util_name_change = {}
-    for agent, nodes_to_be_utils in enumerate(sample_util_nodes_partition):
-        agent_util_name_change = {
-            old_util_name: "U^" + str(agent) + "_" + str(i) for i, old_util_name in enumerate(list(nodes_to_be_utils))
-        }
-        agent_utilities[agent] = list(agent_util_name_change.values())  # type: ignore
-        all_util_name_change.update(agent_util_name_change)
-
-    return agent_utilities, all_util_name_change
 
 
 def _add_sufficient_recall(mb: MACIDBase, d1: str, d2: str, utility_node: str) -> None:

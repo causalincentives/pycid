@@ -1,10 +1,11 @@
 import sys
+from typing import Tuple
 
 import networkx as nx
 import pytest
 
 from pycid import CausalBayesianNetwork, FunctionCPD, RandomCPD
-from pycid.random.random_cid import random_cid, random_cids, random_macid, random_macidbase
+from pycid.random.random_cid import random_cid, random_cids, random_macid, random_macidbase, random_macids
 from pycid.random.random_dag import random_dag
 
 
@@ -19,35 +20,34 @@ def test_cid_sufficient_recall() -> None:
 
 
 @pytest.mark.parametrize(
-    "number_of_nodes,number_of_agents,max_decisions_for_agent,max_utilities_for_agent",
-    [(10, 2, 1, 1), (14, 3, 1, 2), (18, 3, 2, 2)],
+    "number_of_nodes,agent_decisions_num,agent_utilities_num",
+    [(10, (1, 2), (2, 1)), (16, (2, 1, 1), (1, 2, 2)), (15, (2, 1), (3, 2))],
 )
 def test_random_macidbase(
     number_of_nodes: int,
-    number_of_agents: int,
-    max_decisions_for_agent: int,
-    max_utilities_for_agent: int,
+    agent_decisions_num: Tuple[int],
+    agent_utilities_num: Tuple[int],
 ) -> None:
-    macid = random_macidbase(
-        number_of_nodes, number_of_agents, max_decisions_for_agent, max_utilities_for_agent, add_cpds=True
-    )
-    macid.check_model()
+    macidbase = random_macidbase(number_of_nodes, agent_decisions_num, agent_utilities_num, add_cpds=True)
+    macidbase.check_model()
 
 
 @pytest.mark.parametrize(
-    "number_of_nodes,number_of_agents,max_decisions_for_agent,max_utilities_for_agent",
-    [(10, 2, 1, 1), (14, 2, 1, 2), (18, 3, 2, 2)],
+    "number_of_nodes,agent_decisions_num,agent_utilities_num",
+    [(10, (1, 3), (2, 2)), (18, (1, 1, 2), (2, 3, 2)), (14, (2, 2), (1, 4))],
 )
 def test_random_macid(
     number_of_nodes: int,
-    number_of_agents: int,
-    max_decisions_for_agent: int,
-    max_utilities_for_agent: int,
+    agent_decisions_num: Tuple[int],
+    agent_utilities_num: Tuple[int],
 ) -> None:
-    macid = random_macid(
-        number_of_nodes, number_of_agents, max_decisions_for_agent, max_utilities_for_agent, add_cpds=True
-    )
+    macid = random_macid(number_of_nodes, agent_decisions_num, agent_utilities_num, add_cpds=True)
     macid.check_model()
+
+
+def test_random_macids_create_one() -> None:
+    for macid in random_macids(n_macids=1):
+        macid.check_model()
 
 
 def test_random_cids_create_one() -> None:
