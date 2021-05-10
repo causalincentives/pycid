@@ -38,7 +38,6 @@ NOTEBOOKS = [
     "fairness",
     "CID_Basics_Tutorial",
     "CID_Incentives_Tutorial",
-    "generate_cid",
     "MACID_Basics_Tutorial",
     "Reasoning_Patterns_Tutorial",
 ]
