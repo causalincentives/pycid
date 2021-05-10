@@ -78,7 +78,7 @@ class TestQuery:
     @staticmethod
     def test_query_disconnected_components() -> None:
         cbn = CausalBayesianNetwork([("A", "B")])
-        cbn.add_cpds(RandomCPD("A"), RandomCPD("B"))
+        cbn.add_cpds(A=RandomCPD(), B=RandomCPD())
         cbn.query(["A"], {}, intervention={"B": 0})  # the intervention separates A and B into separare components
 
     @staticmethod

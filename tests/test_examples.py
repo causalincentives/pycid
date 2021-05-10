@@ -11,6 +11,7 @@ from pycid.examples import simple_cbns, simple_cids, simple_macids, story_cids, 
 CONSTRUCTORS = [
     # Simple CBN
     simple_cbns.get_3node_cbn,
+    simple_cbns.get_3node_uniform_cbn,
     # Simple CID
     simple_cids.get_minimal_cid,
     simple_cids.get_3node_cid,
@@ -67,6 +68,8 @@ def graph_constructor(request: Any) -> Callable[[], CausalBayesianNetwork]:
 def test_constructs_macid_base(graph_constructor: Callable) -> None:
     graph = graph_constructor()
     assert isinstance(graph, CausalBayesianNetwork)
+    if graph.get_cpds():
+        assert graph.check_model()
 
 
 if __name__ == "__main__":

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import random
-from typing import Dict, Iterable, Mapping, Set, Tuple
+from typing import Callable, Dict, Iterable, Mapping, Set, Tuple, Union
 
 import networkx as nx
 import numpy as np
 
-from pycid.core.cpd import DecisionDomain
+from pycid.core.cpd import Outcome, TabularCPD
 from pycid.core.get_paths import find_active_path, get_motif
 from pycid.core.macid_base import AgentLabel, MACIDBase, MechanismGraph
 from pycid.random.random_cpd import RandomCPD
 from pycid.random.random_dag import random_dag
+
+Relationship = Union[TabularCPD, Dict[Outcome, float], Callable[..., Union[Outcome, Dict[Outcome, float]]]]
 
 
 def random_macidbase(
@@ -113,11 +115,13 @@ def add_random_cpds(mb: MACIDBase) -> None:
     """
     add cpds to the random (MA)CID.
     """
+    node_cpds: Dict[str, Relationship] = {}
     for node in mb.nodes:
         if node in mb.decisions:
-            mb.add_cpds(DecisionDomain(node, [0, 1]))
+            node_cpds[node] = [0, 1]
         else:
-            mb.add_cpds(RandomCPD(node))
+            node_cpds[node] = RandomCPD()
+    mb.add_cpds(**node_cpds)
 
 
 def _check_max_in_degree(mb: MACIDBase, max_in_degree: int) -> bool:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import collections
-from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -10,7 +10,9 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianModel
 
-from pycid.core.cpd import FunctionCPD, Outcome, ParentsNotReadyException, StochasticFunctionCPD, UniformRandomCPD
+from pycid.core.cpd import ConstantCPD, Outcome, ParentsNotReadyException, StochasticFunctionCPD
+
+Relationship = Union[TabularCPD, Dict[Outcome, float], Callable[..., Union[Outcome, Dict[Outcome, float]]]]
 
 
 class CausalBayesianNetwork(BayesianModel):
@@ -32,19 +34,18 @@ class CausalBayesianNetwork(BayesianModel):
             self.cbn = cbn
             self.domain: Dict[str, List[Outcome]] = {}
 
-        def __setitem__(self, variable: str, cpd: TabularCPD, sync_state_names: bool = True) -> None:
+        def __setitem__(self, variable: str, relationship: Relationship, sync_state_names: bool = True) -> None:
 
             # Update the keys
             if variable in self.keys():
                 self.__delitem__(variable)
-            super().__setitem__(variable, cpd)
+            super().__setitem__(variable, relationship)
 
-            # If the CPD can be initialized, try doing so. If it fails, do nothing
-            if isinstance(cpd, StochasticFunctionCPD):
-                try:
-                    cpd.initialize_tabular_cpd(self.cbn)
-                except ParentsNotReadyException:
-                    return
+            # Try obtaining a TabularCPD from the relationship. If it fails, do nothing
+            try:
+                cpd = self.to_tabular_cpd(variable, relationship)
+            except ParentsNotReadyException:
+                return
 
             # add cpd to BayesianModel, and update domain dictionary
             BayesianModel.add_cpds(self.cbn, cpd)
@@ -71,6 +72,14 @@ class CausalBayesianNetwork(BayesianModel):
             for cpd in self.cbn.get_cpds():
                 cpd.store_state_names(None, None, self.domain)
 
+        def to_tabular_cpd(self, variable: str, relationship: Relationship) -> TabularCPD:
+            if isinstance(relationship, TabularCPD):
+                return relationship
+            elif isinstance(relationship, Callable):  # type: ignore
+                return StochasticFunctionCPD(variable, relationship, self.cbn)  # type: ignore
+            elif isinstance(relationship, Mapping):
+                return ConstantCPD(variable, relationship, self.cbn)
+
     def __init__(self, edges: Iterable[Tuple[str, str]]):
         """Initialize a Causal Bayesian Network
 
@@ -92,20 +101,21 @@ class CausalBayesianNetwork(BayesianModel):
 
     def remove_edge(self, u: str, v: str) -> None:
         super().remove_edge(u, v)
-        if v in self.model and isinstance(self.model[v], UniformRandomCPD):
+        if v in self.model and isinstance(self.get_cpds(v), ConstantCPD):
             self.model[v] = self.model[v]
 
-    def add_edge(self, u: str, v: str) -> None:
-        super().add_edge(u, v)
-        if v in self.model and isinstance(self.model[v], UniformRandomCPD):
+    def add_edge(self, u: str, v: str, **kwargs: Any) -> None:
+        super().add_edge(u, v, **kwargs)
+        if v in self.model and isinstance(self.get_cpds(v), ConstantCPD):
             self.model[v] = self.model[v]
 
-    def add_cpds(self, *cpds: TabularCPD) -> None:
+    def add_cpds(self, *cpds: TabularCPD, **relationships: Relationship) -> None:
         """
         Add the given CPDs and initialize StochasticFunctionCPDs
         """
         for cpd in cpds:
             self.model.__setitem__(cpd.variable, cpd, sync_state_names=False)  # type: ignore
+        self.model.update(relationships)  # TODO: Prevent sync_state_names
         self.model.sync_state_names()
 
     def remove_cpds(self, *cpds: Union[str, TabularCPD]) -> None:
@@ -182,7 +192,9 @@ class CausalBayesianNetwork(BayesianModel):
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
             self.add_cpds(
-                FunctionCPD(variable, lambda: intervention[variable], domain=self.model.domain.get(variable, None))
+                StochasticFunctionCPD(
+                    variable, lambda: intervention[variable], self, domain=self.model.domain.get(variable, None)
+                )
             )
 
     def expected_value(

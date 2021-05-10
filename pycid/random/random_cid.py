@@ -76,7 +76,6 @@ def random_cid(
 
     if add_cpds:
         add_random_cpds(cid)
-
     return cid
 
 

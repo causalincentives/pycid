@@ -14,6 +14,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -25,8 +26,8 @@ import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 
-from pycid.core.causal_bayesian_network import CausalBayesianNetwork
-from pycid.core.cpd import DecisionDomain, FunctionCPD, Outcome, UniformRandomCPD
+from pycid.core.causal_bayesian_network import CausalBayesianNetwork, Relationship
+from pycid.core.cpd import DecisionDomain, Outcome, StochasticFunctionCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -49,6 +50,20 @@ class MACIDBase(CausalBayesianNetwork):
     utility_agent: The agent owner of each utility node.
         A dictionary mapping utility node label => agent label.
     """
+
+    class Model(CausalBayesianNetwork.Model):
+        def __setitem__(
+            self, variable: str, relationship: Union[Relationship, Sequence], sync_state_names: bool = False
+        ) -> None:
+            if isinstance(relationship, (DecisionDomain, Sequence)) and variable not in self.cbn.decisions:
+                raise ValueError(f"trying to add DecisionDomain to non-decision node {variable}")
+            super().__setitem__(variable, relationship, sync_state_names)
+
+        def to_tabular_cpd(self, variable: str, relationship: Union[Relationship, Sequence[Outcome]]) -> TabularCPD:
+            if isinstance(relationship, Sequence):
+                return DecisionDomain(variable, self.cbn, relationship)
+            else:
+                return super().to_tabular_cpd(variable, relationship)
 
     def __init__(
         self,
@@ -98,7 +113,7 @@ class MACIDBase(CausalBayesianNetwork):
         self.decision_agent[node] = agent
         cpd = self.get_cpds(node)
         if cpd and not isinstance(cpd, DecisionDomain):
-            self.add_cpds(DecisionDomain(node, cpd.domain))
+            self.add_cpds(DecisionDomain(node, self, cpd.state_names[node]))
 
     def make_utility(self, node: str, agent: AgentLabel = 0) -> None:
         """ "Turn a chance or utility node into a decision node."""
@@ -117,18 +132,8 @@ class MACIDBase(CausalBayesianNetwork):
             agent = self.utility_agent.pop(node)
             self.agent_utilities[agent].remove(node)
 
-    def add_cpds(self, *cpds: TabularCPD) -> None:
-        """
-        Add the given CPDs and initialize them.
-
-        A CPD can be a TabularCPD, FunctionCPD, UniformRandomCPD, DecisionDomain, or a StochasticFunctionCPD.
-        """
-
-        # For MACIDs and CIDs we need to do an extra check
-        for cpd in cpds:
-            if isinstance(cpd, DecisionDomain) and cpd.variable not in self.decisions:
-                raise ValueError(f"trying to add DecisionDomain to non-decision node {cpd.variable}")
-        super().add_cpds(*cpds)
+    def add_cpds(self, *cpds: TabularCPD, **relationships: Union[Relationship, List[Outcome]]) -> None:
+        super().add_cpds(*cpds, **relationships)
 
     def query(
         self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
@@ -268,7 +273,7 @@ class MACIDBase(CausalBayesianNetwork):
                 return False
         return True
 
-    def pure_decision_rules(self, decision: str) -> Iterator[FunctionCPD]:
+    def pure_decision_rules(self, decision: str) -> Iterator[StochasticFunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
         domain = self.get_cpds(decision).domain
@@ -295,16 +300,18 @@ class MACIDBase(CausalBayesianNetwork):
                 # using a default argument is a trick to get func_list to evaluate early
                 return lambda **parent_values: early_eval_func_list[arg2idx(parent_values)]
 
-            yield FunctionCPD(decision, produce_function(), domain=domain)
+            yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)
 
-    def pure_policies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[FunctionCPD, ...]]:
+    def pure_policies(self, decision_nodes: Iterable[str]) -> Iterator[Tuple[StochasticFunctionCPD, ...]]:
         """
         Iterate over all of an agent's pure policies in this subgame.
         """
         possible_dec_rules = list(map(self.pure_decision_rules, decision_nodes))
         return itertools.product(*possible_dec_rules)
 
-    def optimal_pure_policies(self, decisions: Iterable[str], rel_tol: float = 1e-9) -> List[Tuple[FunctionCPD, ...]]:
+    def optimal_pure_policies(
+        self, decisions: Iterable[str], rel_tol: float = 1e-9
+    ) -> List[Tuple[StochasticFunctionCPD, ...]]:
         """Find all optimal policies for a given set of decisions.
 
         - All decisions must belong to the same agent.
@@ -340,7 +347,7 @@ class MACIDBase(CausalBayesianNetwork):
                 max_utility = expected_utility
         return optimal_policies
 
-    def optimal_pure_decision_rules(self, decision: str) -> List[FunctionCPD]:
+    def optimal_pure_decision_rules(self, decision: str) -> List[StochasticFunctionCPD]:
         """
         Return a list of all optimal pure decision rules for a given decision
         """
@@ -348,12 +355,14 @@ class MACIDBase(CausalBayesianNetwork):
 
     def impute_random_decision(self, d: str) -> None:
         """Impute a random policy to the given decision node"""
-        current_cpd = self.get_cpds(d)
-        if current_cpd:
-            sn = current_cpd.domain
-        else:
+        try:
+            domain = self.model.domain[d]
+        except KeyError:
             raise ValueError(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
-        self.add_cpds(UniformRandomCPD(d, sn))
+        else:
+            self.model[d] = StochasticFunctionCPD(
+                d, lambda **pv: {outcome: 1 / len(domain) for outcome in domain}, self, domain, label="random_decision"
+            )
 
     def impute_fully_mixed_policy_profile(self) -> None:
         """Impute a fully mixed policy profile - ie a random decision rule to all decision nodes"""
@@ -369,13 +378,13 @@ class MACIDBase(CausalBayesianNetwork):
             elif isinstance(cpd, DecisionDomain):
                 continue
             else:
-                self.add_cpds(DecisionDomain(d, cpd.domain))
+                self.add_cpds(DecisionDomain(d, self, cpd.domain))
 
     def impute_optimal_decision(self, decision: str) -> None:
         """Impute an optimal policy to the given decision node"""
         # self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
         self.impute_random_decision(decision)
-        domain = self.get_cpds(decision).domain
+        domain = self.model.domain[decision]
         utility_nodes = self.agent_utilities[self.decision_agent[decision]]
         descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
         copy = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions
@@ -388,7 +397,7 @@ class MACIDBase(CausalBayesianNetwork):
                 eu[d] = sum(copy.expected_value(descendant_utility_nodes, parent_values))
             return max(eu, key=eu.get)  # type: ignore
 
-        self.add_cpds(FunctionCPD(decision, opt_policy, domain=domain, label="opt"))
+        self.add_cpds(StochasticFunctionCPD(decision, opt_policy, self, domain=domain, label="opt"))
 
     def impute_conditional_expectation_decision(self, decision: str, y: str) -> None:
         """Imputes a policy for decision = the expectation of y conditioning on d's parents"""
@@ -402,7 +411,7 @@ class MACIDBase(CausalBayesianNetwork):
             else:
                 return copy.expected_value([y], pv)[0]
 
-        self.add_cpds(FunctionCPD(decision, cond_exp_policy, label="cond_exp({})".format(y)))
+        self.add_cpds(StochasticFunctionCPD(decision, cond_exp_policy, self, label="cond_exp({})".format(y)))
 
     # Wrapper around DAG.active_trail_nodes to accept arbitrary iterables for observed.
     # Really, DAG.active_trail_nodes should accept Sets, especially since it does

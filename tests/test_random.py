@@ -4,7 +4,7 @@ from typing import Tuple
 import networkx as nx
 import pytest
 
-from pycid import CausalBayesianNetwork, FunctionCPD, RandomCPD
+from pycid import CausalBayesianNetwork, RandomCPD
 from pycid.random.random_cid import random_cid, random_cids
 from pycid.random.random_dag import random_dag
 from pycid.random.random_macid import random_macid, random_macids
@@ -23,10 +23,7 @@ class TestRandomCpd:
     def test_random_cpd_copy() -> None:
         """check that a copy of a random cpd yields the same distribution"""
         cbn = CausalBayesianNetwork([("A", "B")])
-        cbn.add_cpds(
-            RandomCPD("A"),
-            FunctionCPD("B", lambda a: a),
-        )
+        cbn.add_cpds(A=RandomCPD(), B=lambda a: a)
         cbn2 = cbn.copy()
         assert cbn.expected_value(["B"], {}) == cbn2.expected_value(["B"], {})
 
