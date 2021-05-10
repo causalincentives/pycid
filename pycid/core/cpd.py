@@ -171,11 +171,11 @@ class StochasticFunctionCPD(TabularCPD):
     def parent_values(self) -> Iterator[Dict[str, Outcome]]:
         """Return a list of lists for the values each parent can take (based on the parent state names)"""
         parent_values_list = []
-        for p in self.cbn.get_parents(self.variable):
-            try:
+        try:
+            for p in self.cbn.get_parents(self.variable):
                 parent_values_list.append(self.cbn.model.domain[p])
-            except KeyError:
-                raise ParentsNotReadyException(f"Parent {p} of {self.variable} not yet instantiated")
+        except KeyError:
+            raise ParentsNotReadyException(f"Parent {p} of {self.variable} not yet instantiated")
         for parent_values in itertools.product(*parent_values_list):
             yield {p.lower(): parent_values[i] for i, p in enumerate(self.cbn.get_parents(self.variable))}
 
@@ -207,7 +207,7 @@ class StochasticFunctionCPD(TabularCPD):
         except ParentsNotReadyException:
             pass
         mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
-        return f"{type(self).__name__}<{self.variable}:{self.stochastic_function}> \n{mapping}"
+        return f"{type(self).__name__}<{self.variable}:{self.func}> \n{mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()
