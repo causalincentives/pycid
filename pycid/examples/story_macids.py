@@ -125,22 +125,22 @@ def taxi_competition() -> MACID:
     "Equilibrium Refinements for Multi-Agent Influence Diagrams: Theory and Practice"
     by Hammond, Fox, Everitt, Abate & Wooldridge, 2021:
 
-                              D1
+                              D2
         +----------+----------+----------+
         |  taxi 1  | expensive|  cheap   |
         +----------+----------+----------+
-        |expensive |     2    |   3      |
-    D2  +----------+----------+----------+
-        | cheap    |     5    |   1      |
+        |expensive |     2    |   5      |
+    D1  +----------+----------+----------+
+        | cheap    |     3    |   1      |
         +----------+----------+----------+
 
-                              D1
+                              D2
         +----------+----------+----------+
         |  taxi 2  | expensive|  cheap   |
         +----------+----------+----------+
-        |expensive |     2    |   5      |
-    D2  +----------+----------+----------+
-        | cheap    |     3    |   1      |
+        |expensive |     2    |   3      |
+    D1  +----------+----------+----------+
+        | cheap    |     5    |   1      |
         +----------+----------+----------+
 
     There are 3 pure strategy NE and 1 pure SPE.
@@ -153,14 +153,14 @@ def taxi_competition() -> MACID:
 
     d1_domain = ["e", "c"]
     d2_domain = ["e", "c"]
-    agent1_payoff = np.array([[2, 3], [5, 1]])
+    agent1_payoff = np.array([[2, 5], [3, 1]])
     agent2_payoff = agent1_payoff.T
 
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
-        U2=lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
@@ -173,22 +173,22 @@ def modified_taxi_competition() -> MACID:
 
     - There are now two SPNE
 
-                              D1
+                              D2
         +----------+----------+----------+
         |  taxi 1  | expensive|  cheap   |
         +----------+----------+----------+
-        |expensive |     2    |   3      |
-    D2  +----------+----------+----------+
-        | cheap    |     5    |   1      |
+        |expensive |     2    |   5      |
+    D1  +----------+----------+----------+
+        | cheap    |     3    |   1      |
         +----------+----------+----------+
 
-                              D1
+                              D2
         +----------+----------+----------+
         |  taxi 2  | expensive|  cheap   |
         +----------+----------+----------+
-        |expensive |     2    |   5      |
-    D2  +----------+----------+----------+
-        | cheap    |     3    |   5      |
+        |expensive |     2    |   3      |
+    D1  +----------+----------+----------+
+        | cheap    |     5    |   5      |
         +----------+----------+----------+
 
     """
@@ -200,14 +200,14 @@ def modified_taxi_competition() -> MACID:
 
     d1_domain = ["e", "c"]
     d2_domain = ["e", "c"]
-    agent1_payoff = np.array([[2, 3], [5, 1]])
-    agent2_payoff = np.array([[2, 5], [3, 5]])
+    agent1_payoff = np.array([[2, 5], [3, 1]])
+    agent2_payoff = np.array([[2, 3], [5, 5]])
 
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
-        U2=lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
     )
     return macid
 
