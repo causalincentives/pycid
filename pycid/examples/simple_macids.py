@@ -288,7 +288,7 @@ def basic_different_dec_cardinality() -> MACID:
     agent2_payoff = np.array([[1, 2, 1], [1, 0, 3]])
 
     macid.add_cpds(
-        D1=[0, 1], D2=[0, 1], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
+        D1=[0, 1], D2=[0, 1, 2], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
     )
 
     return macid

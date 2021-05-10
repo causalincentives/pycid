@@ -26,7 +26,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 
 from pycid.core.causal_bayesian_network import CausalBayesianNetwork, Relationship
-from pycid.core.cpd import DecisionDomain, Outcome, StochasticFunctionCPD, discrete_uniform
+from pycid.core.cpd import DecisionDomain, Outcome, StochasticFunctionCPD
 from pycid.core.relevance_graph import RelevanceGraph
 
 AgentLabel = Hashable  # Could be a TypeVar instead but that might be overkill
@@ -358,7 +358,9 @@ class MACIDBase(CausalBayesianNetwork):
         except KeyError:
             raise ValueError(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
         else:
-            self.model[d] = discrete_uniform(domain)
+            self.model[d] = StochasticFunctionCPD(
+                d, lambda **pv: {outcome: 1 / len(domain) for outcome in domain}, self, domain, label="random_decision"
+            )
 
     def impute_fully_mixed_policy_profile(self) -> None:
         """Impute a fully mixed policy profile - ie a random decision rule to all decision nodes"""
@@ -380,7 +382,7 @@ class MACIDBase(CausalBayesianNetwork):
         """Impute an optimal policy to the given decision node"""
         # self.add_cpds(random.choice(self.optimal_pure_decision_rules(d)))
         self.impute_random_decision(decision)
-        domain = self.get_cpds(decision).state_names[decision]
+        domain = self.model.domain[decision]
         utility_nodes = self.agent_utilities[self.decision_agent[decision]]
         descendant_utility_nodes = list(set(utility_nodes).intersection(nx.descendants(self, decision)))
         copy = self.copy()  # using a copy "freezes" the policy so it doesn't adapt to future interventions

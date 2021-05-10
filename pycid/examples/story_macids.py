@@ -159,8 +159,8 @@ def taxi_competition() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+        U2=lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
     )
     return macid
 
@@ -206,8 +206,8 @@ def modified_taxi_competition() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda d1, d2: agent1_payoff[d2_domain.index(d2), d1_domain.index(d1)],
+        U2=lambda d1, d2: agent2_payoff[d2_domain.index(d2), d1_domain.index(d1)],
     )
     return macid
 

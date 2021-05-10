@@ -110,8 +110,8 @@ class TestIntervention:
         macid = macid_taxi_comp
         macid.impute_fully_mixed_policy_profile()
         # TODO: Ask James about this
-        assert macid.expected_value(["U1"], {}, intervention={"D1": "c", "D2": "e"})[0] == 5
-        assert macid.expected_value(["U2"], {}, intervention={"D1": "c", "D2": "e"})[0] == 3
+        assert macid.expected_value(["U1"], {}, intervention={"D1": "c", "D2": "e"})[0] == 3
+        assert macid.expected_value(["U2"], {}, intervention={"D1": "c", "D2": "e"})[0] == 5
 
 
 class TestCopyWithoutCpds:

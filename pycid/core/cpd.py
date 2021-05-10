@@ -256,7 +256,7 @@ def bernoulli(p: float) -> Dict[Outcome, float]:
 
 
 def discrete_uniform(domain: List[Outcome]) -> Dict[Outcome, float]:
-    return dict.fromkeys(domain)
+    return {outcome: 1 / len(domain) for outcome in domain}
 
 
 def noisy_copy(value: Outcome, probability: float = 0.9, domain: List[Outcome] = None) -> Dict[Outcome, float]:
