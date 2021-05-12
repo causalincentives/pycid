@@ -107,7 +107,9 @@ class MACIDBase(CausalBayesianNetwork):
         return self.agent_utilities.keys()
 
     def make_decision(self, node: str, agent: AgentLabel = 0) -> None:
-        """ "Turn a chance or utility node into a decision node."""
+        """ "Turn a chance or utility node into a decision node.
+        - agent specifies which agent the decision node should belong to in a MACID.
+        """
         self.make_chance(node)
         self.agent_decisions[agent].append(node)
         self.decision_agent[node] = agent
@@ -276,7 +278,7 @@ class MACIDBase(CausalBayesianNetwork):
     def pure_decision_rules(self, decision: str) -> Iterator[StochasticFunctionCPD]:
         """Return a list of the decision rules available at the given decision"""
 
-        domain = self.get_cpds(decision).domain
+        domain = self.model.domain[decision]
         parents = self.get_parents(decision)
         parent_cardinalities = [self.get_cardinality(parent) for parent in parents]
 
