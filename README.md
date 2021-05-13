@@ -35,12 +35,10 @@ cid = pycid.CID([
     decisions=['D'],  # D is a decision node
     utilities=['U'])  # U is a utility node
 
-# specify the causal relationships
-cid.add_cpds(
-    pycid.UniformRandomCPD('S', [-1, 1]),  # S is -1 or 1 with equal probability
-    pycid.DecisionDomain('D', [-1, 1]),  # the permitted choices for D are -1 and 1
-    pycid.FunctionCPD('U', lambda s, d: s * d)  # U is the product of S and D (arguments lowercase the variable names)
-)
+# specify the causal relationships with CPDs using keyword arguments
+cid.add_cpds(S = pycid.discrete_uniform([-1, 1]), # S is -1 or 1 with equal probability
+             D=[-1, 1], # the permitted action choices for D are -1 and 1
+             U=lambda s, d: s * d) # U is the product of S and D (arguments lowercase the variable names)
 
 # Draw the result
 cid.draw()
