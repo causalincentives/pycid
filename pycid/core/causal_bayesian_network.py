@@ -269,7 +269,7 @@ class CausalBayesianNetwork(BayesianModel):
         node_label: Callable[[str], str] = None,
     ) -> None:
         """
-        Draw the MACID or CID.
+        Draw the CBN, CID, or MACID.
         """
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
