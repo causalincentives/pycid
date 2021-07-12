@@ -95,3 +95,18 @@ Before committing to the master branch, please ensure that:
 * Your functions have docstrings and types, and a unit test verifying that they work
 * For notebooks, you have done "restart kernel and run all cells" before saving and committing
 * Any documentation (such as this file) is up-to-date
+
+## Citing
+Please use the following bibtex for citing `PyCID` in your research:
+
+```
+@InProceedings{ james_fox-proc-scipy-2021,
+  author    = { {J}ames {F}ox and {T}om {E}veritt and {R}yan {C}arey and {E}ric {L}anglois and {A}lessandro {A}bate and {M}ichael {W}ooldridge },
+  title     = { {P}y{C}{I}{D}: {A} {P}ython {L}ibrary for {C}ausal {I}nfluence {D}iagrams },
+  booktitle = { {P}roceedings of the 20th {P}ython in {S}cience {C}onference },
+  pages     = { 43 - 51 },
+  year      = { 2021 },
+  editor    = { {M}eghann {A}garwal and {C}hris {C}alloway and {D}illon {N}iederhut and {D}avid {S}hupe },
+  doi       = {  }
+}
+```
