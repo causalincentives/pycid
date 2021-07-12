@@ -116,7 +116,7 @@ class StochasticFunctionCPD(TabularCPD):
             probabilities = complete_prob_dictionary(self.stochastic_function(**pv))
             probability_list.append([probabilities[t] for t in self.domain])
         probability_matrix = np.array(probability_list).T
-        if not np.allclose(probability_matrix.sum(axis=0), 1, atol=0.01):
+        if not np.allclose(probability_matrix.sum(axis=0), 1, rtol=0, atol=0.01):
             raise ValueError(f"The values for {self.variable} do not sum to 1 \n{probability_matrix}")
         if (probability_matrix < 0).any() or (probability_matrix > 1).any():
             raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
