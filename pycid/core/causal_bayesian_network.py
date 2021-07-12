@@ -220,10 +220,10 @@ class CausalBayesianNetwork(BayesianModel):
         factor.normalize()  # make probs add to one
 
         ev = np.array([0.0 for _ in factor.variables])
-        for idx, prob in np.ndenumerate(factor.values):
+        for idx, prob in np.ndenumerate(factor.values):  # type: ignore
             # idx contains the information about the value each variable takes
             # we use state_names to convert index into the actual value of the variable
-            ev += prob * np.array(
+            ev += prob * np.array(  # type: ignore
                 [factor.state_names[variable][idx[var_idx]] for var_idx, variable in enumerate(factor.variables)]
             )
             if np.isnan(ev).any():
