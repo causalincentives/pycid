@@ -22,7 +22,7 @@ def admits_ri(cid: CID, decision: str, node: str) -> bool:
     if decision not in cid.nodes:
         raise KeyError(f"{decision} is not present in the cid")
     if not cid.sufficient_recall():
-        raise ValueError("Voi is only implemented for graphs with sufficient recall")
+        raise ValueError("Response inventives are only implemented for graphs with sufficient recall")
     if node == decision:
         return False
 

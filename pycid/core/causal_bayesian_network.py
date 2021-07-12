@@ -100,11 +100,13 @@ class CausalBayesianNetwork(BayesianModel):
             self._lowercase_to_variable[node.lower()] = node
 
     def remove_edge(self, u: str, v: str) -> None:
+        """removes an edge u to v that exists from the CBN"""
         super().remove_edge(u, v)
         if v in self.model and isinstance(self.get_cpds(v), ConstantCPD):
             self.model[v] = self.model[v]
 
     def add_edge(self, u: str, v: str, **kwargs: Any) -> None:
+        """adds an edge from u to v to the CBN"""
         super().add_edge(u, v, **kwargs)
         if v in self.model and isinstance(self.get_cpds(v), ConstantCPD):
             self.model[v] = self.model[v]
@@ -245,7 +247,6 @@ class CausalBayesianNetwork(BayesianModel):
         return model_copy
 
     def _get_color(self, node: str) -> Union[np.ndarray, str]:
-        # TODO: the return type is like this because otherwise it violates the "Liskov substitution principle".
         # all nodes in a CBN are chance nodes
         return "lightgray"
 

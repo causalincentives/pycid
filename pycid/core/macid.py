@@ -23,6 +23,8 @@ class MACID(MACIDBase):
         return self.get_all_pure_ne_in_sg()
 
     def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
+        """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
+        pure decision rule to every decision node in the MACID."""
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 

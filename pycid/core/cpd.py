@@ -209,9 +209,6 @@ class StochasticFunctionCPD(TabularCPD):
         mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         return f"{type(self).__name__}<{self.variable}:{self.func}> \n{mapping}"
 
-    def __str__(self) -> str:
-        return self.__repr__()
-
 
 class ConstantCPD(StochasticFunctionCPD):
     def __init__(
@@ -252,14 +249,17 @@ class DecisionDomain(ConstantCPD):
 
 
 def bernoulli(p: float) -> Dict[Outcome, float]:
+    """Create a CPD for a variable that follows a Bernoulli(p) distribution."""
     return {0: 1 - p, 1: p}
 
 
 def discrete_uniform(domain: List[Outcome]) -> Dict[Outcome, float]:
+    "Assign a variable a CPD which is a discrete uniform random distribution over the given domain."
     return {outcome: 1 / len(domain) for outcome in domain}
 
 
 def noisy_copy(value: Outcome, probability: float = 0.9, domain: List[Outcome] = None) -> Dict[Outcome, float]:
+    """specify a variable's CPD as copying the value of some other variable with a certain probability."""
     dist = dict.fromkeys(domain) if domain else {}
     dist[value] = probability
     return dist
