@@ -97,7 +97,7 @@ Before committing to the master branch, please ensure that:
 * Any documentation (such as this file) is up-to-date
 
 ## Citing
-Please use the following bibtex for citing `PyCID` in your research:
+Please use the following BibTeX entry for citing `PyCID` in your research:
 
 ```
 @InProceedings{ james_fox-proc-scipy-2021,
