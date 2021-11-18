@@ -124,6 +124,20 @@ class CausalBayesianNetwork(BayesianModel):
         for cpd in cpds:
             del self.model[cpd.variable if isinstance(cpd, TabularCPD) else cpd]
 
+    def is_structural_causal_model(self) -> bool:
+        """Check whether self represents a Structural Causal Model (SCM).
+
+        Nodes without parents are interpreted as exogenous, and are allowed to have any
+        distribution. All other nodes are interpreted as endogenous, and are therefore
+        required to have degenerate CPD tables containing only 0 and 1s.
+        """
+        for node in self:
+            if self.get_parents(node):
+                for probability in self.get_cpds(node).values.flatten():
+                    if not (np.isclose(probability, 0) or np.isclose(probability, 1)):
+                        return False
+        return True
+
     def _fix_lowercase_variables(self, outcome_dict: Dict[str, Outcome]) -> None:
         """
         Outcomes are sometimes specified in terms of lowercase versions of variable names.

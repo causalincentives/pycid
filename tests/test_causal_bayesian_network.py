@@ -70,6 +70,16 @@ class TestAssignCpd:
         cbn_3node.remove_cpds("U")
 
 
+class TestIsStructuralCausalModel:
+    @staticmethod
+    def test_is_scm(cbn_3node: CausalBayesianNetwork) -> None:
+        assert cbn_3node.is_structural_causal_model()
+
+    @staticmethod
+    def test_is_not_scm(cbn_3node_uniform: CausalBayesianNetwork) -> None:
+        assert not cbn_3node_uniform.is_structural_causal_model()
+
+
 class TestQuery:
     @staticmethod
     def test_query(cbn_3node: CausalBayesianNetwork) -> None:
