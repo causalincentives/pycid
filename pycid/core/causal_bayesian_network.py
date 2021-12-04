@@ -34,7 +34,7 @@ class CausalBayesianNetwork(BayesianModel):
             self.cbn = cbn
             self.domain: Dict[str, List[Outcome]] = {}
 
-        def __setitem__(self, variable: str, relationship: Relationship, sync_state_names: bool = True) -> None:
+        def __setitem__(self, variable: str, relationship: Relationship) -> None:
 
             # Update the keys
             if variable in self.keys():
@@ -56,9 +56,9 @@ class CausalBayesianNetwork(BayesianModel):
             if not (old_domain and old_domain == self.domain[variable]):
                 for child in self.cbn.get_children(variable):
                     if child in self.keys():
-                        self.__setitem__(child, self[child], sync_state_names=False)  # type: ignore
-                if sync_state_names:
-                    self.sync_state_names()
+                        self.__setitem__(child, self[child])  # type: ignore
+
+            self.sync_state_names()
 
         def __delitem__(self, variable: str) -> None:
             super().__delitem__(variable)
@@ -116,9 +116,8 @@ class CausalBayesianNetwork(BayesianModel):
         Add the given CPDs and initialize StochasticFunctionCPDs
         """
         for cpd in cpds:
-            self.model.__setitem__(cpd.variable, cpd, sync_state_names=False)  # type: ignore
-        self.model.update(relationships)  # TODO: Prevent sync_state_names
-        self.model.sync_state_names()
+            self.model.__setitem__(cpd.variable, cpd)  # type: ignore
+        self.model.update(relationships)
 
     def remove_cpds(self, *cpds: Union[str, TabularCPD]) -> None:
         for cpd in cpds:
@@ -256,8 +255,8 @@ class CausalBayesianNetwork(BayesianModel):
     def copy(self) -> CausalBayesianNetwork:
         """copy the MACIDBase object"""
         model_copy = self.copy_without_cpds()
-        if self.cpds:
-            model_copy.add_cpds(*[cpd.copy() for cpd in self.cpds])
+        for v in self.model:
+            model_copy.model[v] = self.model[v]
         return model_copy
 
     def _get_color(self, node: str) -> Union[np.ndarray, str]:

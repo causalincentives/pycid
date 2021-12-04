@@ -197,7 +197,7 @@ class TestBASE(unittest.TestCase):
         macid.remove_all_decision_rules()
         self.assertTrue(isinstance(macid.get_cpds("D1"), DecisionDomain))
         macid_copy = macid.copy_without_cpds()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             macid_copy.remove_all_decision_rules()
 
     # @unittest.skip("")
