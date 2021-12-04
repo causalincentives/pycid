@@ -6,7 +6,6 @@ from pycid.core.cpd import (  # noqa
     StochasticFunctionCPD,
     bernoulli,
     discrete_uniform,
-    function_copy,
     noisy_copy,
 )
 from pycid.core.macid import MACID  # noqa

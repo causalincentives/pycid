@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import itertools
-import types
 from inspect import getsourcelines
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Union
 
@@ -17,17 +16,6 @@ if TYPE_CHECKING:
 
 class ParentsNotReadyException(ValueError):
     pass
-
-
-def function_copy(f: Callable) -> Callable:
-    """
-    return a function with same code, globals, defaults, closure, and
-    name (or provide a new name)
-    """
-    fn = types.FunctionType(f.__code__, f.__globals__, f.__name__, f.__defaults__, f.__closure__)  # type: ignore
-    # in case f was given attrs (note this dict is a shallow copy):
-    fn.__dict__.update(f.__dict__)
-    return fn
 
 
 class StochasticFunctionCPD(TabularCPD):
