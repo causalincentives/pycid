@@ -71,7 +71,7 @@ def random_macidbase(
             )
             if num_decs > len(possible_dec_nodes):
                 break
-            agent_decs = random.sample(possible_dec_nodes, num_decs)
+            agent_decs = random.sample(list(possible_dec_nodes), num_decs)
             used_nodes.update(agent_decs)
 
             # rename decision and utility nodes
