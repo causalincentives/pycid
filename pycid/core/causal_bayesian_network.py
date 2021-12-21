@@ -90,15 +90,6 @@ class CausalBayesianNetwork(BayesianModel):
         self.model = self.Model(self)
         super().__init__(ebunch=edges)
 
-        self._lowercase_to_variable: Dict[str, str] = {}
-        for node in self.nodes:
-            if node.lower() in self._lowercase_to_variable:
-                raise ValueError(
-                    f'Name conflict: Both "{node}" and "{self._lowercase_to_variable[node.lower()]}" '
-                    f'have the same lowercase "{node.lower()}".'
-                )
-            self._lowercase_to_variable[node.lower()] = node
-
     def remove_edge(self, u: str, v: str) -> None:
         """removes an edge u to v that exists from the CBN"""
         super().remove_edge(u, v)
@@ -116,7 +107,7 @@ class CausalBayesianNetwork(BayesianModel):
         Add the given CPDs and initialize StochasticFunctionCPDs
         """
         for cpd in cpds:
-            self.model.__setitem__(cpd.variable, cpd)  # type: ignore
+            self.model[cpd.variable] = cpd  # type: ignore
         self.model.update(relationships)
 
     def remove_cpds(self, *cpds: Union[str, TabularCPD]) -> None:
@@ -137,15 +128,6 @@ class CausalBayesianNetwork(BayesianModel):
                         return False
         return True
 
-    def _fix_lowercase_variables(self, outcome_dict: Dict[str, Outcome]) -> None:
-        """
-        Outcomes are sometimes specified in terms of lowercase versions of variable names.
-        They need to be converted, before passed to factor.query
-        """
-        for var in set(outcome_dict).intersection(self._lowercase_to_variable):
-            outcome_dict[self._lowercase_to_variable[var]] = outcome_dict[var]
-            del outcome_dict[var]
-
     def query(
         self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
     ) -> BeliefPropagation:
@@ -162,8 +144,6 @@ class CausalBayesianNetwork(BayesianModel):
 
         intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
-        self._fix_lowercase_variables(context)
-
         for variable, outcome in context.items():
             if outcome not in self.model.domain[variable]:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
@@ -202,7 +182,6 @@ class CausalBayesianNetwork(BayesianModel):
         ----------
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
-        self._fix_lowercase_variables(intervention)
         for variable in intervention:
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)

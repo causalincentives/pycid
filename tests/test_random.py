@@ -23,7 +23,7 @@ class TestRandomCpd:
     def test_random_cpd_copy() -> None:
         """check that a copy of a random cpd yields the same distribution"""
         cbn = CausalBayesianNetwork([("A", "B")])
-        cbn.add_cpds(A=RandomCPD(), B=lambda a: a)
+        cbn.add_cpds(A=RandomCPD(), B=lambda A: A)
         cbn2 = cbn.copy()
         assert cbn.expected_value(["B"], {}) == cbn2.expected_value(["B"], {})
 

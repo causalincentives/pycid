@@ -4,13 +4,13 @@ from pycid.core.cpd import discrete_uniform, noisy_copy
 
 def get_minimal_cid() -> CID:
     cid = CID([("A", "B")], decisions=["A"], utilities=["B"])
-    cid.add_cpds(A=[0, 1], B=lambda a: a)
+    cid.add_cpds(A=[0, 1], B=lambda A: A)
     return cid
 
 
 def get_3node_cid() -> CID:
     cid = CID([("S", "D"), ("S", "U"), ("D", "U")], decisions=["D"], utilities=["U"])
-    cid.add_cpds(S=discrete_uniform([-1, 1]), U=lambda s, d: s * d, D=[-1, 1])
+    cid.add_cpds(S=discrete_uniform([-1, 1]), U=lambda S, D: S * D, D=[-1, 1])
     return cid
 
 
@@ -23,8 +23,8 @@ def get_5node_cid() -> CID:
     cid.add_cpds(
         S1=discrete_uniform([0, 1]),
         S2=discrete_uniform([0, 1]),
-        U1=lambda s1, d: int(s1 == d),
-        U2=lambda s2, d: int(s2 == d),
+        U1=lambda S1, D: int(S1 == D),
+        U2=lambda S2, D: int(S2 == D),
         D=[0, 1],
     )
     return cid
@@ -39,8 +39,8 @@ def get_5node_cid_with_scaled_utility() -> CID:
     cid.add_cpds(
         S1=discrete_uniform([0, 1]),
         S2=discrete_uniform([0, 1]),
-        U1=lambda s1, d: 10 * int(s1 == d),
-        U2=lambda s2, d: 2 * int(s2 == d),
+        U1=lambda S1, D: 10 * int(S1 == D),
+        U2=lambda S2, D: 2 * int(S2 == D),
         D=[0, 1],
     )
     return cid
@@ -56,8 +56,8 @@ def get_2dec_cid() -> CID:
         S1=discrete_uniform([0, 1]),
         D1=[0, 1],
         D2=[0, 1],
-        S2=lambda s1, d1: int(s1 == d1),
-        U=lambda s2, d2: int(s2 == d2),
+        S2=lambda S1, D1: int(S1 == D1),
+        U=lambda S2, D2: int(S2 == D2),
     )
     return cid
 
@@ -66,9 +66,9 @@ def get_quantitative_voi_cid() -> CID:
     cid = CID([("S", "X"), ("X", "D"), ("D", "U"), ("S", "U")], decisions=["D"], utilities=["U"])
     cid.add_cpds(
         S=discrete_uniform([-1, 1]),
-        X=lambda s: noisy_copy(s, probability=0.8, domain=[-1, 1]),
+        X=lambda S: noisy_copy(S, probability=0.8, domain=[-1, 1]),
         D=[-1, 0, 1],
-        U=lambda s, d: int(s) * int(d),
+        U=lambda S, D: int(S) * int(D),
     )
     return cid
 
@@ -96,17 +96,17 @@ def get_sequential_cid() -> CID:
     cid.add_cpds(
         S1=discrete_uniform([0, 1]),
         D1=[0, 1],
-        U1=lambda s1, d1: int(s1 == d1),
-        S2=lambda d1: d1,
+        U1=lambda S1, D1: int(S1 == D1),
+        S2=lambda D1: D1,
         D2=[0, 1],
-        U2=lambda s2, d2: int(s2 == d2),
+        U2=lambda S2, D2: int(S2 == D2),
     )
     return cid
 
 
 def get_insufficient_recall_cid() -> CID:
     cid = CID([("A", "U"), ("B", "U")], decisions=["A", "B"], utilities=["U"])
-    cid.add_cpds(A=[0, 1], B=[0, 1], U=lambda a, b: a * b)
+    cid.add_cpds(A=[0, 1], B=[0, 1], U=lambda A, B: A * B)
     return cid
 
 

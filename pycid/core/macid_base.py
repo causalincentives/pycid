@@ -151,8 +151,6 @@ class MACIDBase(CausalBayesianNetwork):
 
         intervention: Interventions to apply. A dictionary mapping node => outcome.
         """
-
-        self._fix_lowercase_variables(context)
         for variable, outcome in context.items():
             if outcome not in self.get_cpds(variable).domain:
                 raise ValueError(f"The outcome {outcome} is not in the domain of {variable}")
@@ -290,7 +288,7 @@ class MACIDBase(CausalBayesianNetwork):
             idx = 0
             for i, parent in enumerate(parents):
                 name_to_no: Dict[Outcome, int] = self.get_cpds(parent).name_to_no[parent]
-                idx += name_to_no[pv[parent.lower()]] * int(np.product(parent_cardinalities[:i]))
+                idx += name_to_no[pv[parent]] * int(np.product(parent_cardinalities[:i]))
             assert 0 <= idx <= number_of_decision_contexts
             return idx
 
@@ -400,8 +398,8 @@ class MACIDBase(CausalBayesianNetwork):
 
         @lru_cache(maxsize=1000)
         def cond_exp_policy(**pv: Outcome) -> float:
-            if y.lower() in pv:
-                return pv[y.lower()]  # type: ignore
+            if y in pv:
+                return pv[y]  # type: ignore
             else:
                 return copy.expected_value([y], pv)[0]
 

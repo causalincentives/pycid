@@ -164,7 +164,7 @@ def two_agent_one_pne() -> MACID:
     agent2_payoff = np.array([[2, 0], [3, 2]])
 
     macid.add_cpds(
-        D1=[0, 1], D2=[0, 1], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
+        D1=[0, 1], D2=[0, 1], U1=lambda D1, D2: agent1_payoff[D1, D2], U2=lambda D1, D2: agent2_payoff[D1, D2]
     )
     return macid
 
@@ -268,8 +268,8 @@ def two_agents_three_actions() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
     )
     return macid
 
@@ -288,7 +288,7 @@ def basic_different_dec_cardinality() -> MACID:
     agent2_payoff = np.array([[1, 2, 1], [1, 0, 3]])
 
     macid.add_cpds(
-        D1=[0, 1], D2=[0, 1, 2], U1=lambda d1, d2: agent1_payoff[d1, d2], U2=lambda d1, d2: agent2_payoff[d1, d2]
+        D1=[0, 1], D2=[0, 1, 2], U1=lambda D1, D2: agent1_payoff[D1, D2], U2=lambda D1, D2: agent2_payoff[D1, D2]
     )
 
     return macid

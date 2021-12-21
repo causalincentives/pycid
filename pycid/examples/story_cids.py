@@ -21,10 +21,10 @@ def get_introduced_bias() -> CID:
     cid.add_cpds(
         A=discrete_uniform([0, 1]),
         Z=discrete_uniform([0, 1]),
-        X=lambda a, z: a * z,
+        X=lambda A, Z: A * Z,
         D=[0, 1],
-        Y=lambda x, z: x + z,
-        U=lambda d, y: -((d - y) ** 2),
+        Y=lambda X, Z: X + Z,
+        U=lambda D, Y: -((D - Y) ** 2),
     )
     return cid
 

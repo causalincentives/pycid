@@ -27,7 +27,7 @@ class TestCPD(unittest.TestCase):
         self.assertEqual(cpd_a.get_cardinality(["A"])["A"], 1)
         self.assertEqual(cpd_a.get_state_names("A", 0), 2)
         cid.add_cpds(cpd_a)
-        cpd_b = StochasticFunctionCPD("B", lambda a: a, cid)
+        cpd_b = StochasticFunctionCPD("B", lambda A: A, cid)
         self.assertEqual(cpd_b.get_values(), np.array([[1]]))
         self.assertEqual(cpd_b.get_cardinality(["B"])["B"], 1)
         self.assertEqual(cpd_b.get_state_names("B", 0), 2)

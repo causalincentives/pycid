@@ -36,8 +36,8 @@ def prisoners_dilemma() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
     )
     return macid
 
@@ -74,8 +74,8 @@ def battle_of_the_sexes() -> MACID:
     macid.add_cpds(
         D_F=d_f_domain,
         D_M=d_m_domain,
-        U_F=lambda d_f, d_m: agent_f_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
-        U_M=lambda d_f, d_m: agent_m_payoff[d_f_domain.index(d_f), d_m_domain.index(d_m)],
+        U_F=lambda D_F, D_M: agent_f_payoff[d_f_domain.index(D_F), d_m_domain.index(D_M)],
+        U_M=lambda D_F, D_M: agent_m_payoff[d_f_domain.index(D_F), d_m_domain.index(D_M)],
     )
     return macid
 
@@ -112,8 +112,8 @@ def matching_pennies() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
     )
     return macid
 
@@ -159,8 +159,8 @@ def taxi_competition() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
     )
     return macid
 
@@ -206,8 +206,8 @@ def modified_taxi_competition() -> MACID:
     macid.add_cpds(
         D1=d1_domain,
         D2=d2_domain,
-        U1=lambda d1, d2: agent1_payoff[d1_domain.index(d1), d2_domain.index(d2)],
-        U2=lambda d1, d2: agent2_payoff[d1_domain.index(d1), d2_domain.index(d2)],
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
     )
     return macid
 
@@ -254,12 +254,12 @@ def robot_warehouse() -> MACID:
     macid.add_cpds(
         D1=[0, 1],
         D2=[0, 1],
-        Q=lambda d1: noisy_copy(d1, domain=[0, 1]),
-        B=lambda d1: noisy_copy(d1, probability=0.3, domain=[0, 1]),
-        R=lambda b, d2: int(not b or d2),
-        O=lambda d2: noisy_copy(d2, probability=0.6, domain=[0, 1]),
-        U1=lambda q, b, o: int(q and not o) - int(b),
-        U2=lambda r: r,
+        Q=lambda D1: noisy_copy(D1, domain=[0, 1]),
+        B=lambda D1: noisy_copy(D1, probability=0.3, domain=[0, 1]),
+        R=lambda B, D2: int(not B or D2),
+        O=lambda D2: noisy_copy(D2, probability=0.6, domain=[0, 1]),
+        U1=lambda Q, B, O: int(Q and not O) - int(B),
+        U2=lambda R: R,
     )
     return macid
 

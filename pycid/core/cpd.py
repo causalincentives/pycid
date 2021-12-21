@@ -60,8 +60,8 @@ class StochasticFunctionCPD(TabularCPD):
         stochastic_function: A stochastic function that maps parent outcomes to a distribution
         over outcomes for this variable (see doc-string for class).
         The different parents are identified by name: the arguments to the function must
-        be lowercase versions of the names of the parent variables. For example, if X has
-        parents Y, S1, and Obs, the arguments to function must be y, s1, and obs.
+        match the names of the parent variables. For example, if X has
+        parents Y, S1, and Obs, the arguments to function must be Y, S1, and Obs.
 
         domain: An optional specification of the variable's domain.
             Must include all values this variable can take as a result of its function.
@@ -149,11 +149,10 @@ class StochasticFunctionCPD(TabularCPD):
         sig = inspect.signature(self.stochastic_function).parameters
         arg_kinds = [arg_kind.kind.name for arg_kind in sig.values()]
         args = set(sig)
-        lower_case_parents = {p.lower() for p in self.cbn.get_parents(self.variable)}
-        if "VAR_KEYWORD" not in arg_kinds and args != lower_case_parents:
+        if "VAR_KEYWORD" not in arg_kinds and args != set(self.cbn.get_parents(self.variable)):
             raise ValueError(
                 f"function for {self.variable} mismatch parents on"
-                f" {args.symmetric_difference(lower_case_parents)}, "
+                f" {args.symmetric_difference(set(self.cbn.get_parents(self.variable)))}, "
             )
 
     def parent_values(self) -> Iterator[Dict[str, Outcome]]:
@@ -165,7 +164,7 @@ class StochasticFunctionCPD(TabularCPD):
         except KeyError:
             raise ParentsNotReadyException(f"Parent {p} of {self.variable} not yet instantiated")
         for parent_values in itertools.product(*parent_values_list):
-            yield {p.lower(): parent_values[i] for i, p in enumerate(self.cbn.get_parents(self.variable))}
+            yield {p: parent_values[i] for i, p in enumerate(self.cbn.get_parents(self.variable))}
 
     def possible_values(self) -> List[Outcome]:
         """The possible values this variable can take, given the values the parents can take"""

@@ -35,11 +35,11 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
 
 
 NOTEBOOKS = [
-    "fairness",
     "CID_Basics_Tutorial",
     "CID_Incentives_Tutorial",
     "MACID_Basics_Tutorial",
     "Reasoning_Patterns_Tutorial",
+    "Why_fair_labels_may_yield_unfair_models_AAAI_22",
 ]
 
 
