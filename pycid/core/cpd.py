@@ -245,8 +245,10 @@ def discrete_uniform(domain: List[Outcome]) -> Dict[Outcome, float]:
     return {outcome: 1 / len(domain) for outcome in domain}
 
 
-def noisy_copy(value: Outcome, probability: float = 0.9, domain: List[Outcome] = None) -> Dict[Outcome, float]:
+def noisy_copy(
+    value: Outcome, probability: float = 0.9, domain: List[Outcome] = None
+) -> Dict[Outcome, Optional[float]]:
     """specify a variable's CPD as copying the value of some other variable with a certain probability."""
-    dist: Dict[Outcome, float] = dict.fromkeys(domain) if domain else {}
+    dist = dict.fromkeys(domain) if domain else {}
     dist[value] = probability
     return dist
