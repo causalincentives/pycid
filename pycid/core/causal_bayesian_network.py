@@ -235,7 +235,7 @@ class CausalBayesianNetwork(BayesianModel):
         """copy the MACIDBase object"""
         model_copy = self.copy_without_cpds()
         for v in self.model:
-            model_copy.model[v] = self.model[v]
+            model_copy.model[v] = self.model[v].copy() if hasattr(self.model[v], "copy") else self.model[v]
         return model_copy
 
     def _get_color(self, node: str) -> Union[np.ndarray, str]:
