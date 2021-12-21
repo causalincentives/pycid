@@ -35,6 +35,7 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
 
 
 NOTEBOOKS = [
+    "CBN_Tutorial",
     "CID_Basics_Tutorial",
     "CID_Incentives_Tutorial",
     "MACID_Basics_Tutorial",

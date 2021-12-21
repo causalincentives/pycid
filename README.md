@@ -46,12 +46,14 @@ cid.draw()
 
 ![image](./image.png "")
 
-The [notebooks](./notebooks) provide many more examples, including
-a [CID Basics Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb),
-a [MACID Basics Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb), and
-a [CID Incentives Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Incentives_Tutorial.ipynb).
+The [notebooks](./notebooks) provide many more examples, including tutorials on how to work with
+[Causal Bayesian Networks](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CBN_Tutorial.ipynb),
+[Causal Influence Diagrams](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb), and
+[Multi-Agent Causal Influence Diagrams](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb).
+There also a tutorial on [Incentive Analysis](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Incentives_Tutorial.ipynb).
 
-To quickly get started using colab, make a copy of [this notebook](https://colab.research.google.com/drive/1QsITqn02c8zBfdOxaR0gVFcLQA_2UROu#scrollTo=GfupUXwM77Ti).
+The above notebooks all open in Colab, and can be run
+directly in the browser with no further setup or installation required.
 
 ## Code overview
 
