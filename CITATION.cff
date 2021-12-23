@@ -31,7 +31,7 @@ preferred-citation:
     given-names: "Michael"
 
   doi: "10.25080/majora-1b6fd038-008"
-  journal: "Proceedings of the 20th Python in Science Conference"
+  collection-title: "Proceedings of the 20th Python in Science Conference"
   start: 43 # First page number
   end: 51 # Last page number
   title: "PyCID: A Python Library for Causal Influence Diagrams"
