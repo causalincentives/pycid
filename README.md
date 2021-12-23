@@ -3,11 +3,17 @@
 This package implements causal influence diagrams and methods to analyze them, and is part of the
 [Causal Incentives](https://causalincentives.com) project.
 
-Building on [pgmpy](https://pgmpy.org/), pycid provides methods for
-defining CIDs and MACIDs,
+Building on [pgmpy](https://pgmpy.org/) and [NetworkX](https://networkx.org/), pycid provides methods for
+defining CBNs, CIDs and MACIDs,
 computing optimal policies and Nash equilibria,
 studying the effects of interventions, and
 checking graphical criteria for various types of incentives.
+
+## News
+
+Version 0.7 *breaks backwards compatibility* by requiring CPD arguments to match the case of the parent nodes.
+To update your code to the latest version, simply change the case of the arguments, as illustrated [here](https://github.com/causalincentives/pycid/commit/e50ee06b7eafac63fe7c9471764c9c5774fc743b).
+Alternatively, stick to version 0.2.8. 
 
 ## Install
 Create and activate
