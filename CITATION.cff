@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use PyCID in your work, please cite it as below."
+authors:
+- family-names: "Fox"
+  given-names: "James"
+- family-names: "Everitt"
+  given-names: "Tom"
+- family-names: "Carey"
+  given-names: "Ryan"
+- family-names: "Langlois"
+  given-names: "Eric"
+
+title: "PyCID"
+version: 0.7.0
+date-released: 2021-12-21
+url: "https://github.com/causalincentives/pycid"
+preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Fox"
+    given-names: "James"
+  - family-names: "Everitt"
+    given-names: "Tom"
+  - family-names: "Carey"
+    given-names: "Ryan"
+  - family-names: "Langlois"
+    given-names: "Eric"
+  - family-names: "Abate"
+    given-names: "Alessandro"
+  - family-names: "Wooldridge"
+    given-names: "Michael"
+
+  doi: "10.25080/majora-1b6fd038-008"
+  journal: "Proceedings of the 20th Python in Science Conference"
+  start: 43 # First page number
+  end: 51 # Last page number
+  title: "PyCID: A Python Library for Causal Influence Diagrams"
+  year: 2021
