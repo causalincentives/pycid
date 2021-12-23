@@ -115,6 +115,6 @@ Please use the following BibTeX entry for citing `PyCID` in your research:
   pages     = { 43 - 51 },
   year      = { 2021 },
   editor    = { {M}eghann {A}garwal and {C}hris {C}alloway and {D}illon {N}iederhut and {D}avid {S}hupe },
-  doi       = {  }
+  doi       = {10.25080/majora-1b6fd038-008}
 }
 ```
