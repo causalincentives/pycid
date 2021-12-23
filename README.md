@@ -52,13 +52,13 @@ cid.draw()
 
 ![image](./image.png "")
 
-The [notebooks](./notebooks) provide many more examples, including tutorials on how to work with
-[Causal Bayesian Networks](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CBN_Tutorial.ipynb),
-[Causal Influence Diagrams](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb), and
-[Multi-Agent Causal Influence Diagrams](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb).
-There also a tutorial on [Incentive Analysis](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Incentives_Tutorial.ipynb).
+The [notebooks](./notebooks) provide many more examples, including: 
+* [CBN Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CBN_Tutorial.ipynb) shows how to specify the structure and (causal) relationships between nodes, and ask simple queries.
+* [CID tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb) adds special decision and utility nodes for one agent, and how to compute optimal policies.
+* [MACID tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb) covers methods for handling multiple agents, including finding subgames and Nash equilibria.
+* [Incentive Analysis tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Incentives_Tutorial.ipynb) illustrates various methods for analyzing the incentives of agents.
 
-The above notebooks all open in Colab, and can be run
+The above notebooks links all open in Colab, and can be run
 directly in the browser with no further setup or installation required.
 
 ## Code overview
