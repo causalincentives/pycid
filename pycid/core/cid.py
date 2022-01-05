@@ -12,9 +12,9 @@ class CID(MACIDBase):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]],
-        decisions: Iterable[str],
-        utilities: Iterable[str],
+        edges: Iterable[Tuple[str, str]] = None,
+        decisions: Iterable[str] = None,
+        utilities: Iterable[str] =None,
     ):
         """Initialize a Causal Influence Diagram
 

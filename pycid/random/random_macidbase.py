@@ -151,7 +151,7 @@ def _add_sufficient_recall(mb: MACIDBase, d1: str, d2: str, utility_node: str) -
         raise ValueError("{} is an ancestor of {}".format(d2, d1))
 
     mg = MechanismGraph(mb)
-    while mg.is_active_trail(d1 + "mec", utility_node, observed=mg.get_parents(d2) + [d2]):
+    while mg.is_dconnected(d1 + "mec", utility_node, observed=mg.get_parents(d2) + [d2]):
         path = find_active_path(mg, d1 + "mec", utility_node, {d2, *mg.get_parents(d2)})
         if path is None:
             raise RuntimeError("couldn't find path even though there should be an active trail")

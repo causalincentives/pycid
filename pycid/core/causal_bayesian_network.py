@@ -9,15 +9,16 @@ import numpy as np
 import pandas
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
-from pgmpy.models import BayesianModel
 from pgmpy.sampling import BayesianModelSampling
+from pgmpy.models import BayesianNetwork
+
 
 from pycid.core.cpd import ConstantCPD, Outcome, ParentsNotReadyException, StochasticFunctionCPD
 
 Relationship = Union[TabularCPD, Dict[Outcome, float], Callable[..., Union[Outcome, Dict[Outcome, float]]]]
 
 
-class CausalBayesianNetwork(BayesianModel):
+class CausalBayesianNetwork(BayesianNetwork):
     """Causal Bayesian Network
 
     A Causal Bayesian Network is a Bayesian Network where the directed edges represent every causal relationship
@@ -28,7 +29,7 @@ class CausalBayesianNetwork(BayesianModel):
         """
         This class keeps track of all CPDs and their domains in the form of a dictionary,
         and makes sure that whenever a CPD is added or removed, it is also added/removed from
-        the BayesianModel list.
+        the BayesianNetwork list.
         """
 
         def __init__(self, cbn: CausalBayesianNetwork, *args: Any, **kwargs: Any) -> None:
@@ -49,8 +50,8 @@ class CausalBayesianNetwork(BayesianModel):
             except ParentsNotReadyException:
                 return
 
-            # add cpd to BayesianModel, and update domain dictionary
-            BayesianModel.add_cpds(self.cbn, cpd)
+            # add cpd to BayesianNetwork, and update domain dictionary
+            BayesianNetwork.add_cpds(self.cbn, cpd)
             old_domain = self.domain.get(variable, None)
             self.domain[variable] = cpd.state_names[variable]
 
@@ -65,14 +66,14 @@ class CausalBayesianNetwork(BayesianModel):
         def __delitem__(self, variable: str) -> None:
             super().__delitem__(variable)
             try:
-                BayesianModel.remove_cpds(self.cbn, variable)
+                BayesianNetwork.remove_cpds(self.cbn, variable)
             except ValueError:
                 pass
 
         def sync_state_names(self) -> None:
             """Inform each CPD about the domains of other variables"""
             for cpd in self.cbn.get_cpds():
-                cpd.store_state_names(None, None, self.domain)
+                cpd.store_state_names(None, None, dict(self.domain))
 
         def to_tabular_cpd(self, variable: str, relationship: Relationship) -> TabularCPD:
             if isinstance(relationship, TabularCPD):
@@ -82,7 +83,7 @@ class CausalBayesianNetwork(BayesianModel):
             elif isinstance(relationship, Mapping):
                 return ConstantCPD(variable, relationship, self.cbn)
 
-    def __init__(self, edges: Iterable[Tuple[str, str]]):
+    def __init__(self, edges: Iterable[Tuple[str, str]] = None):
         """Initialize a Causal Bayesian Network
 
         Parameters

@@ -223,7 +223,7 @@ class ConstantCPD(StochasticFunctionCPD):
 class DecisionDomain(ConstantCPD):
     """DecisionDomain is used to specify the domain for a decision
 
-    Under the hood it becomes a UniformRandomCPD, to satisfy BayesianModel.check_model()
+    Under the hood it becomes a UniformRandomCPD, to satisfy BayesianNetwork.check_model()
     """
 
     def __init__(self, variable: str, cbn: CausalBayesianNetwork, domain: Sequence[Outcome]):

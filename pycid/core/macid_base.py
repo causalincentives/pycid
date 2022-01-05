@@ -65,9 +65,9 @@ class MACIDBase(CausalBayesianNetwork):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]],
-        agent_decisions: Mapping[AgentLabel, Iterable[str]],
-        agent_utilities: Mapping[AgentLabel, Iterable[str]],
+        edges: Iterable[Tuple[str, str]]=None,
+        agent_decisions: Mapping[AgentLabel, Iterable[str]]=None,
+        agent_utilities: Mapping[AgentLabel, Iterable[str]]=None,
     ):
         """Initialize a new MACIDBase instance.
 
@@ -83,11 +83,17 @@ class MACIDBase(CausalBayesianNetwork):
         """
         super().__init__(edges=edges)
 
-        self.agent_decisions = {agent: list(nodes) for agent, nodes in agent_decisions.items()}
-        self.agent_utilities = {agent: list(nodes) for agent, nodes in agent_utilities.items()}
+        try:
+            self.agent_decisions = {agent: list(nodes) for agent, nodes in agent_decisions.items()}
+            self.decision_agent = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
+        except:
+            print("TODO: find a better solution")
 
-        self.decision_agent = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
-        self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
+        try:
+            self.agent_utilities = {agent: list(nodes) for agent, nodes in agent_utilities.items()}
+            self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
+        except:
+            print("TODO: find a better solution")
 
     @property
     def decisions(self) -> KeysView[str]:
@@ -164,7 +170,7 @@ class MACIDBase(CausalBayesianNetwork):
                 mech_graph.remove_edge(parent, intervention_var)
         for decision in self.decisions:
             for query_node in query:
-                if mech_graph.is_active_trail(
+                if mech_graph.is_dconnected(
                     decision + "mec", query_node, observed=list(context.keys()) + list(intervention.keys())
                 ):
                     cpd = self.get_cpds(decision)
@@ -244,7 +250,7 @@ class MACIDBase(CausalBayesianNetwork):
                 con_nodes = [decision] + self.get_parents(decision)
                 agent_utilities = self.agent_utilities[self.decision_agent[decision]]
                 for utility in set(agent_utilities).intersection(nx.descendants(self, decision)):
-                    if mg.is_active_trail(node + "mec", utility, con_nodes):
+                    if mg.is_dconnected(node + "mec", utility, con_nodes):
                         return True
         return False
 
@@ -409,9 +415,9 @@ class MACIDBase(CausalBayesianNetwork):
     # Really, DAG.active_trail_nodes should accept Sets, especially since it does
     # inefficient membership checks on observed as a list.
     def active_trail_nodes(
-        self, variables: Union[str, List[str], Tuple[str, ...]], observed: Optional[Iterable[str]] = None
+        self, variables: Union[str, List[str], Tuple[str, ...]], observed: Optional[Iterable[str]] = None, **argv
     ) -> Dict[str, Set[str]]:
-        return super().active_trail_nodes(variables, list(observed))  # type: ignore
+        return super().active_trail_nodes(variables, list(observed), **argv)  # type: ignore
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
