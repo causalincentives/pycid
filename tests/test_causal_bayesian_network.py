@@ -99,7 +99,7 @@ class TestQuery:
 
 class TestSample:
     @staticmethod
-    def test_sample(cbn_3node: CausalBayesianNetwork):
+    def test_sample(cbn_3node: CausalBayesianNetwork) -> None:
         sample = cbn_3node.sample().to_numpy()
         assert (sample == np.array([-1, 0, 0])).all() or (sample == np.array([1, 2, 2])).all()
 
