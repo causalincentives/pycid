@@ -48,6 +48,7 @@ class StochasticFunctionCPD(TabularCPD):
         stochastic_function: Callable[..., Union[Outcome, Mapping[Outcome, Union[int, float]]]],
         cbn: CausalBayesianNetwork,
         domain: Optional[Sequence[Outcome]] = None,
+        state_names: Optional[Mapping[str, List]] = None,
         label: str = None,
     ) -> None:
         """Initialize StochasticFunctionCPD with a variable name and a stochastic function.
@@ -71,6 +72,10 @@ class StochasticFunctionCPD(TabularCPD):
         self.variable = variable
         self.func = stochastic_function
         self.cbn = cbn
+
+        if state_names is not None and domain is not None:
+            assert state_names[self.variable] == domain
+            # TODO: get rid of domain
 
         assert isinstance(domain, (list, type(None)))
         self.force_domain: Optional[Sequence[Outcome]] = domain
@@ -110,7 +115,12 @@ class StochasticFunctionCPD(TabularCPD):
             raise ValueError(f"The probabilities for {self.variable} are not within range 0-1\n{probability_matrix}")
 
         super().__init__(
-            self.variable, card, probability_matrix, evidence, evidence_card, state_names={self.variable: self.domain}
+            self.variable,
+            card,
+            probability_matrix,
+            evidence,
+            evidence_card,
+            state_names=state_names if state_names is not None else {self.variable: self.domain},
         )
 
     def stochastic_function(self, **pv: Outcome) -> Mapping[Outcome, float]:
@@ -178,6 +188,7 @@ class StochasticFunctionCPD(TabularCPD):
             self.func,
             self.cbn,
             domain=list(self.force_domain) if self.force_domain else None,
+            state_names=self.state_names,
         )
 
     def __repr__(self) -> str:

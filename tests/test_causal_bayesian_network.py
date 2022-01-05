@@ -97,6 +97,13 @@ class TestQuery:
             cbn_3node.query(["U"], {"S": 0})
 
 
+class TestSample:
+    @staticmethod
+    def test_sample(cbn_3node: CausalBayesianNetwork):
+        sample = cbn_3node.sample().to_numpy()
+        assert (sample == np.array([-1, 0, 0])).all() or (sample == np.array([1, 2, 2])).all()
+
+
 class TestIntervention:
     @staticmethod
     def test_cbn_single_intervention(cbn_minimal: CausalBayesianNetwork) -> None:
