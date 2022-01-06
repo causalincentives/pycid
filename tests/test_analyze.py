@@ -92,8 +92,8 @@ def cid_fitness_tracker() -> CID:
 def macid() -> MACID:
     return MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
-        agent_decisions={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
-        agent_utilities={0: {"D": ["D1"], "U": ["U1"]}, 1: {"D": ["D2"], "U": ["U2"]}},
+        agent_decisions={0: ["D1"], 1: ["D2"]},
+        agent_utilities={0: ["U1"], 1: ["U2"]},
     )
 
 

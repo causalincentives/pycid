@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Callable, Dict, Iterable, Mapping, Set, Tuple, Union
+from typing import Callable, Dict, List, Mapping, Set, Tuple, Union
 
 import networkx as nx
 import numpy as np
@@ -56,8 +56,8 @@ def random_macidbase(
         }
 
         used_nodes = set()  # type: Set[str]
-        agent_decisions: Mapping[AgentLabel, Iterable[str]] = {}
-        agent_utilities: Mapping[AgentLabel, Iterable[str]] = {}
+        agent_decisions: Mapping[AgentLabel, List[str]] = {}
+        agent_utilities: Mapping[AgentLabel, List[str]] = {}
         node_name_change_map: Dict[str, str] = {}
 
         for agent in agent_utilities_old_name.keys():

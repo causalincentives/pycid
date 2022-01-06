@@ -82,7 +82,7 @@ class CausalBayesianNetwork(BayesianNetwork):
             elif isinstance(relationship, Mapping):
                 return ConstantCPD(variable, relationship, self.cbn)
 
-    def __init__(self, edges: Iterable[Tuple[str, str]] = None, **kwargs):
+    def __init__(self, edges: Iterable[Tuple[str, str]] = None, **kwargs: Any):
         """Initialize a Causal Bayesian Network
 
         Parameters

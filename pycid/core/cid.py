@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from pycid.core.cpd import StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -13,9 +13,9 @@ class CID(MACIDBase):
     def __init__(
         self,
         edges: Optional[Iterable[Tuple[str, str]]] = None,
-        decisions: Optional[Iterable[str]] = None,
-        utilities: Optional[Iterable[str]] = None,
-        **kwargs
+        decisions: Optional[List[str]] = None,
+        utilities: Optional[List[str]] = None,
+        **kwargs: Any
     ):
         """Initialize a Causal Influence Diagram
 

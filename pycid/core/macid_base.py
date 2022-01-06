@@ -4,6 +4,7 @@ import itertools
 import math
 from functools import lru_cache
 from typing import (
+    Any,
     Callable,
     Collection,
     Dict,
@@ -67,9 +68,9 @@ class MACIDBase(CausalBayesianNetwork):
     def __init__(
         self,
         edges: Iterable[Tuple[str, str]] = None,
-        agent_decisions: Mapping[AgentLabel, Iterable[str]] = None,
-        agent_utilities: Mapping[AgentLabel, Iterable[str]] = None,
-        **kwargs,
+        agent_decisions: Mapping[AgentLabel, List[str]] = None,
+        agent_utilities: Mapping[AgentLabel, List[str]] = None,
+        **kwargs: Any,
     ):
         """Initialize a new MACIDBase instance.
 
@@ -414,9 +415,9 @@ class MACIDBase(CausalBayesianNetwork):
     # Really, DAG.active_trail_nodes should accept Sets, especially since it does
     # inefficient membership checks on observed as a list.
     def active_trail_nodes(
-        self, variables: Union[str, List[str], Tuple[str, ...]], observed: Optional[Iterable[str]] = None, **argv
+        self, variables: Union[str, List[str], Tuple[str, ...]], observed: Optional[Iterable[str]] = None, **kwargs: Any
     ) -> Dict[str, Set[str]]:
-        return super().active_trail_nodes(variables, list(observed), **argv)  # type: ignore
+        return super().active_trail_nodes(variables, list(observed), **kwargs)  # type: ignore
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
