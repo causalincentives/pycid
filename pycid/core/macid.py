@@ -122,8 +122,12 @@ class MACID(MACIDBase):
 
     def copy_without_cpds(self) -> MACID:
         """copy the MACID structure"""
-        return MACID(
-            edges=self.edges(),
-            agent_decisions=self.agent_decisions,
-            agent_utilities=self.agent_utilities,
-        )
+        new = MACID()
+        new.add_nodes_from(self.nodes)
+        new.add_edges_from(self.edges)
+        for agent in self.agents:
+            for decision in self.agent_decisions[agent]:
+                new.make_decision(decision, agent)
+            for utility in self.agent_utilities[agent]:
+                new.make_utility(utility, agent)
+        return new

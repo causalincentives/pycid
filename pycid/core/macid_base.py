@@ -19,6 +19,7 @@ from typing import (
     Tuple,
     Union,
 )
+from warnings import warn
 
 import matplotlib.cm as cm
 import networkx as nx
@@ -54,7 +55,7 @@ class MACIDBase(CausalBayesianNetwork):
     class Model(CausalBayesianNetwork.Model):
         def __setitem__(self, variable: str, relationship: Union[Relationship, Sequence]) -> None:
             if isinstance(relationship, (DecisionDomain, Sequence)) and variable not in self.cbn.decisions:
-                raise ValueError(f"trying to add DecisionDomain to non-decision node {variable}")
+                warn(f"adding DecisionDomain to non-decision node {variable}")
             super().__setitem__(variable, relationship)
 
         def to_tabular_cpd(self, variable: str, relationship: Union[Relationship, Sequence[Outcome]]) -> TabularCPD:
@@ -65,9 +66,10 @@ class MACIDBase(CausalBayesianNetwork):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]]=None,
-        agent_decisions: Mapping[AgentLabel, Iterable[str]]=None,
-        agent_utilities: Mapping[AgentLabel, Iterable[str]]=None,
+        edges: Iterable[Tuple[str, str]] = None,
+        agent_decisions: Mapping[AgentLabel, Iterable[str]] = None,
+        agent_utilities: Mapping[AgentLabel, Iterable[str]] = None,
+        **kwargs,
     ):
         """Initialize a new MACIDBase instance.
 
@@ -81,19 +83,13 @@ class MACIDBase(CausalBayesianNetwork):
         agent_utilities: The utility nodes of each agent.
             A mapping of agent label => node labels.
         """
-        super().__init__(edges=edges)
+        super().__init__(edges=edges, **kwargs)
 
-        try:
-            self.agent_decisions = {agent: list(nodes) for agent, nodes in agent_decisions.items()}
-            self.decision_agent = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
-        except:
-            print("TODO: find a better solution")
+        self.agent_decisions = dict(agent_decisions) if agent_decisions else {}
+        self.agent_utilities = dict(agent_utilities) if agent_utilities else {}
 
-        try:
-            self.agent_utilities = {agent: list(nodes) for agent, nodes in agent_utilities.items()}
-            self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
-        except:
-            print("TODO: find a better solution")
+        self.decision_agent = {node: agent for agent, nodes in self.agent_decisions.items() for node in nodes}
+        self.utility_agent = {node: agent for agent, nodes in self.agent_utilities.items() for node in nodes}
 
     @property
     def decisions(self) -> KeysView[str]:
@@ -115,16 +111,19 @@ class MACIDBase(CausalBayesianNetwork):
         - agent specifies which agent the decision node should belong to in a MACID.
         """
         self.make_chance(node)
-        self.agent_decisions[agent].append(node)
+        if agent not in self.agent_decisions:
+            self.agent_decisions[agent] = [node]
+        else:
+            self.agent_decisions[agent].append(node)
         self.decision_agent[node] = agent
-        cpd = self.get_cpds(node)
-        if cpd and not isinstance(cpd, DecisionDomain):
-            self.add_cpds(DecisionDomain(node, self, cpd.state_names[node]))
 
     def make_utility(self, node: str, agent: AgentLabel = 0) -> None:
         """ "Turn a chance or utility node into a decision node."""
         self.make_chance(node)
-        self.agent_utilities[agent].append(node)
+        if agent not in self.agent_utilities:
+            self.agent_utilities[agent] = [node]
+        else:
+            self.agent_utilities[agent].append(node)
         self.utility_agent[node] = agent
 
     def make_chance(self, node: str) -> None:
@@ -421,11 +420,15 @@ class MACIDBase(CausalBayesianNetwork):
 
     def copy_without_cpds(self) -> MACIDBase:
         """copy the MACIDBase object without its CPDs"""
-        return MACIDBase(
-            edges=self.edges(),
-            agent_decisions=self.agent_decisions,
-            agent_utilities=self.agent_utilities,
-        )
+        new = MACIDBase()
+        new.add_nodes_from(self.nodes)
+        new.add_edges_from(self.edges)
+        for agent in self.agents:
+            for decision in self.agent_decisions[agent]:
+                new.make_decision(decision, agent)
+            for utility in self.agent_utilities[agent]:
+                new.make_utility(utility, agent)
+        return new
 
     def _get_color(self, node: str) -> Union[np.ndarray, str]:
         """

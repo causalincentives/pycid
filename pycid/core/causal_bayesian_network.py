@@ -9,9 +9,8 @@ import numpy as np
 import pandas
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
-from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
-
+from pgmpy.sampling import BayesianModelSampling
 
 from pycid.core.cpd import ConstantCPD, Outcome, ParentsNotReadyException, StochasticFunctionCPD
 
@@ -83,7 +82,7 @@ class CausalBayesianNetwork(BayesianNetwork):
             elif isinstance(relationship, Mapping):
                 return ConstantCPD(variable, relationship, self.cbn)
 
-    def __init__(self, edges: Iterable[Tuple[str, str]] = None):
+    def __init__(self, edges: Iterable[Tuple[str, str]] = None, **kwargs):
         """Initialize a Causal Bayesian Network
 
         Parameters
@@ -91,7 +90,7 @@ class CausalBayesianNetwork(BayesianNetwork):
         edges: A set of directed edges. Each is a pair of node labels (tail, head).
         """
         self.model = self.Model(self)
-        super().__init__(ebunch=edges)
+        super().__init__(ebunch=edges, **kwargs)
 
     def remove_edge(self, u: str, v: str) -> None:
         """removes an edge u to v that exists from the CBN"""
@@ -174,6 +173,7 @@ class CausalBayesianNetwork(BayesianNetwork):
 
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
             factor = bp.query(query, context, show_progress=False)
+            factor = bp.query(query, context, show_progress=False)
         return factor
 
     def intervene(self, intervention: Dict[str, Outcome]) -> None:
@@ -186,13 +186,12 @@ class CausalBayesianNetwork(BayesianNetwork):
         intervention: Interventions to apply. A dictionary mapping node => value.
         """
         for variable in intervention:
+            del self.model[variable]
             for p in self.get_parents(variable):  # remove ingoing edges
                 self.remove_edge(p, variable)
-            self.add_cpds(
-                StochasticFunctionCPD(
-                    variable, lambda: intervention[variable], self, domain=self.model.domain.get(variable, None)
-                )
-            )
+            new_dist = {outcome: 0 for outcome in self.model.domain[variable]}
+            new_dist[intervention[variable]] = 1
+            self.model[variable] = new_dist
 
     def expected_value(
         self,
@@ -236,7 +235,10 @@ class CausalBayesianNetwork(BayesianNetwork):
 
     def copy_without_cpds(self) -> CausalBayesianNetwork:
         """copy the CausalBayesianNetwork object"""
-        return CausalBayesianNetwork(edges=self.edges)
+        new = CausalBayesianNetwork()
+        new.add_nodes_from(self.nodes)
+        new.add_edges_from(self.edges)
+        return new
 
     def copy(self) -> CausalBayesianNetwork:
         """copy the MACIDBase object"""

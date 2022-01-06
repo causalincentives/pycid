@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from pycid.core.cpd import StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -12,9 +12,10 @@ class CID(MACIDBase):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]] = None,
-        decisions: Iterable[str] = None,
-        utilities: Iterable[str] =None,
+        edges: Optional[Iterable[Tuple[str, str]]] = None,
+        decisions: Optional[Iterable[str]] = None,
+        utilities: Optional[Iterable[str]] = None,
+        **kwargs
     ):
         """Initialize a Causal Influence Diagram
 
@@ -27,7 +28,12 @@ class CID(MACIDBase):
         utilities: The utility nodes of the agent.
         """
         # Initialize a MACID with a single agent labelled `0`
-        super().__init__(edges=edges, agent_decisions={0: decisions}, agent_utilities={0: utilities})
+        super().__init__(
+            edges=edges,
+            agent_decisions={0: decisions if decisions is not None else []},
+            agent_utilities={0: utilities if utilities is not None else []},
+            **kwargs
+        )
 
     def impute_optimal_policy(self) -> None:
         """Impute an optimal policy to all decision nodes"""
@@ -65,7 +71,15 @@ class CID(MACIDBase):
         """
         Return a copy of the CID without the CPDs.
         """
-        return CID(self.edges(), self.decisions, self.utilities)
+        new = CID()
+        new.add_nodes_from(self.nodes)
+        new.add_edges_from(self.edges)
+        for agent in self.agents:
+            for decision in self.agent_decisions[agent]:
+                new.make_decision(decision, agent)
+            for utility in self.agent_utilities[agent]:
+                new.make_utility(utility, agent)
+        return new
 
     def _get_color(self, node: str) -> str:
         if node in self.decisions:
