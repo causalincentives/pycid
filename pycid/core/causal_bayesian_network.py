@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import collections
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -228,7 +228,7 @@ class CausalBayesianNetwork(BayesianNetwork):
                 )
         return ev.tolist()  # type: ignore
 
-    def sample(self, seed=None) -> Dict[str, Outcome]:
+    def sample(self, seed: Optional[int] = None) -> Dict[str, Outcome]:
         """
         Generates a sample from the joint distribution, and returns it as a dictionary {variable: outcome}
         """
