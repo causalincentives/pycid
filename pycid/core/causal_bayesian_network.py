@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Uni
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import pandas
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference.ExactInference import BeliefPropagation
 from pgmpy.models import BayesianNetwork
@@ -229,9 +228,12 @@ class CausalBayesianNetwork(BayesianNetwork):
                 )
         return ev.tolist()  # type: ignore
 
-    def sample(self) -> pandas.DataFrame:
-        sampler = BayesianModelSampling(self)
-        return sampler.forward_sample(show_progress=False)
+    def sample(self, seed=None) -> Dict[str, Outcome]:
+        """
+        Generates a sample from the joint distribution, and returns it as a dictionary {variable: outcome}
+        """
+        sampled_df = BayesianModelSampling(self).forward_sample(size=1, seed=seed, show_progress=False)
+        return {var: sampled_df[var][0] for var in sampled_df.columns}
 
     def copy_without_cpds(self) -> CausalBayesianNetwork:
         """copy the CausalBayesianNetwork object"""

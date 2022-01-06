@@ -100,8 +100,8 @@ class TestQuery:
 class TestSample:
     @staticmethod
     def test_sample(cbn_3node: CausalBayesianNetwork) -> None:
-        sample = cbn_3node.sample().to_numpy()
-        assert (sample == np.array([-1, 0, 0])).all() or (sample == np.array([1, 2, 2])).all()
+        sample = cbn_3node.sample()
+        assert (sample == {"S": -1, "D": 0, "U": 0}) or (sample == {"S": 1, "D": 2, "U": 2})
 
 
 class TestIntervention:
