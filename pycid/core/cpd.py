@@ -207,7 +207,7 @@ class StochasticFunctionCPD(TabularCPD):
         except ParentsNotReadyException:
             pass
         mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
-        return f"{type(self).__name__}<{self.variable}:{self.func}> \n{mapping}"
+        return f"{type(self).__name__}<{self.variable}> \n{mapping}"
 
     def __str__(self) -> str:
         return self.__repr__()
