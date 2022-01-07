@@ -18,7 +18,7 @@ def random_cid(
     sufficient_recall: bool = False,
     edge_density: float = 0.4,
     max_in_degree: int = 4,
-    max_resampling_attempts: int = 100,
+    max_resampling_attempts: int = 1000,
 ) -> CID:
     """
     Generate a random CID.
