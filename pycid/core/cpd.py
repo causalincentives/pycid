@@ -130,9 +130,10 @@ class StochasticFunctionCPD(TabularCPD):
         else:
             return {ret: 1}
 
-    @staticmethod
-    def compute_label(function: Callable) -> str:
-        if hasattr(function, "__name__"):
+    def compute_label(self, function: Callable = None) -> str:
+        """Try to generate a string that succinctly describes the relationship"""
+        function = function if function is not None else self.func
+        if hasattr(function, "__name__") and function.__name__ != "<lambda>":
             return function.__name__
         sl = ""
         try:
@@ -140,7 +141,8 @@ class StochasticFunctionCPD(TabularCPD):
         except OSError:
             lambda_pos = -1  # Could not find source
         else:
-            lambda_pos = sl.find("lambda")
+            var_pos = sl.find(self.variable)
+            lambda_pos = sl.find("lambda", var_pos, len(sl))
         if lambda_pos > -1:  # can't infer label if not defined by lambda expression
             colon = sl.find(":", lambda_pos, len(sl))
             seen_parenthesis = 0
@@ -206,6 +208,14 @@ class StochasticFunctionCPD(TabularCPD):
             pass
         mapping = "\n".join([str(key) + "  ->  " + str(dictionary[key]) for key in sorted(list(dictionary.keys()))])
         return f"{type(self).__name__}<{self.variable}:{self.func}> \n{mapping}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def prob_table(self) -> str:
+        """print distribution as a probability table"""
+        table: str = TabularCPD.__str__(self)
+        return table
 
 
 class ConstantCPD(StochasticFunctionCPD):
