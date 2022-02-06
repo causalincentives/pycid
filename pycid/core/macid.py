@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, Iterable, List, Optional, Tuple, Iterator
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
-import networkx as nx
-from pgmpy.factors.discrete import TabularCPD
-import numpy as np
 import nashpy as nash
+import networkx as nx
+import numpy as np
+from pgmpy.factors.discrete import TabularCPD
 
 from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -103,7 +103,7 @@ class MACID(MACIDBase):
         """
         Returns a list of all mixed Nash equilibria in non-degnerate 2-player games using
         Nashpy's support enumeration implementation.
-        Returns a list of most mixed Nash equilbria in degnerate 2-player games (see Nashpy's 
+        Returns a list of most mixed Nash equilbria in degnerate 2-player games (see Nashpy's
         documentation for more details)
         - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
         """
@@ -130,7 +130,7 @@ class MACID(MACIDBase):
         # find all mixed NE using Nashpy
         game = nash.Game(payoff1, payoff2)
         equilibria = game.support_enumeration()
-        
+
         all_mixed_ne = []
         for eq in equilibria:
             mixed_ne = list(
@@ -143,10 +143,10 @@ class MACID(MACIDBase):
 
     def _mixed_policy(self, agent_pure_policies, prob_dist) -> Iterator[StochasticFunctionCPD]:
         """
-        Given a list of the agent's pure policies and a distribution over these pure policies, 
+        Given a list of the agent's pure policies and a distribution over these pure policies,
         return a generator of the equivalent mixed decision rules that make up this mixed policy
         """
-    
+
         num_decision_rules = len(agent_pure_policies[0])  # how many decision nodes that agent has
 
         for i in range(num_decision_rules):
@@ -156,14 +156,15 @@ class MACID(MACIDBase):
             def mixed_dec_rule(pvs):  # construct mixed decision rule for each decision node
                 cpd_dict = {}
                 for d in self.model.domain[decision]:
-                    cpd_dict[d] = sum([prob_dist[idx] for idx, p in enumerate(agent_pure_policies) if p[i].func(**pvs) ==d])
+                    cpd_dict[d] = sum(
+                        [prob_dist[idx] for idx, p in enumerate(agent_pure_policies) if p[i].func(**pvs) == d]
+                    )
                 return cpd_dict
 
             def produce_function():
                 return lambda **parent_values: mixed_dec_rule(parent_values)
 
             yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)
-
 
     def decs_in_each_maid_subgame(self) -> List[set]:
         """

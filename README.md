@@ -13,7 +13,7 @@ checking graphical criteria for various types of incentives.
 
 Version 0.7 *breaks backwards compatibility* by requiring CPD arguments to match the case of the parent nodes.
 To update your code to the latest version, simply change the case of the arguments, as illustrated [here](https://github.com/causalincentives/pycid/commit/e50ee06b7eafac63fe7c9471764c9c5774fc743b).
-Alternatively, stick to version 0.2.8. 
+Alternatively, stick to version 0.2.8.
 
 ## Install
 Create and activate
@@ -52,7 +52,7 @@ cid.draw()
 
 ![image](./image.png "")
 
-The [notebooks](./notebooks) provide many more examples, including: 
+The [notebooks](./notebooks) provide many more examples, including:
 * [CBN Tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CBN_Tutorial.ipynb) shows how to specify the structure and (causal) relationships between nodes, and ask simple queries.
 * [CID tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/CID_Basics_Tutorial.ipynb) adds special decision and utility nodes for one agent, and how to compute optimal policies.
 * [MACID tutorial](https://colab.research.google.com/github/causalincentives/pycid/blob/master/notebooks/MACID_Basics_Tutorial.ipynb) covers methods for handling multiple agents, including finding subgames and Nash equilibria.
