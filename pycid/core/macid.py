@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Iterator
 
 import networkx as nx
 from pgmpy.factors.discrete import TabularCPD
+import numpy as np
+import nashpy as nash
 
 from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
@@ -82,7 +84,7 @@ class MACID(MACIDBase):
 
     def get_all_pure_spe(self) -> List[List[StochasticFunctionCPD]]:
         """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM
-        - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
         """
         spes: List[List[StochasticFunctionCPD]] = [[]]
 
@@ -96,6 +98,72 @@ class MACID(MACIDBase):
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
+
+    def get_mixed_ne(self):
+        """
+        Returns a list of all mixed Nash equilibria in non-degnerate 2-player games using
+        Nashpy's support enumeration implementation.
+        Returns a list of most mixed Nash equilbria in degnerate 2-player games (see Nashpy's 
+        documentation for more details)
+        - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
+        """
+        agents = list(self.agents)
+        if len(agents) != 2:
+            raise ValueError(
+                f"This MACID has {len(agents)} agents and yet this method currently only works for 2 agent games."
+            )
+
+        # convert MAID into normal form
+        agent_pure_policies = [list(self.pure_policies(self.agent_decisions[agent])) for agent in agents]
+
+        def _agent_util(pp, agent) -> float:
+            self.add_cpds(*pp)
+            return self.expected_utility({}, agent=agent)
+
+        payoff1 = np.array(
+            [[_agent_util(pp1 + pp2, agents[0]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+        )
+        payoff2 = np.array(
+            [[_agent_util(pp1 + pp2, agents[1]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+        )
+
+        # find all mixed NE using Nashpy
+        game = nash.Game(payoff1, payoff2)
+        equilibria = game.support_enumeration()
+        
+        all_mixed_ne = []
+        for eq in equilibria:
+            mixed_ne = list(
+                itertools.chain(
+                    *[list(self._mixed_policy(agent_pure_policies[agent], eq[agent])) for agent in range(2)]
+                )
+            )
+            all_mixed_ne.append(mixed_ne)
+        return all_mixed_ne
+
+    def _mixed_policy(self, agent_pure_policies, prob_dist) -> Iterator[StochasticFunctionCPD]:
+        """
+        Given a list of the agent's pure policies and a distribution over these pure policies, 
+        return a generator of the equivalent mixed decision rules that make up this mixed policy
+        """
+    
+        num_decision_rules = len(agent_pure_policies[0])  # how many decision nodes that agent has
+
+        for i in range(num_decision_rules):
+            decision = agent_pure_policies[0][i].variable
+            domain = self.model.domain[decision]
+
+            def mixed_dec_rule(pvs):  # construct mixed decision rule for each decision node
+                cpd_dict = {}
+                for d in self.model.domain[decision]:
+                    cpd_dict[d] = sum([prob_dist[idx] for idx, p in enumerate(agent_pure_policies) if p[i].func(**pvs) ==d])
+                return cpd_dict
+
+            def produce_function():
+                return lambda **parent_values: mixed_dec_rule(parent_values)
+
+            yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)
+
 
     def decs_in_each_maid_subgame(self) -> List[set]:
         """
