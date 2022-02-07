@@ -147,13 +147,27 @@ class MACID(MACIDBase):
 
     def get_ne(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of all pure Nash equilbiria in the MACID.
-        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        Return a list of Nash equilbiria in the MACID.
+
+        - If mixed_ne is False, then this returns a list of all pure NE in the MACID.
+        - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
+            - In non-degenerate 2-agent games, this returns a list of all mixed NE.
+            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
+            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
+
+        - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
         """
         return self.get_ne_in_sg(mixed_ne=mixed_ne)
 
     def get_spe(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
-        """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM
+        """Return a list of subgame perfect equilibria in the MACID.
+
+        - If mixed_ne is False, then this returns a list of all pure SPE in the MACID.
+        - If mixed_ne is True, then this finds mixed SPE in 2-agent games using Nashpy:
+            - In non-degenerate 2-agent games, this returns a list of all mixed SPE.
+            - In degenerate 2-agent games, this returns a list of most mixed SPE (see 
+            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
+
         - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
         """
         spes: List[List[StochasticFunctionCPD]] = [[]]
