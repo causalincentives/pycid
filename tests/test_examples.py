@@ -57,6 +57,7 @@ CONSTRUCTORS = [
     story_macids.signal,
     story_macids.triage,
     story_macids.robot_warehouse,
+    story_macids.rock_paper_scissors,
 ]
 
 

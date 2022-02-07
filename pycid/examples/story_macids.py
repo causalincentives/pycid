@@ -117,6 +117,42 @@ def matching_pennies() -> MACID:
     )
     return macid
 
+def rock_paper_scissors() -> MACID:
+    """MACIM representation of rock, paper, scissors
+    - the row player is agent 1 and the
+    column player is agent 2 - the normal form
+    representation of the payoffs is as follows:
+        +----------+----------+----------+----------+
+        |          |  R       |     P    |     S    |
+        +----------+----------+----------+----------+
+        | R        | 0, 0     | -1, 1    | 1, -1    |
+        +----------+----------+----------+----------+
+        | P        | 1, -1    | 0, 0     |  -1, 1   |
+        +----------+----------+----------+----------+
+        | S        | -1, 1    | 1, -1    |  0, 0    |
+        +----------+----------+----------+----------+
+    - The game has one pure NE (T,L)
+    """
+    macid = MACID(
+        [("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],
+        agent_decisions={1: ["D1"], 2: ["D2"]},
+        agent_utilities={1: ["U1"], 2: ["U2"]},
+    )
+
+    d1_domain = ["T", "M", "B"]
+    d2_domain = ["L", "C", "R"]
+
+    agent1_payoff = np.array([[0, -1, 1], [1, 0, -1], [-1, 1, 0]])
+    agent2_payoff = np.array([[0, 1, -1], [-1, 0, 1], [1, -1, 0]])
+
+    macid.add_cpds(
+        D1=d1_domain,
+        D2=d2_domain,
+        U1=lambda D1, D2: agent1_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+        U2=lambda D1, D2: agent2_payoff[d1_domain.index(D1), d2_domain.index(D2)],
+    )
+    return macid
+
 
 def taxi_competition() -> MACID:
     """MACIM representation of the Taxi Competition game.

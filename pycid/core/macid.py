@@ -17,6 +17,44 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
 
+    def get_ne(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
+        """
+        Return a list of Nash equilbiria in the MACID.
+
+        - If mixed_ne is False, then this returns a list of all pure NE in the MACID.
+        - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
+            - In non-degenerate 2-agent games, this returns a list of all mixed NE.
+            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
+            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
+
+        - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
+        """
+        return self.get_ne_in_sg(mixed_ne=mixed_ne)
+
+    def get_spe(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
+        """Return a list of subgame perfect equilibria in the MACID.
+
+        - If mixed_ne is False, then this returns a list of all pure SPE in the MACID.
+        - If mixed_ne is True, then this finds mixed SPE in 2-agent games using Nashpy:
+            - In non-degenerate 2-agent games, this returns a list of all mixed SPE.
+            - In degenerate 2-agent games, this returns a list of most mixed SPE (see 
+            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
+
+        - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
+        """
+        spes: List[List[StochasticFunctionCPD]] = [[]]
+
+        # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
+        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
+            extended_spes = []
+            for partial_profile in spes:
+                self.add_cpds(*partial_profile)
+                all_ne_in_sg = self.get_ne_in_sg(scc, mixed_ne)
+                for ne in all_ne_in_sg:
+                    extended_spes.append(partial_profile + list(ne))
+            spes = extended_spes
+        return spes
+
     def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
         """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
         pure decision rule to every decision node in the MACID."""
@@ -64,13 +102,13 @@ class MACID(MACIDBase):
                 macid.impute_random_decision(d)
 
         if mixed_ne:
-            
+            # mixed NE finder in 2 agent subgames:
+
             if len(agents_in_sg) != 2:
                 raise ValueError(
                     f"This MACID has {len(agents_in_sg)} agents and yet this method currently only works for 2 agent games."
                 )
             
-            # mixed NE finder:
             # convert MAID into normal form
             agent_pure_policies = [tuple(self.pure_policies(agent_decs_in_sg[agent])) for agent in agents_in_sg]
 
@@ -101,8 +139,8 @@ class MACID(MACIDBase):
             return all_mixed_ne
         
         else:
-
             # pure NE finder
+
             all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
             for pp in self.joint_pure_policies(decisions_in_sg):
                 macid.add_cpds(*pp)  # impute the policy profile
@@ -143,45 +181,6 @@ class MACID(MACIDBase):
                 return lambda **parent_values: mixed_dec_rule(parent_values)
 
             yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)
-
-
-    def get_ne(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
-        """
-        Return a list of Nash equilbiria in the MACID.
-
-        - If mixed_ne is False, then this returns a list of all pure NE in the MACID.
-        - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
-            - In non-degenerate 2-agent games, this returns a list of all mixed NE.
-            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
-            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
-
-        - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
-        """
-        return self.get_ne_in_sg(mixed_ne=mixed_ne)
-
-    def get_spe(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
-        """Return a list of subgame perfect equilibria in the MACID.
-
-        - If mixed_ne is False, then this returns a list of all pure SPE in the MACID.
-        - If mixed_ne is True, then this finds mixed SPE in 2-agent games using Nashpy:
-            - In non-degenerate 2-agent games, this returns a list of all mixed SPE.
-            - In degenerate 2-agent games, this returns a list of most mixed SPE (see 
-            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
-
-        - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
-        """
-        spes: List[List[StochasticFunctionCPD]] = [[]]
-
-        # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
-        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
-            extended_spes = []
-            for partial_profile in spes:
-                self.add_cpds(*partial_profile)
-                all_ne_in_sg = self.get_ne_in_sg(scc, mixed_ne)
-                for ne in all_ne_in_sg:
-                    extended_spes.append(partial_profile + list(ne))
-            spes = extended_spes
-        return spes
 
     def decs_in_each_maid_subgame(self) -> List[set]:
         """
