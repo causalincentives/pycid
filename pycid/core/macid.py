@@ -17,31 +17,81 @@ from pycid.core.relevance_graph import CondensedRelevanceGraph
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
 
-    def get_all_pure_ne(self) -> List[List[StochasticFunctionCPD]]:
-        """
-        Return a list of all pure Nash equilbiria in the MACID.
-        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
-        """
-        return self.get_all_pure_ne_in_sg()
-
     def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
         """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
         pure decision rule to every decision node in the MACID."""
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
-    def get_all_pure_ne_in_sg(
-        self, decisions_in_sg: Optional[Iterable[str]] = None
+    # def get_all_pure_ne_in_sg(
+    #     self, decisions_in_sg: Optional[Iterable[str]] = None
+    # ) -> List[List[StochasticFunctionCPD]]:
+    #     """
+    #     Return a list of all pure Nash equilbiria in a MACID subgame.
+
+    #     - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
+    #     - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
+    #     - If the MACID being operated on already has function CPDs for some decision nodes, it is
+    #     assumed that these have already been optimised and so these are not changed.
+    #     """
+    #     # TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
+    #     if decisions_in_sg is None:
+    #         decisions_in_sg = self.decisions
+    #     else:
+    #         decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
+
+    #     agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
+    #     agent_decs_in_sg = {
+    #         agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
+    #     }
+
+    #     # impute random decisions to non-instantiated, irrelevant decision nodes
+    #     macid = self.copy()
+    #     for d in macid.decisions:
+    #         if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
+    #             macid.impute_random_decision(d)
+
+    #     # NE finder
+    #     all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
+    #     for pp in self.joint_pure_policies(decisions_in_sg):
+    #         macid.add_cpds(*pp)  # impute the policy profile
+
+    #         for a in agents_in_sg:  # check that each agent is happy
+    #             eu_pp_agent_a = macid.expected_utility({}, agent=a)
+    #             macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
+    #             max_eu_agent_a = macid.expected_utility({}, agent=a)
+    #             if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+    #                 break
+    #         else:
+    #             # it's an NE
+    #             all_pure_ne_in_sg.append(list(pp))
+
+    #     return all_pure_ne_in_sg
+
+    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
+        """Return a dictionary with the joint or partial policy profile assigned -
+        ie a decision rule for each of the MACIM's decision nodes."""
+        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
+        pp.update({cpd.variable: cpd for cpd in partial_policy})
+        return pp
+
+    def get_ne_in_sg(
+        self, decisions_in_sg: Optional[Iterable[str]] = None, mixed_ne: bool = False,
     ) -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of all pure Nash equilbiria in a MACID subgame.
+        Return a list of Nash equilbiria in a MACID subgame.
 
-        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
-        - If decisions_in_sg is not specified, this method finds all pure NE in the full MACID.
+        - If mixed_ne is False, then this returns a list of all pure NE in the subgame.
+        - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
+            - In non-degenerate 2-agent games, this returns a list of all mixed NE.
+            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
+            Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
+
+        - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the subgame.
+        - If decisions_in_sg is unspecified, this method finds NE in the full MACID.
         - If the MACID being operated on already has function CPDs for some decision nodes, it is
         assumed that these have already been optimised and so these are not changed.
         """
-        # TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
         if decisions_in_sg is None:
             decisions_in_sg = self.decisions
         else:
@@ -58,31 +108,69 @@ class MACID(MACIDBase):
             if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
 
-        # NE finder
-        all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
-        for pp in self.joint_pure_policies(decisions_in_sg):
-            macid.add_cpds(*pp)  # impute the policy profile
+        if mixed_ne:
+            
+            if len(agents_in_sg) != 2:
+                raise ValueError(
+                    f"This MACID has {len(agents_in_sg)} agents and yet this method currently only works for 2 agent games."
+                )
+            
+            # mixed NE finder:
+            # convert MAID into normal form
+            agent_pure_policies = [list(self.pure_policies(agent_decs_in_sg[agent])) for agent in agents_in_sg]
 
-            for a in agents_in_sg:  # check that each agent is happy
-                eu_pp_agent_a = macid.expected_utility({}, agent=a)
-                macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
-                max_eu_agent_a = macid.expected_utility({}, agent=a)
-                if max_eu_agent_a > eu_pp_agent_a:  # not an NE
-                    break
-            else:
-                # it's an NE
-                all_pure_ne_in_sg.append(list(pp))
+            def agent_util(pp, agent) -> float:
+                self.add_cpds(*pp)
+                return self.expected_utility({}, agent=agent)
 
-        return all_pure_ne_in_sg
+            payoff1 = np.array(
+                [[agent_util(pp1 + pp2, agents_in_sg[0]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+            )
+            payoff2 = np.array(
+                [[agent_util(pp1 + pp2, agents_in_sg[1]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+            )
 
-    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
-        """Return a dictionary with the joint or partial policy profile assigned -
-        ie a decision rule for each of the MACIM's decision nodes."""
-        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
-        pp.update({cpd.variable: cpd for cpd in partial_policy})
-        return pp
+            # find all mixed NE using Nashpy
+            game = nash.Game(payoff1, payoff2)
+            equilibria = game.support_enumeration()
 
-    def get_all_pure_spe(self) -> List[List[StochasticFunctionCPD]]:
+            all_mixed_ne = []
+            for eq in equilibria:
+                mixed_ne = list(
+                    itertools.chain(
+                        *[list(self._mixed_policy(agent_pure_policies[agent], eq[agent])) for agent in range(2)]
+                    )
+                )
+                all_mixed_ne.append(mixed_ne)
+            return all_mixed_ne
+        
+        else:
+
+            # pure NE finder
+            all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
+            for pp in self.joint_pure_policies(decisions_in_sg):
+                macid.add_cpds(*pp)  # impute the policy profile
+
+                for a in agents_in_sg:  # check that each agent is happy
+                    eu_pp_agent_a = macid.expected_utility({}, agent=a)
+                    macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
+                    max_eu_agent_a = macid.expected_utility({}, agent=a)
+                    if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+                        break
+                else:
+                    # it's an NE
+                    all_pure_ne_in_sg.append(list(pp))
+
+            return all_pure_ne_in_sg
+
+    def get_all_pure_ne(self) -> List[List[StochasticFunctionCPD]]:
+        """
+        Return a list of all pure Nash equilbiria in the MACID.
+        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        """
+        return self.get_ne_in_sg()
+
+    def get_spe(self, mixed_ne: bool = False) -> List[List[StochasticFunctionCPD]]:
         """Return a list of all pure subgame perfect Nash equilbiria (SPE) in the MACIM
         - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
         """
@@ -93,11 +181,33 @@ class MACID(MACIDBase):
             extended_spes = []
             for partial_profile in spes:
                 self.add_cpds(*partial_profile)
-                all_ne_in_sg = self.get_all_pure_ne_in_sg(scc)
+                all_ne_in_sg = self.get_ne_in_sg(scc, mixed_ne)
                 for ne in all_ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
+
+    
+
+        # # NE finder
+        # all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
+        # for pp in self.joint_pure_policies(decisions_in_sg):
+        #     macid.add_cpds(*pp)  # impute the policy profile
+
+        #     for a in agents_in_sg:  # check that each agent is happy
+        #         eu_pp_agent_a = macid.expected_utility({}, agent=a)
+        #         macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
+        #         max_eu_agent_a = macid.expected_utility({}, agent=a)
+        #         if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+        #             break
+        #     else:
+        #         # it's an NE
+        #         all_pure_ne_in_sg.append(list(pp))
+
+        # return all_pure_ne_in_sg
+
+
+    
 
     def get_mixed_ne(self):
         """
@@ -165,6 +275,8 @@ class MACID(MACIDBase):
                 return lambda **parent_values: mixed_dec_rule(parent_values)
 
             yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)
+
+
 
     def decs_in_each_maid_subgame(self) -> List[set]:
         """

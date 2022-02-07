@@ -69,15 +69,15 @@ class TestMACID(unittest.TestCase):
     # @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()
-        ne_in_subgame = macid.get_all_pure_ne_in_sg(decisions_in_sg=["D2"])
+        ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"])
         policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
         cpd_d2 = policy_assignment["D2"]
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
         self.assertFalse(policy_assignment["D1"])
-        ne_in_full_macid = macid.get_all_pure_ne_in_sg()
+        ne_in_full_macid = macid.get_ne_in_sg()
         self.assertEqual(len(ne_in_full_macid), 3)
         with self.assertRaises(KeyError):
-            macid.get_all_pure_ne_in_sg(decisions_in_sg=["D3"])
+            macid.get_ne_in_sg(decisions_in_sg=["D3"])
 
     # @unittest.skip("")
     def test_get_all_pure_spe(self) -> None:
@@ -111,6 +111,20 @@ class TestMACID(unittest.TestCase):
         cpd_d2 = joint_policy["D2"]
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
+
+    # @unittest.skip("")
+    def test_mixed_ne(self) -> None:
+        macid = matching_pennies()
+        mixed_nes = macid.get_mixed_ne()
+        self.assertEqual(len(mixed_nes), 1)
+        mixed_ne = mixed_nes[0]
+        macid.add_cpds(*mixed_ne)
+        self.assertEqual(macid.expected_utility({}, agent=1), 0)
+        self.assertEqual(macid.expected_utility({}, agent=2), 0)
+
+        macid2 = battle_of_the_sexes()
+        self.assertEqual(len(macid2.get_mixed_ne()), 3)
+
 
 
 if __name__ == "__main__":
