@@ -271,6 +271,7 @@ class CausalBayesianNetwork(BayesianNetwork):
         node_color: Callable[[str], Union[str, np.ndarray]] = None,
         node_shape: Callable[[str], str] = None,
         node_label: Callable[[str], str] = None,
+        layout: Callable[[nx.Graph], dict] = None,
     ) -> None:
         """
         Draw the CBN, CID, or MACID.
@@ -278,7 +279,7 @@ class CausalBayesianNetwork(BayesianNetwork):
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
-        layout = nx.kamada_kawai_layout(self)
+        layout = layout(self) if layout else nx.kamada_kawai_layout(self)
         label_dict = {node: label(node) for node in self.nodes}
         pos_higher = {}
         for k, v in layout.items():
