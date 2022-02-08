@@ -4,6 +4,34 @@ from pgmpy.factors.discrete import TabularCPD  # type: ignore
 from pycid.core.macid import MACID
 
 
+def three_agent_maid() -> MACID:
+    """this agent should have 5 pure NE (which is easy to intuit from the utility functions)"""
+    macid = MACID(
+        [
+            ("D1", "U1"),
+            ("D2", "U1"),
+            ("D3", "U1"),
+            ("D1", "U2"),
+            ("D2", "U2"),
+            ("D3", "U2"),
+            ("D1", "U3"),
+            ("D2", "U3"),
+            ("D3", "U3"),
+        ],
+        agent_decisions={1: ["D1"], 2: ["D2"], 3: ["D3"]},
+        agent_utilities={1: ["U1"], 2: ["U2"], 3: ["U3"]},
+    )
+
+    macid.add_cpds(
+        D1=[0, 1],
+        D2=[0, 1],
+        D3=[0, 1],
+        U1=lambda D1, D2, D3: int(D1) * int(D2) * int(D3),
+        U2=lambda D1, D2, D3: int(D1) * int(D2) * int(D3),
+        U3=lambda D1, D2, D3: int(D1) * int(D2) * int(D3),
+    )
+
+
 def get_basic_subgames() -> MACID:
     macid = MACID(
         [

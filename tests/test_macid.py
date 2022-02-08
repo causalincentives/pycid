@@ -15,8 +15,8 @@ from pycid.examples.story_macids import (
     matching_pennies,
     modified_taxi_competition,
     prisoners_dilemma,
+    rock_paper_scissors,
     taxi_competition,
-    rock_paper_scissors
 )
 
 
@@ -51,7 +51,6 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(macid.expected_utility({}, agent=1), 0)
         self.assertEqual(macid.expected_utility({}, agent=2), 0)
 
-
     # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
@@ -71,7 +70,6 @@ class TestMACID(unittest.TestCase):
         # print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
-    
     # @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()

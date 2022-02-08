@@ -24,7 +24,7 @@ class MACID(MACIDBase):
         - If mixed_ne is False, then this returns a list of all pure NE in the MACID.
         - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
             - In non-degenerate 2-agent games, this returns a list of all mixed NE.
-            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
+            - In degenerate 2-agent games, this returns a list of most mixed NE (see
             Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
 
         - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
@@ -37,7 +37,7 @@ class MACID(MACIDBase):
         - If mixed_ne is False, then this returns a list of all pure SPE in the MACID.
         - If mixed_ne is True, then this finds mixed SPE in 2-agent games using Nashpy:
             - In non-degenerate 2-agent games, this returns a list of all mixed SPE.
-            - In degenerate 2-agent games, this returns a list of most mixed SPE (see 
+            - In degenerate 2-agent games, this returns a list of most mixed SPE (see
             Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
 
         - Each SPE comes as a list of StochasticFunctionCPDs, one for each decision node in the MACID.
@@ -69,7 +69,9 @@ class MACID(MACIDBase):
         return pp
 
     def get_ne_in_sg(
-        self, decisions_in_sg: Optional[Iterable[str]] = None, mixed_ne: bool = False,
+        self,
+        decisions_in_sg: Optional[Iterable[str]] = None,
+        mixed_ne: bool = False,
     ) -> List[List[StochasticFunctionCPD]]:
         """
         Return a list of Nash equilbiria in a MACID subgame.
@@ -77,7 +79,7 @@ class MACID(MACIDBase):
         - If mixed_ne is False, then this returns a list of all pure NE in the subgame.
         - If mixed_ne is True, then this finds mixed NE in 2-agent games using Nashpy:
             - In non-degenerate 2-agent games, this returns a list of all mixed NE.
-            - In degenerate 2-agent games, this returns a list of most mixed NE (see 
+            - In degenerate 2-agent games, this returns a list of most mixed NE (see
             Nashpy's documentation at: https://nashpy.readthedocs.io/en/latest/contributing/index.html)
 
         - Each NE comes as a list of StochasticFunctionCPDs, one for each decision node in the subgame.
@@ -108,7 +110,7 @@ class MACID(MACIDBase):
                 raise ValueError(
                     f"This MACID has {len(agents_in_sg)} agents and yet this method currently only works for 2 agent games."
                 )
-            
+
             # convert MAID into normal form
             agent_pure_policies = [tuple(self.pure_policies(agent_decs_in_sg[agent])) for agent in agents_in_sg]
 
@@ -117,10 +119,16 @@ class MACID(MACIDBase):
                 return self.expected_utility({}, agent=agent)
 
             payoff1 = np.array(
-                [[agent_util(pp1 + pp2, agents_in_sg[0]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+                [
+                    [agent_util(pp1 + pp2, agents_in_sg[0]) for pp2 in agent_pure_policies[1]]
+                    for pp1 in agent_pure_policies[0]
+                ]
             )
             payoff2 = np.array(
-                [[agent_util(pp1 + pp2, agents_in_sg[1]) for pp2 in agent_pure_policies[1]] for pp1 in agent_pure_policies[0]]
+                [
+                    [agent_util(pp1 + pp2, agents_in_sg[1]) for pp2 in agent_pure_policies[1]]
+                    for pp1 in agent_pure_policies[0]
+                ]
             )
 
             # find all mixed NE using Nashpy
@@ -136,7 +144,7 @@ class MACID(MACIDBase):
                 )
                 all_mixed_ne.append(mixed_ne)
             return all_mixed_ne
-        
+
         else:
             # pure NE finder
 
@@ -157,7 +165,7 @@ class MACID(MACIDBase):
 
             return all_pure_ne_in_sg
 
-    def is_nash(self, policy_profile: Iterable[StochasticFunctionCPD]) -> bool: 
+    def is_nash(self, policy_profile: Iterable[StochasticFunctionCPD]) -> bool:
         """
         Given a policy profile, is it the case that this policy profile is a pure policy Nash equilibrium in
         the MACID?
@@ -178,8 +186,9 @@ class MACID(MACIDBase):
             # it's an NE
             return True
 
-
-    def mixed_policy(self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: np.ndarray) -> Iterator[StochasticFunctionCPD]:
+    def mixed_policy(
+        self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: np.ndarray
+    ) -> Iterator[StochasticFunctionCPD]:
         """
         Given a list of the agent's pure policies and a distribution over these pure policies,
         return a generator of the equivalent mixed decision rules that makes up this mixed policy
@@ -238,5 +247,3 @@ class MACID(MACIDBase):
             for utility in self.agent_utilities[agent]:
                 new.make_utility(utility, agent)
         return new
-
-    

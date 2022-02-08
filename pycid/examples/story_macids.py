@@ -117,6 +117,7 @@ def matching_pennies() -> MACID:
     )
     return macid
 
+
 def rock_paper_scissors() -> MACID:
     """MACIM representation of rock, paper, scissors
     - the row player is agent 1 and the

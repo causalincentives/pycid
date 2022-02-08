@@ -33,6 +33,7 @@ CONSTRUCTORS = [
     simple_macids.two_agent_one_pne,
     simple_macids.two_agent_two_pne,
     simple_macids.two_agents_three_actions,
+    simple_macids.three_agent_maid,
     # Story CID
     story_cids.get_fitness_tracker,
     story_cids.get_introduced_bias,
