@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Callable, Dict, Hashable, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 import nashpy as nash
 import networkx as nx
