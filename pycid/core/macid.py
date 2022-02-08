@@ -129,7 +129,6 @@ class MACID(MACIDBase):
 
             all_mixed_ne = []
             for eq in equilibria:
-                print(f"type is: {type(eq[0])}")
                 mixed_ne = list(
                     itertools.chain(
                         *[list(self.mixed_policy(agent_pure_policies[agent], eq[agent])) for agent in range(2)]
@@ -156,6 +155,24 @@ class MACID(MACIDBase):
                     all_pure_ne_in_sg.append(list(pp))
 
             return all_pure_ne_in_sg
+
+    def is_nash(self, policy_profile: Iterable[StochasticFunctionCPD]) -> bool: 
+        """
+        Given a policy profile, is it the case that this policy profile is a pure policy Nash equilibrium in
+        the MACID?
+        """
+        self.add_cpds(*policy_profile)
+
+        for a in self.agents:  # check that each agent is happy
+            eu_pp_agent_a = self.expected_utility({}, agent=a)
+            self.add_cpds(*self.optimal_pure_policies(self.agent_decisions[a])[0])
+            max_eu_agent_a = self.expected_utility({}, agent=a)
+            if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+                return False
+            else:
+                # it's an NE
+                return True
+
 
     def mixed_policy(self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: np.ndarray) -> Iterator[StochasticFunctionCPD]:
         """

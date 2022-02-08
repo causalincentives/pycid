@@ -139,8 +139,8 @@ def rock_paper_scissors() -> MACID:
         agent_utilities={1: ["U1"], 2: ["U2"]},
     )
 
-    d1_domain = ["T", "M", "B"]
-    d2_domain = ["L", "C", "R"]
+    d1_domain = ["R", "P", "S"]
+    d2_domain = ["R", "P", "S"]
 
     agent1_payoff = np.array([[0, -1, 1], [1, 0, -1], [-1, 1, 0]])
     agent2_payoff = np.array([[0, 1, -1], [-1, 0, 1], [1, -1, 0]])

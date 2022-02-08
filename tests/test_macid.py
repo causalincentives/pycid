@@ -16,27 +16,41 @@ from pycid.examples.story_macids import (
     modified_taxi_competition,
     prisoners_dilemma,
     taxi_competition,
+    rock_paper_scissors
 )
 
 
 class TestMACID(unittest.TestCase):
     # @unittest.skip("")
-    def test_get_all_pure_ne(self) -> None:
+    def test_get_ne(self) -> None:
         macid = prisoners_dilemma()
-        self.assertEqual(len(macid.get_all_pure_ne()), 1)
-        pne = macid.get_all_pure_ne()[0]
+        self.assertEqual(len(macid.get_ne()), 1)
+        pne = macid.get_ne()[0]
         macid.add_cpds(*pne)
         self.assertEqual(macid.expected_utility({}, agent=1), -2)
         self.assertEqual(macid.expected_utility({}, agent=2), -2)
 
         macid2 = battle_of_the_sexes()
-        self.assertEqual(len(macid2.get_all_pure_ne()), 2)
+        self.assertEqual(len(macid2.get_ne()), 2)
+        self.assertEqual(len(macid2.get_ne(mixed_ne=True)), 3)
 
         macid3 = matching_pennies()
-        self.assertEqual(len(macid3.get_all_pure_ne()), 0)
+        self.assertEqual(len(macid3.get_ne()), 0)
+        mixed_nes = macid3.get_ne(mixed_ne=True)
+        self.assertEqual(len(mixed_nes), 1)
+        mixed_ne = mixed_nes[0]
+        macid3.add_cpds(*mixed_ne)
+        self.assertEqual(macid3.expected_utility({}, agent=1), 0)
+        self.assertEqual(macid3.expected_utility({}, agent=2), 0)
 
-        macid4 = two_agents_three_actions()
-        self.assertEqual(len(macid4.get_all_pure_ne()), 1)
+        macid4 = rock_paper_scissors()
+        self.assertEqual(len(macid4.get_ne()), 0)
+        mne = macid4.get_ne(mixed_ne=True)
+        self.assertEqual(len(mne), 0)
+        macid.add_cpds(*mne[0])
+        self.assertEqual(macid.expected_utility({}, agent=1), 0)
+        self.assertEqual(macid.expected_utility({}, agent=2), 0)
+
 
     # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
