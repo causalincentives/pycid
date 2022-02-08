@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import copy
 import itertools
-from ctypes import Union
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Callable, Dict, Hashable, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
 import nashpy as nash
 import networkx as nx
 import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 
-from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
-from pycid.core.macid_base import MACIDBase
+from pycid.core.cpd import DecisionDomain, Outcome, StochasticFunctionCPD
+from pycid.core.macid_base import AgentLabel, MACIDBase
 from pycid.core.relevance_graph import CondensedRelevanceGraph
 
 
@@ -110,13 +109,13 @@ class MACID(MACIDBase):
             # mixed NE finder in 2 agent subgames:
             if len(agents_in_sg) != 2:
                 raise ValueError(
-                    f"This MACID has {len(agents_in_sg)} agents and yet this method currently only works for 2 agent games."
+                    f"MAID has {len(agents_in_sg)} agents, but this method currently only works for 2 agent games."
                 )
 
             # convert MAID into normal form
             agent_pure_policies = [tuple(self.pure_policies(agent_decs_in_sg[agent])) for agent in agents_in_sg]
 
-            def agent_util(pp, agent) -> float:
+            def agent_util(pp: Tuple[StochasticFunctionCPD, ...], agent: AgentLabel) -> float:
                 self.add_cpds(*pp)
                 return self.expected_utility({}, agent=agent)
 
@@ -139,12 +138,12 @@ class MACID(MACIDBase):
 
             all_mixed_ne = []
             for eq in equilibria:
-                mixed_ne = list(
+                mixed_ne_profile = list(
                     itertools.chain(
                         *[list(self.mixed_policy(agent_pure_policies[agent], eq[agent])) for agent in range(2)]
                     )
                 )
-                all_mixed_ne.append(mixed_ne)
+                all_mixed_ne.append(mixed_ne_profile)
             return all_mixed_ne
 
         else:
@@ -183,7 +182,9 @@ class MACID(MACIDBase):
             return True
 
     def mixed_policy(
-        self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: Union[np.ndarray, Iterable[float]]
+        self,
+        agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD, ...], ...],
+        prob_dist: Union[List[float], np.ndarray],
     ) -> Iterator[StochasticFunctionCPD]:
         """
         Given a list of the agent's pure policies over some decisions and a distribution over these pure policies,
@@ -196,7 +197,9 @@ class MACID(MACIDBase):
             decision = agent_pure_policies[0][i].variable
             domain = self.model.domain[decision]
 
-            def mixed_dec_rule(pvs):  # construct mixed decision rule for each decision node
+            def mixed_dec_rule(
+                pvs: Dict[str, Outcome]
+            ) -> Dict[str, float]:  # construct mixed decision rule for each decision node
                 cpd_dict = {}
                 for d in self.model.domain[decision]:
                     cpd_dict[d] = sum(
@@ -204,7 +207,7 @@ class MACID(MACIDBase):
                     )
                 return cpd_dict
 
-            def produce_function():
+            def produce_function() -> Callable:
                 return lambda **parent_values: mixed_dec_rule(parent_values)
 
             yield StochasticFunctionCPD(decision, produce_function(), self, domain=domain)

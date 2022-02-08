@@ -34,9 +34,11 @@ def three_agent_maid() -> MACID:
     return macid
 
 
-def five_agent_with_mixed_spe():
-    """This MAID has no pure NE, but has two proper subgames that are the same as the matching pennies 2 agent game. Therefore,
-    a mixed SPE (and therefore also a mixed NE) can be found by finding the mixed NE in the proper subgame first, and then finding the optimal decision rule for D5"""
+def five_agent_with_mixed_spe() -> MACID:
+    """This MAID has no pure NE, but has two proper subgames that are the same
+    as the matching pennies 2 agent game. Therefore, a mixed SPE (and therefore also a mixed NE)
+    can be found by finding the mixed NE in the proper subgame first, and then finding
+    the optimal decision rule for D5"""
     macid = MACID(
         [
             ("D1", "U1"),

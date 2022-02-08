@@ -4,7 +4,6 @@ import unittest
 import numpy as np
 import pytest
 
-from pycid.core import MACID
 from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
     five_agent_with_mixed_spe,
@@ -23,7 +22,7 @@ from pycid.examples.story_macids import (
 
 
 class TestMACID(unittest.TestCase):
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_ne(self) -> None:
         macid = prisoners_dilemma()
         self.assertEqual(len(macid.get_ne()), 1)
@@ -58,7 +57,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(ValueError):
             macid5.get_ne(mixed_ne=True)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_spe()
@@ -98,7 +97,7 @@ class TestMACID(unittest.TestCase):
             macid4.get_ne(mixed_ne=True)
         self.assertTrue(len(macid4.get_spe(mixed_ne=True)) == 1)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision("D1")
@@ -117,7 +116,7 @@ class TestMACID(unittest.TestCase):
         # print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_ne_in_sg(self) -> None:
         macid = taxi_competition()
         ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"])
@@ -152,7 +151,7 @@ class TestMACID(unittest.TestCase):
         macid.add_cpds(*mixed_policy)
         self.assertTrue(np.array_equal(macid.get_cpds("D1").values, np.array([0.5, 0.5])))
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_decs_in_each_maid_subgame(self) -> None:
         macid = prisoners_dilemma()
         self.assertCountEqual(macid.decs_in_each_maid_subgame(), [{"D1", "D2"}])
