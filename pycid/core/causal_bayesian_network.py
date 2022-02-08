@@ -279,10 +279,10 @@ class CausalBayesianNetwork(BayesianNetwork):
         color = node_color if node_color else self._get_color
         shape = node_shape if node_shape else self._get_shape
         label = node_label if node_label else self._get_label
-        layout = layout(self) if layout else nx.kamada_kawai_layout(self) #type: ignore
+        layout = layout(self) if layout else nx.kamada_kawai_layout(self)  # type: ignore
         label_dict = {node: label(node) for node in self.nodes}
         pos_higher = {}
-        for k, v in layout.items():#type: ignore
+        for k, v in layout.items():  # type: ignore
             if v[1] > 0:
                 pos_higher[k] = (v[0] - 0.1, v[1] - 0.2)
             else:
