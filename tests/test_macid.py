@@ -23,7 +23,7 @@ from pycid.examples.story_macids import (
 
 
 class TestMACID(unittest.TestCase):
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_ne(self) -> None:
         macid = prisoners_dilemma()
         self.assertEqual(len(macid.get_ne()), 1)
@@ -58,7 +58,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(ValueError):
             macid5.get_ne(mixed_ne=True)
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_get_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_spe()
@@ -98,7 +98,7 @@ class TestMACID(unittest.TestCase):
             macid4.get_ne(mixed_ne=True)
         self.assertTrue(len(macid4.get_spe(mixed_ne=True)) == 1)
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision("D1")
@@ -118,7 +118,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
     @unittest.skip("")
-    def test_get_all_pure_ne_in_sg(self) -> None:
+    def test_get_ne_in_sg(self) -> None:
         macid = taxi_competition()
         ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"])
         policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
@@ -130,18 +130,19 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg(decisions_in_sg=["D3"])
 
-    @unittest.skip("")
-    def test_mixed_ne(self) -> None:
-        macid = matching_pennies()
-        mixed_nes = macid.get_mixed_ne()
-        self.assertEqual(len(mixed_nes), 1)
-        mixed_ne = mixed_nes[0]
-        macid.add_cpds(*mixed_ne)
-        self.assertEqual(macid.expected_utility({}, agent=1), 0)
-        self.assertEqual(macid.expected_utility({}, agent=2), 0)
+        macid2 = five_agent_with_mixed_spe()
+        self.assertTrue(len(macid2.get_ne_in_sg(["D1", "D2"], mixed_ne=True)) == 1)
 
-        macid2 = battle_of_the_sexes()
-        self.assertEqual(len(macid2.get_mixed_ne()), 3)
+    # @unittest.skip("")
+    def test_is_nash(self) -> None:
+        macid = prisoners_dilemma()
+        macid.model["D1"] = {"d": 1, "c": 0}
+        macid.model["D2"] = {"d": 1, "c": 0}
+        profile = [macid.get_cpds(d) for d in macid.decisions]
+        self.assertTrue(macid.is_nash(profile))
+        macid.model["D1"] = {"d": 0, "c": 1}
+        profile2 = [macid.get_cpds(d) for d in macid.decisions]
+        self.assertFalse(macid.is_nash(profile2))
 
     @unittest.skip("")
     def test_decs_in_each_maid_subgame(self) -> None:

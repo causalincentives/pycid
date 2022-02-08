@@ -170,16 +170,11 @@ class MACID(MACIDBase):
         Given a policy profile, is it the case that this policy profile is a pure policy Nash equilibrium in
         the MACID?
         """
-
         for a in self.agents:  # check that each agent is happy
             self.add_cpds(*policy_profile)
-
-            print(f"agent is {a}")
             eu_pp_agent_a = self.expected_utility({}, agent=a)
-            print(f"eu_pp_agent_a is {eu_pp_agent_a}")
             self.add_cpds(*self.optimal_pure_policies(self.agent_decisions[a])[0])
             max_eu_agent_a = self.expected_utility({}, agent=a)
-            print(f"max_eu_agent_a is {max_eu_agent_a}")
             if max_eu_agent_a > eu_pp_agent_a:  # not an NE
                 return False
         else:
