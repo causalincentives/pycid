@@ -15,7 +15,7 @@ class CID(MACIDBase):
         edges: Optional[Iterable[Tuple[str, str]]] = None,
         decisions: Optional[List[str]] = None,
         utilities: Optional[List[str]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         """Initialize a Causal Influence Diagram
 
@@ -32,7 +32,7 @@ class CID(MACIDBase):
             edges=edges,
             agent_decisions={0: decisions if decisions is not None else []},
             agent_utilities={0: utilities if utilities is not None else []},
-            **kwargs
+            **kwargs,
         )
 
     def impute_optimal_policy(self) -> None:
