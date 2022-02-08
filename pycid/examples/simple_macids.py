@@ -31,6 +31,8 @@ def three_agent_maid() -> MACID:
         U3=lambda D1, D2, D3: int(D1) * int(D2) * int(D3),
     )
 
+    return macid
+
 
 def get_basic_subgames() -> MACID:
     macid = MACID(
