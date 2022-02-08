@@ -1,11 +1,13 @@
 import sys
 import unittest
-from pycid.core import MACID
+
 import numpy as np
 import pytest
 
+from pycid.core import MACID
 from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
+    five_agent_with_mixed_spe,
     get_basic_subgames,
     get_basic_subgames3,
     three_agent_maid,
@@ -15,8 +17,8 @@ from pycid.examples.story_macids import (
     matching_pennies,
     modified_taxi_competition,
     prisoners_dilemma,
+    rock_paper_scissors,
     taxi_competition,
-    rock_paper_scissors
 )
 
 
@@ -56,7 +58,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(ValueError):
             macid5.get_ne(mixed_ne=True)
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_get_spe(self) -> None:
         macid = taxi_competition()
         all_spe = macid.get_spe()
@@ -90,12 +92,13 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
+        macid4 = five_agent_with_mixed_spe()
+        self.assertTrue(len(macid4.get_ne()) == 0)
+        with self.assertRaises(ValueError):
+            macid4.get_ne(mixed_ne=True)
+        self.assertTrue(len(macid4.get_spe(mixed_ne=True)) == 1)
 
-
-
-
-
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
         macid = taxi_competition()
         macid.impute_random_decision("D1")
@@ -114,7 +117,6 @@ class TestMACID(unittest.TestCase):
         # print(d1_cpd.state_names)  # can put this in the notebook too
         self.assertTrue(np.array_equal(d1_cpd.values, np.array([0.5, 0.5])))
 
-    
     @unittest.skip("")
     def test_get_all_pure_ne_in_sg(self) -> None:
         macid = taxi_competition()
@@ -127,8 +129,6 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(len(ne_in_full_macid), 3)
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg(decisions_in_sg=["D3"])
-
-    
 
     @unittest.skip("")
     def test_mixed_ne(self) -> None:
