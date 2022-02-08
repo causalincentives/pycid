@@ -42,7 +42,7 @@ class RandomCPD:
         self.domain = domain or [0, 1]
 
     def __call__(self, **parent_values: Outcome) -> Mapping[Outcome, float]:
-        with temp_seed(self.seed + hash(frozenset(parent_values.items())) % 2**31 - 1):
+        with temp_seed(self.seed + hash(frozenset(parent_values.items())) % 2 ** 31 - 1):
             prob_vec = np.random.dirichlet(np.ones(len(self.domain)) * self.smoothness, size=1).flat  # type: ignore
         return {self.domain[i]: prob for i, prob in enumerate(prob_vec)}  # type: ignore
 
