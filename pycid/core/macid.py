@@ -105,8 +105,8 @@ class MACID(MACIDBase):
 
         if (
             mixed_ne and len(agents_in_sg) > 1
-        ):  # if only one agent in subgame, then a deterministic optimal policy exists
-            # mixed NE finder in 2 agent subgames:
+        ):  # mixed NE finder in 2 agent subgames (if one agent in subgame, then a deterministic optimal policy exists)
+
             if len(agents_in_sg) != 2:
                 raise ValueError(
                     f"MAID has {len(agents_in_sg)} agents, but this method currently only works for 2 agent games."
