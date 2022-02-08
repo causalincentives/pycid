@@ -56,6 +56,44 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(ValueError):
             macid5.get_ne(mixed_ne=True)
 
+    @unittest.skip("")
+    def test_get_spe(self) -> None:
+        macid = taxi_competition()
+        all_spe = macid.get_spe()
+        self.assertTrue(len(all_spe) == 1)
+        spe = all_spe[0]
+        joint_policy = macid.policy_profile_assignment(spe)
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.array_equal(cpd_d1.values, np.array([1, 0])))
+        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
+        self.assertTrue(len(macid.get_spe(mixed_ne=True)) == 1)
+
+        macid = modified_taxi_competition()
+        all_spe = macid.get_spe()
+        self.assertTrue(len(all_spe) == 2)
+
+        macid = prisoners_dilemma()
+        all_spe = macid.get_spe()
+        self.assertTrue(len(all_spe) == 1)
+
+        macid = battle_of_the_sexes()
+        self.assertTrue(len(macid.get_spe()) == 2)
+        self.assertTrue(len(macid.get_spe(mixed_ne=True)) == 3)
+
+        macid3 = basic_different_dec_cardinality()
+        all_spe = macid3.get_spe()
+        spe = all_spe[0]
+        joint_policy = macid3.policy_profile_assignment(spe)
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
+        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
+
+
+
+
+
 
     @unittest.skip("")
     def test_policy_profile_assignment(self) -> None:
@@ -90,38 +128,7 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg(decisions_in_sg=["D3"])
 
-    @unittest.skip("")
-    def test_get_all_pure_spe(self) -> None:
-        macid = taxi_competition()
-        all_spe = macid.get_all_pure_spe()
-        self.assertTrue(len(all_spe) == 1)
-        spe = all_spe[0]
-        joint_policy = macid.policy_profile_assignment(spe)
-        cpd_d1 = joint_policy["D1"]
-        cpd_d2 = joint_policy["D2"]
-        self.assertTrue(np.array_equal(cpd_d1.values, np.array([1, 0])))
-        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
-
-        macid = modified_taxi_competition()
-        all_spe = macid.get_all_pure_spe()
-        self.assertTrue(len(all_spe) == 2)
-
-        macid = prisoners_dilemma()
-        all_spe = macid.get_all_pure_spe()
-        self.assertTrue(len(all_spe) == 1)
-
-        macid = battle_of_the_sexes()
-        all_spe = macid.get_all_pure_spe()
-        self.assertTrue(len(all_spe) == 2)
-
-        macid3 = basic_different_dec_cardinality()
-        all_spe = macid3.get_all_pure_spe()
-        spe = all_spe[0]
-        joint_policy = macid3.policy_profile_assignment(spe)
-        cpd_d1 = joint_policy["D1"]
-        cpd_d2 = joint_policy["D2"]
-        self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
-        self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
+    
 
     @unittest.skip("")
     def test_mixed_ne(self) -> None:

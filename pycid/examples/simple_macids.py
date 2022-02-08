@@ -33,6 +33,31 @@ def three_agent_maid() -> MACID:
 
     return macid
 
+def five_agent_with_mixed_spe():
+    """This MAID has no pure NE, but has two proper subgames that are the same as the matching pennies 2 agent game. Therefore, 
+    a mixed SPE (and therefore also a mixed NE) can be found by finding the mixed NE in the proper subgame first, and then finding the optimal decision rule for D5"""
+    macid = MACID(
+        [("D1", "U1"), ("D1", "U2"),("D2", "U1"), ("D2", "U2"),
+        ("D3", "U3"), ("D3", "U4"),("D4", "U3"), ("D4", "U4"), 
+        ("D1", "U5"), ("D2", "U5"),("D3", "U5"), ("D4", "U5"), ("D5", "U5")],
+        agent_decisions={1: ["D1"], 2: ["D2"], 3: ["D3"], 4: ["D4"], 5: ["D5"]},
+        agent_utilities={1: ["U1"], 2: ["U2"], 3: ["U3"], 4: ["U4"], 5: ["U5"]},
+    )
+
+    macid.add_cpds(
+        D1 = [0,1],
+        D2 = [0,1],
+        D3 = [0,1],
+        D4 = [0,1],
+        D5 = [0,1],
+        U1=lambda D1, D2: 1-2*(int(D1)+int(D2))+4*(int(D1)*int(D2)),
+        U2=lambda D1, D2: -1+2*(int(D1)+int(D2))-4*(int(D1)*int(D2)),
+        U3=lambda D3, D4: 1-2*(int(D3)+int(D4))+4*(int(D3)*int(D4)),
+        U4=lambda D3, D4: -1+2*(int(D3)+int(D4))-4*(int(D3)*int(D4)),
+        U5 = lambda D1, D2, D3, D4, D5: int(D1)*int(D2)*int(D3)*int(D4)*int(D5),
+    )
+    return macid
+
 
 def get_basic_subgames() -> MACID:
     macid = MACID(

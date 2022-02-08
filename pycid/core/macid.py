@@ -103,9 +103,8 @@ class MACID(MACIDBase):
             if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
 
-        if mixed_ne:
+        if mixed_ne and len(agents_in_sg) > 1: #if only one agent in subgame, then a deterministic optimal policy exists
             # mixed NE finder in 2 agent subgames:
-
             if len(agents_in_sg) != 2:
                 raise ValueError(
                     f"This MACID has {len(agents_in_sg)} agents and yet this method currently only works for 2 agent games."
@@ -147,7 +146,6 @@ class MACID(MACIDBase):
 
         else:
             # pure NE finder
-
             all_pure_ne_in_sg: List[List[StochasticFunctionCPD]] = []
             for pp in self.joint_pure_policies(decisions_in_sg):
 
