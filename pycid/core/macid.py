@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
+from ctypes import Union
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 import nashpy as nash
@@ -182,10 +183,10 @@ class MACID(MACIDBase):
             return True
 
     def mixed_policy(
-        self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: np.ndarray
+        self, agent_pure_policies: Tuple[Tuple[StochasticFunctionCPD]], prob_dist: Union[np.ndarray, Iterable[float]]
     ) -> Iterator[StochasticFunctionCPD]:
         """
-        Given a list of the agent's pure policies and a distribution over these pure policies,
+        Given a list of the agent's pure policies over some decisions and a distribution over these pure policies,
         return a generator of the equivalent mixed decision rules that makes up this mixed policy
         """
 

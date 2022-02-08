@@ -144,6 +144,14 @@ class TestMACID(unittest.TestCase):
         profile2 = [macid.get_cpds(d) for d in macid.decisions]
         self.assertFalse(macid.is_nash(profile2))
 
+    # @unittest.skip("")
+    def test_mixed_policy(self) -> None:
+        macid = prisoners_dilemma()
+        pure_policies = tuple(macid.pure_policies(macid.agent_decisions[1]))
+        mixed_policy = list(macid.mixed_policy(pure_policies, [0.5, 0.5]))
+        macid.add_cpds(*mixed_policy)
+        self.assertTrue(np.array_equal(macid.get_cpds("D1").values, np.array([0.5, 0.5])))
+
     @unittest.skip("")
     def test_decs_in_each_maid_subgame(self) -> None:
         macid = prisoners_dilemma()
