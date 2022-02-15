@@ -24,7 +24,7 @@ Then install using:
 python3 -m pip install pycid
 ```
 
-PyCID requires python version 3.7 or greater.
+PyCID requires python version 3.8 or greater.
 
 ## Basic usage
 
