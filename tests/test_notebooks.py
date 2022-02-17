@@ -9,6 +9,8 @@ import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+NOTEBOOKS_DIR = "notebooks"
+NOTEBOOKS = [file for file in os.listdir(os.path.join(ROOT_DIR, NOTEBOOKS_DIR)) if file.endswith(".ipynb")]
 
 
 def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
@@ -34,23 +36,13 @@ def run_notebook(notebook_path: str) -> Tuple[Any, List[Any]]:
     return nb, errors
 
 
-NOTEBOOKS = [
-    "CBN_Tutorial",
-    "CID_Basics_Tutorial",
-    "CID_Incentives_Tutorial",
-    "MACID_Basics_Tutorial",
-    "Reasoning_Patterns_Tutorial",
-    "Why_fair_labels_can_yield_unfair_predictions_AAAI_22",
-]
-
-
 @pytest.fixture(params=NOTEBOOKS)
 def notebook_name(request: Any) -> str:
     return request.param  # type: ignore
 
 
 def test_notebook(notebook_name: str) -> None:
-    _, errors = run_notebook(f"notebooks/{notebook_name}.ipynb")
+    _, errors = run_notebook(f"{NOTEBOOKS_DIR}/{notebook_name}")
     assert len(errors) == 0
 
 
