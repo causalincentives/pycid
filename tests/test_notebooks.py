@@ -40,7 +40,7 @@ NOTEBOOKS = [
     "CID_Incentives_Tutorial",
     "MACID_Basics_Tutorial",
     "Reasoning_Patterns_Tutorial",
-    "Why_fair_labels_may_yield_unfair_models_AAAI_22",
+    "Why_fair_labels_can_yield_unfair_predictions_AAAI_22",
 ]
 
 
