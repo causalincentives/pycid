@@ -24,8 +24,6 @@ def random_macid(
     -----------
     number_of nodes: The total number of nodes in the MACID.
 
-    number_of_agents: The number of agents in the MACID.
-
     agent_decisions_num: A Tuple giving the number of decision nodes for each agent. For example, (1,2,1)
     means that the first agent has 1 decision, the second agent has two, and the third agent has 1.
 
