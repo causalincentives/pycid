@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import itertools
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Set, Tuple, Union
 
 import networkx as nx
 import pygambit
@@ -63,7 +63,6 @@ class MACID(MACIDBase):
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
-        print("decisions_in_sg", decisions_in_sg, "agents_in_sg", agents_in_sg)
         # old NE finder
         # agent_decs_in_sg = {
         #     agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
@@ -90,25 +89,59 @@ class MACID(MACIDBase):
 
         # pygambit NE solver
         efg, parents_to_infoset = self.macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
-        print(efg.write())
-        print(parents_to_infoset)
         ne_behaviour_strategies = self.pygambit_ne_solver(efg, solver=solver)
-        print(ne_behaviour_strategies)
         all_ne_in_sg = [
             self.behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg) for strat in ne_behaviour_strategies
         ]
 
-        print(all_ne_in_sg)
-
         return all_ne_in_sg
+
+    def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
+        # add the players
+        agent_to_player = {}
+        for agent in agents_in_sg:
+            player = game.players.add(agent)
+            agent_to_player[agent] = player
+
+        return agent_to_player
+
+    def _add_payoffs(
+        self,
+        macid: MACID,
+        game: pygambit.Game,
+        range_num_children: List[List],
+        node_idx_to_state: Dict[Tuple[int, ...], Dict[str, Any]],
+        agents_in_sg: Iterable[Hashable],
+    ) -> None:
+        """add payoffs to the game as leave nodes"""
+        for node_idx in itertools.product(*range_num_children):
+            cur_node = self._get_cur_node(game, node_idx)
+            context = node_idx_to_state[node_idx]
+            # name outcome as a string of the node_idx
+            payoff_tuple = game.outcomes.add(str(node_idx))
+            for i, agent in enumerate(agents_in_sg):
+                payoff = macid.expected_utility(context=context, agent=agent)
+                payoff_tuple[i] = pygambit.Decimal(payoff)
+            cur_node.outcome = payoff_tuple
+
+    def _get_cur_node(self, game: pygambit.Game, idx: Tuple[int, ...]) -> pygambit.Node:
+        """Returns the current node in the game tree given the index of the node."""
+        cur_node = game.root
+        # first entry is the root node
+        if len(idx) == 1:
+            return cur_node
+        # traverse the tree
+        for i in idx[1:]:
+            cur_node = cur_node.children[i]
+        return cur_node
 
     def macid_to_pygambit_efg(
         self,
         macid: Optional[MACID] = None,
-        decisions_in_sg: Optional[Iterable[str]] = None,
-        agents_in_sg: Optional[Iterable[str]] = None,
-    ) -> Tuple[pygambit.Game, Mapping[Tuple[Union[int, str], ...], pygambit.Infoset]]:
-        """TODO check typing
+        decisions_in_sg: Optional[Union[KeysView[str], Set[str]]] = None,
+        agents_in_sg: Optional[Iterable[Hashable]] = None,
+    ) -> Tuple[pygambit.Game, Mapping[Tuple[Hashable, Tuple[Tuple[Any, Any], ...]], pygambit.Infoset]]:
+        """
         Creates the EFG from a MACID:
         1) Finds the MACID nodes needed for the EFG (decision nodes and informational parents S = {D u Pa_D})
         2) Creats an ordering of these nodes such that X_j precedes X_i in the ordering if and only if X_j
@@ -116,22 +149,13 @@ class MACID(MACIDBase):
         3) Labels each node X_i with a partial instantiation of the splits in the path to X_i in the EFG.
         """
 
-        def _get_cur_node(game: pygambit.Game, idx: Tuple[int, ...]):
-            """Returns the current node in the game tree given the index of the node."""
-            cur_node = game.root
-            # first entry is the root node
-            if len(idx) == 1:
-                return cur_node
-            # traverse the tree
-            for i in idx[1:]:
-                cur_node = cur_node.children[i]
-            return cur_node
-
         # can use on a subgame if copying, else do the whole game
         if macid is None:
             macid = self
         if decisions_in_sg is None:
             decisions_in_sg = macid.decisions
+        if agents_in_sg is None:
+            agents_in_sg = macid.agents
 
         # instantiate the decisions (TODO already instantiated in subgame?)
         # macid.impute_fully_mixed_policy_profile()
@@ -143,17 +167,14 @@ class MACID(MACIDBase):
         sorted_game_tree_nodes = macid.get_valid_order(game_tree_nodes)
         # create the pygambit efg
         game = pygambit.Game.new_tree()
-        # add the players
-        agent_to_player = {}  # TODO typing
-        for agent in agents_in_sg:
-            player = game.players.add(agent)
-            agent_to_player[agent] = player
+
+        agent_to_player = self._add_players(game, agents_in_sg)
 
         # key is instantiation of parents, value is pygambit infoset
-        parents_to_infoset = defaultdict(dict)  # TODO typing
+        parents_to_infoset: Dict[Tuple[Hashable, Tuple[Tuple[Any, Any], ...]], pygambit.Infoset] = defaultdict(dict)
         # nodes referenced in the game tree. Root has node_idx (0,), rest are (0, n, m, ...)
         # state is a dict of node_idx:state of partial instantiations of nodes
-        node_idx_to_state = defaultdict(dict)
+        node_idx_to_state: Dict[Tuple[int, ...], Dict[str, Any]] = defaultdict(dict)
         # get cardinality of each node
         num_children = [1] + [len(macid.model.domain[node]) for node in sorted_game_tree_nodes]
         range_num_children = [list(range(x)) for x in num_children]
@@ -163,7 +184,7 @@ class MACID(MACIDBase):
             # iterate over all possible parents of the node
             for node_idx in itertools.product(*range_num_children[:i]):
                 # get current node
-                cur_node = _get_cur_node(game, node_idx)
+                cur_node = self._get_cur_node(game, node_idx)
                 parents = macid.get_parents(node)
                 parents_actions = {parent: node_idx_to_state[node_idx][parent] for parent in parents}
 
@@ -203,16 +224,8 @@ class MACID(MACIDBase):
                         state_info = node_idx_to_state[node_idx].copy()
                         state_info.update({node: actions[action_idx]})
                         node_idx_to_state[node_idx + (action_idx,)] = state_info
-        # add payoffs to the game as leave nodes
-        for node_idx in itertools.product(*range_num_children):
-            cur_node = _get_cur_node(game, node_idx)
-            context = node_idx_to_state[node_idx]
-            # name outcome as a string of the node_idx
-            payoff_tuple = game.outcomes.add(str(node_idx))
-            for i, agent in enumerate(agents_in_sg):
-                payoff = macid.expected_utility(context=context, agent=agent)
-                payoff_tuple[i] = pygambit.Decimal(payoff)
-            cur_node.outcome = payoff_tuple
+
+        self._add_payoffs(macid, game, range_num_children, node_idx_to_state, agents_in_sg)
 
         return game, parents_to_infoset
 
@@ -243,17 +256,20 @@ class MACID(MACIDBase):
     def behavior_to_cpd(
         self,
         macid: MACID,
-        state_to_infoset: Mapping[Tuple[Union[int, str], ...], pygambit.Infoset],
+        state_to_infoset: Mapping[Tuple[Hashable, Tuple[Tuple[str, Any], ...]], pygambit.Infoset],
         behavior: pygambit.lib.libgambit.MixedStrategyProfile,
-        decisions_in_sg: List[str],
+        decisions_in_sg: Union[KeysView[str], Set[str]] = None,
     ) -> List[StochasticFunctionCPD]:
         """Convert a behavior strategy to list of CPDs for each decision node"""
 
-        def _decimal_from_fraction(item: Any):
+        if decisions_in_sg is None:
+            decisions_in_sg = self.decisions
+
+        def _decimal_from_fraction(item: Any) -> float:
             if isinstance(item, pygambit.Rational):
-                return item.numerator / item.denominator
+                return float(item.numerator / item.denominator)
             else:
-                return item
+                return float(item)
 
         def _action_prob_given_parents(node: Any, **pv: Outcome) -> Mapping[str, float]:
             """Takes the parent instantiation and outputs the prob from the infoset"""
