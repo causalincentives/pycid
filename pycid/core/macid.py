@@ -63,24 +63,6 @@ class MACID(MACIDBase):
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
-        # old NE finder
-        # agent_decs_in_sg = {
-        #     agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
-        # }
-        # all_ne_in_sg: List[List[StochasticFunctionCPD]] = []
-        # for pp in self.joint_pure_policies(decisions_in_sg):
-        #     macid.add_cpds(*pp)  # impute the policy profile
-
-        #     for a in agents_in_sg:  # check that each agent is happy
-        #         eu_pp_agent_a = macid.expected_utility({}, agent=a)
-        #         macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
-        #         max_eu_agent_a = macid.expected_utility({}, agent=a)
-        #         if max_eu_agent_a > eu_pp_agent_a:  # not an NE
-        #             break
-        #     else:
-        #         # it's an NE
-        #         all_ne_in_sg.append(list(pp))
-
         # impute random decisions to non-instantiated, irrelevant decision nodes
         macid = self.copy()
         for d in macid.decisions:
@@ -97,7 +79,7 @@ class MACID(MACIDBase):
         return all_ne_in_sg
 
     def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
-        # add the players
+        """add players to the pygambit game"""
         agent_to_player = {}
         for agent in agents_in_sg:
             player = game.players.add(agent)
@@ -230,22 +212,22 @@ class MACID(MACIDBase):
         return game, parents_to_infoset
 
     def pygambit_ne_solver(
-        self, efg: pygambit.Game, solver: Optional[str] = "enummixed"
+        self, game: pygambit.Game, solver: Optional[str] = "enummixed"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
         Pygambit will raise errors if solver not allowed for the game (e.g. more than 2 players)
         TODO manual asserts for errors?
         """
         if solver == "enummixed":
-            mixed_strategies = pygambit.nash.enummixed_solve(efg, rational=False)
+            mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
         elif solver == "enumpure":
-            mixed_strategies = pygambit.nash.enumpure_solve(efg)
+            mixed_strategies = pygambit.nash.enumpure_solve(game)
         elif solver == "lcp":
-            mixed_strategies = pygambit.nash.lcp_solve(efg, rational=False)
+            mixed_strategies = pygambit.nash.lcp_solve(game, rational=False)
         elif solver == "lp":
-            mixed_strategies = pygambit.nash.lp_solve(efg, rational=False)
+            mixed_strategies = pygambit.nash.lp_solve(game, rational=False)
         elif solver == "simpdiv":
-            mixed_strategies = pygambit.nash.simpdiv_solve(efg, rational=False)
+            mixed_strategies = pygambit.nash.simpdiv_solve(game, rational=False)
         else:
             raise ValueError(f"Solver {solver} not recognised")
         # convert to behavior strategies
