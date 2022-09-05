@@ -70,10 +70,11 @@ class MACID(MACIDBase):
                 macid.impute_random_decision(d)
 
         # pygambit NE solver
-        efg, parents_to_infoset = self.macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
-        ne_behaviour_strategies = self.pygambit_ne_solver(efg, solver=solver)
+        efg, parents_to_infoset = self._macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
+        ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
         all_ne_in_sg = [
-            self.behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg) for strat in ne_behaviour_strategies
+            self._behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg)
+            for strat in ne_behaviour_strategies
         ]
 
         return all_ne_in_sg
@@ -117,7 +118,7 @@ class MACID(MACIDBase):
             cur_node = cur_node.children[i]
         return cur_node
 
-    def macid_to_pygambit_efg(
+    def _macid_to_pygambit_efg(
         self,
         macid: Optional[MACID] = None,
         decisions_in_sg: Optional[Union[KeysView[str], Set[str]]] = None,
@@ -211,7 +212,7 @@ class MACID(MACIDBase):
 
         return game, parents_to_infoset
 
-    def pygambit_ne_solver(
+    def _pygambit_ne_solver(
         self, game: pygambit.Game, solver: Optional[str] = "enummixed"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
@@ -235,7 +236,7 @@ class MACID(MACIDBase):
 
         return behavior_strategies
 
-    def behavior_to_cpd(
+    def _behavior_to_cpd(
         self,
         macid: MACID,
         state_to_infoset: Mapping[Tuple[Hashable, Tuple[Tuple[str, Any], ...]], pygambit.Infoset],
