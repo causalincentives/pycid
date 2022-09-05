@@ -62,11 +62,11 @@ class MACID(MACIDBase):
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
+        print("decisions_in_sg", decisions_in_sg, "agents_in_sg", agents_in_sg)
         # old NE finder
         # agent_decs_in_sg = {
         #     agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
         # }
-
         # all_ne_in_sg: List[List[StochasticFunctionCPD]] = []
         # for pp in self.joint_pure_policies(decisions_in_sg):
         #     macid.add_cpds(*pp)  # impute the policy profile
@@ -87,15 +87,14 @@ class MACID(MACIDBase):
             if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
 
-        # # pygambit NE solver
+        # pygambit NE solver
         efg, parents_to_infoset = self.macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
-        # print(efg.write())
+        print(efg.write())
         print(parents_to_infoset)
         ne_behaviour_strategies = self.pygambit_ne_solver(efg, solver=solver)
         print(ne_behaviour_strategies)
         all_ne_in_sg = [
-            self.behavior_to_cpd(efg, macid, parents_to_infoset, strat, decisions_in_sg)
-            for strat in ne_behaviour_strategies
+            self.behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg) for strat in ne_behaviour_strategies
         ]
 
         print(all_ne_in_sg)
@@ -166,7 +165,6 @@ class MACID(MACIDBase):
                 cur_node = _get_cur_node(game, node_idx)
                 parents = macid.get_parents(node)
                 parents_actions = {parent: node_idx_to_state[node_idx][parent] for parent in parents}
-                parents_actions_tuple = tuple(parents_actions.items())  # hashable
 
                 # if the node is a decision, consider infosets
                 if node in decisions_in_sg:
@@ -174,6 +172,7 @@ class MACID(MACIDBase):
                     agent = macid.decision_agent[node]
                     player = agent_to_player[agent]
                     actions = macid.model.domain[node]
+                    parents_actions_tuple = (agent, tuple(parents_actions.items()))  # hashable
                     # check if this matches an existing infoset
                     if parents_actions_tuple in parents_to_infoset:
                         cur_infoset = parents_to_infoset[parents_actions_tuple]
@@ -187,7 +186,7 @@ class MACID(MACIDBase):
                         parents_to_infoset[parents_actions_tuple] = cur_infoset
                     # add state info
                     for action_idx, action in enumerate(actions):
-                        cur_infoset.actions[action_idx].label = action
+                        cur_infoset.actions[action_idx].label = str(action)
                         state_info = node_idx_to_state[node_idx].copy()
                         state_info.update({node: action})
                         node_idx_to_state[node_idx + (action_idx,)] = state_info
@@ -198,7 +197,7 @@ class MACID(MACIDBase):
                     # add state info
                     actions = macid.model.domain[node]
                     for action_idx, prob in enumerate(factor.values):
-                        move.actions[action_idx].label = actions[action_idx]
+                        move.actions[action_idx].label = str(actions[action_idx])
                         move.actions[action_idx].prob = pygambit.Decimal(prob)
                         state_info = node_idx_to_state[node_idx].copy()
                         state_info.update({node: actions[action_idx]})
@@ -241,7 +240,6 @@ class MACID(MACIDBase):
 
     def behavior_to_cpd(
         self,
-        efg: pygambit.Game,
         macid: MACID,
         state_to_infoset: Mapping[Tuple[Union[int, str], ...], pygambit.Infoset],
         behavior: pygambit.lib.libgambit.MixedStrategyProfile,
@@ -255,23 +253,23 @@ class MACID(MACIDBase):
             else:
                 return item
 
-        def _action_prob_given_parents(**pv: Any):
+        def _action_prob_given_parents(node: Any, **pv: Any) -> Mapping[str, float]:
             """Takes the parent instantiation and outputs the prob from the infoset"""
-            pv_tuple = tuple(pv.items())
+            pv_tuple = (macid.decision_agent[node], tuple(pv.items()))
             # get the infoset for the node
             infoset = state_to_infoset[pv_tuple]
             # get the action probs for the infoset
             action_probs = {
-                infoset.actions[i].label: _decimal_from_fraction(prob) for i, prob in enumerate(behavior[infoset])
+                macid.model.domain[node][i]: _decimal_from_fraction(prob) for i, prob in enumerate(behavior[infoset])
             }
-            # get the prob for the action
             return action_probs
 
         # require domain to get cpd.values in the same order as in macid
+        # require agent for the infoset
         cpds = [
             StochasticFunctionCPD(
                 variable=node,
-                stochastic_function=_action_prob_given_parents,
+                stochastic_function=lambda **x: _action_prob_given_parents(node, **x),
                 cbn=macid,
                 domain=macid.model.domain[node],
             )
