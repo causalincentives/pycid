@@ -13,6 +13,8 @@ from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
 from pycid.core.relevance_graph import CondensedRelevanceGraph
 
+Outcome = Any
+
 
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
@@ -20,7 +22,6 @@ class MACID(MACIDBase):
     def get_all_ne(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
         """
         Return a list of Nash equilbiria in the MACID.
-
         - solver can be any of the pygambit solvers.
         See pygambit docs for details https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
             - "enumpure": enumerate all pure NEs in the MACID
@@ -132,7 +133,7 @@ class MACID(MACIDBase):
         if decisions_in_sg is None:
             decisions_in_sg = macid.decisions
 
-        # instantiate the decisions TODO this might be why it doesn't work, we want to force a subgame setting?
+        # instantiate the decisions (TODO already instantiated in subgame?)
         # macid.impute_fully_mixed_policy_profile()
         # choose only relevant nodes
         game_tree_nodes = set(
@@ -220,6 +221,7 @@ class MACID(MACIDBase):
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
         Pygambit will raise errors if solver not allowed for the game (e.g. more than 2 players)
+        TODO manual asserts for errors?
         """
         if solver == "enummixed":
             mixed_strategies = pygambit.nash.enummixed_solve(efg, rational=False)
@@ -253,11 +255,15 @@ class MACID(MACIDBase):
             else:
                 return item
 
-        def _action_prob_given_parents(node: Any, **pv: Any) -> Mapping[str, float]:
+        def _action_prob_given_parents(node: Any, **pv: Outcome) -> Mapping[str, float]:
             """Takes the parent instantiation and outputs the prob from the infoset"""
             pv_tuple = (macid.decision_agent[node], tuple(pv.items()))
             # get the infoset for the node
             infoset = state_to_infoset[pv_tuple]
+            # if the infoset does not exist, this is not a valid parent instantiation
+            # TODO check what to do here
+            if not infoset:
+                return {}
             # get the action probs for the infoset
             action_probs = {
                 macid.model.domain[node][i]: _decimal_from_fraction(prob) for i, prob in enumerate(behavior[infoset])
