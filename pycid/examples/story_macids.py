@@ -58,7 +58,8 @@ def battle_of_the_sexes() -> MACID:
         | Football | 0, 0     | 2, 3     |
         +----------+----------+----------+
 
-    This game has two pure NE: (Opera, Football) and (Football, Opera)
+    This game has two pure NE: (Opera, Opera) and (Football, Football)
+    and 1 mixed NE: (0.4, 0.6), (0,6, 0.4)
     """
     macid = MACID(
         [("D_F", "U_F"), ("D_F", "U_M"), ("D_M", "U_M"), ("D_M", "U_F")],

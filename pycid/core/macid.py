@@ -29,7 +29,8 @@ class MACID(MACIDBase):
             - "lcp": Compute NE using the Linear Complementarity Program (LCP) solver (only for 2-player games)
             - "lp": Compute (one) NE using the Linear Programming solver (only for 2-player games)
             - "simpdiv": Compute (one) NE using the Simplicial Subdivision
-            - "ipa": Compute (one) NE using the Iterative Partial Assignment solver (only for 2-player games)
+            - "ipa": Compute (one) NE using the Iterative Partial Assignment solver
+            - "gnm": Compute (one) NE using the global newton method
 
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
@@ -77,6 +78,7 @@ class MACID(MACIDBase):
             for strat in ne_behaviour_strategies
         ]
 
+        print(all_ne_in_sg)
         return all_ne_in_sg
 
     def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
@@ -213,7 +215,7 @@ class MACID(MACIDBase):
         return game, parents_to_infoset
 
     def _pygambit_ne_solver(
-        self, game: pygambit.Game, solver: Optional[str] = "enummixed"
+        self, game: pygambit.Game, solver: Optional[str] = "enumpure"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
         Pygambit will raise errors if solver not allowed for the game (e.g. more than 2 players)
@@ -229,6 +231,10 @@ class MACID(MACIDBase):
             mixed_strategies = pygambit.nash.lp_solve(game, rational=False)
         elif solver == "simpdiv":
             mixed_strategies = pygambit.nash.simpdiv_solve(game, rational=False)
+        elif solver == "ipa":
+            mixed_strategies = pygambit.nash.ipa_solve(game)
+        elif solver == "gnm":
+            mixed_strategies = pygambit.nash.gnm_solve(game)
         else:
             raise ValueError(f"Solver {solver} not recognised")
         # convert to behavior strategies
