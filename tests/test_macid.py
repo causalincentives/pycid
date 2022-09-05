@@ -59,13 +59,15 @@ class TestMACID(unittest.TestCase):
 
         macid2 = battle_of_the_sexes()
         self.assertEqual(len(macid2.get_all_ne()), 2)
+        self.assertEqual(len(macid2.get_all_ne(solver="enummixed")), 3)
 
         macid3 = matching_pennies()
         self.assertEqual(len(macid3.get_all_ne()), 0)
+        self.assertEqual(len(macid3.get_all_ne(solver="enummixed")), 1)
 
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_all_ne()), 1)
-
+        self.assertEqual(len(macid4.get_all_ne(solver="enummixed")), 1)
         # TODO add tests for mixed equilibria
 
     # @unittest.skip("")
@@ -82,6 +84,9 @@ class TestMACID(unittest.TestCase):
             macid.get_all_ne_in_sg(decisions_in_sg=["D3"])
 
         # TODO add tests for mixed equilibria
+        mixed_ne_in_subgame = macid.get_all_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
+        print(mixed_ne_in_subgame)
+        self.assertEqual(len(mixed_ne_in_subgame), 1)
 
     # @unittest.skip("")
     def test_get_all_spe(self) -> None:
@@ -118,7 +123,7 @@ class TestMACID(unittest.TestCase):
 
         # TODO add tests for mixed equilibria
 
-        # TODO check whether spe works here
+        # TODO check whether spe works here as expected?
 
 
 if __name__ == "__main__":
