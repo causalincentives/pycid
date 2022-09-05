@@ -62,19 +62,43 @@ class MACID(MACIDBase):
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
+        # old NE finder
+        # agent_decs_in_sg = {
+        #     agent: [dec for dec in self.agent_decisions[agent] if dec in decisions_in_sg] for agent in agents_in_sg
+        # }
+
+        # all_ne_in_sg: List[List[StochasticFunctionCPD]] = []
+        # for pp in self.joint_pure_policies(decisions_in_sg):
+        #     macid.add_cpds(*pp)  # impute the policy profile
+
+        #     for a in agents_in_sg:  # check that each agent is happy
+        #         eu_pp_agent_a = macid.expected_utility({}, agent=a)
+        #         macid.add_cpds(*macid.optimal_pure_policies(agent_decs_in_sg[a])[0])
+        #         max_eu_agent_a = macid.expected_utility({}, agent=a)
+        #         if max_eu_agent_a > eu_pp_agent_a:  # not an NE
+        #             break
+        #     else:
+        #         # it's an NE
+        #         all_ne_in_sg.append(list(pp))
+
         # impute random decisions to non-instantiated, irrelevant decision nodes
         macid = self.copy()
         for d in macid.decisions:
             if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
                 macid.impute_random_decision(d)
 
-        # pygambit NE solver
+        # # pygambit NE solver
         efg, parents_to_infoset = self.macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
-        ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
+        # print(efg.write())
+        print(parents_to_infoset)
+        ne_behaviour_strategies = self.pygambit_ne_solver(efg, solver=solver)
+        print(ne_behaviour_strategies)
         all_ne_in_sg = [
             self.behavior_to_cpd(efg, macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
         ]
+
+        print(all_ne_in_sg)
 
         return all_ne_in_sg
 
@@ -109,15 +133,14 @@ class MACID(MACIDBase):
         if decisions_in_sg is None:
             decisions_in_sg = macid.decisions
 
-        # instantiate the decisions
-        macid.impute_fully_mixed_policy_profile()
+        # instantiate the decisions TODO this might be why it doesn't work, we want to force a subgame setting?
+        # macid.impute_fully_mixed_policy_profile()
         # choose only relevant nodes
         game_tree_nodes = set(
             list(decisions_in_sg) + [parent for dec in decisions_in_sg for parent in macid.get_parents(dec)]
         )
         # topologically order them
         sorted_game_tree_nodes = macid.get_valid_order(game_tree_nodes)
-
         # create the pygambit efg
         game = pygambit.Game.new_tree()
         # add the players
@@ -173,11 +196,12 @@ class MACID(MACIDBase):
                     factor = macid.query([node], context=parents_actions)
                     move = cur_node.append_move(game.players.chance, factor.cardinality)
                     # add state info
+                    actions = macid.model.domain[node]
                     for action_idx, prob in enumerate(factor.values):
-                        move.actions[action_idx].label = str(action_idx)
+                        move.actions[action_idx].label = actions[action_idx]
                         move.actions[action_idx].prob = pygambit.Decimal(prob)
                         state_info = node_idx_to_state[node_idx].copy()
-                        state_info.update({node: action_idx})
+                        state_info.update({node: actions[action_idx]})
                         node_idx_to_state[node_idx + (action_idx,)] = state_info
         # add payoffs to the game as leave nodes
         for node_idx in itertools.product(*range_num_children):
@@ -192,7 +216,7 @@ class MACID(MACIDBase):
 
         return game, parents_to_infoset
 
-    def get_nash_eqs(
+    def pygambit_ne_solver(
         self, efg: pygambit.Game, solver: Optional[str] = "enummixed"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
@@ -243,7 +267,16 @@ class MACID(MACIDBase):
             # get the prob for the action
             return action_probs
 
-        cpds = [StochasticFunctionCPD(node, _action_prob_given_parents, macid) for node in decisions_in_sg]
+        # require domain to get cpd.values in the same order as in macid
+        cpds = [
+            StochasticFunctionCPD(
+                variable=node,
+                stochastic_function=_action_prob_given_parents,
+                cbn=macid,
+                domain=macid.model.domain[node],
+            )
+            for node in decisions_in_sg
+        ]
         return cpds
 
     def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
