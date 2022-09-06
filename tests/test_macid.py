@@ -123,9 +123,23 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 0], [1, 0], [0, 1]])))
 
-        # TODO add tests for mixed equilibria
+        macid = battle_of_the_sexes()
+        all_spe = macid.get_all_spe(solver="enummixed")
+        self.assertTrue(len(all_spe) == 3)
+        macid = prisoners_dilemma()
+        all_spe = macid.get_all_spe(solver="enummixed")
+        self.assertTrue(len(all_spe) == 1)
+        macid = taxi_competition()
+        all_spe = macid.get_all_spe(solver="enummixed")
+        self.assertTrue(len(all_spe) == 1)
+        macid = modified_taxi_competition()
+        all_spe = macid.get_all_spe(solver="enummixed")
+        self.assertTrue(len(all_spe) == 2)
+        macid = basic_different_dec_cardinality()
+        all_spe = macid.get_all_spe(solver="enummixed")
+        self.assertTrue(len(all_spe) == 1)
 
-        # TODO check whether spe works here as expected?
+        # TODO add more tests for mixed equilibria
 
 
 if __name__ == "__main__":

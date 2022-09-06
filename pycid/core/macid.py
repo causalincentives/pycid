@@ -75,12 +75,10 @@ class MACID(MACIDBase):
         # pygambit NE solver
         efg, parents_to_infoset = self._macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
         ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
-        print(ne_behaviour_strategies)
         all_ne_in_sg = [
             self._behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
         ]
-        print(all_ne_in_sg)
 
         return all_ne_in_sg
 
@@ -221,13 +219,13 @@ class MACID(MACIDBase):
         self, game: pygambit.Game, solver: Optional[str] = "enumpure"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
-        Pygambit will raise errors if solver not allowed for the game (e.g. not 2 player games)
+        Pygambit will raise errors if solver not allowed for the game (e.g. not constant sum for lp)
         """
         # check if not 2 player game
         two_player = True if len(game.players) == 2 else False
         if solver in ["enummixed", "lcp", "lp"] and not two_player:
-            warn(f"Solver {solver} not allowed for non-2 player games. Using 'simpdiv' instead.")
-            solver = "simpdiv"
+            warn(f"Solver {solver} not allowed for non-2 player games. Using 'enumpure' instead.")
+            solver = "enumpure"
 
         if solver == "enummixed":
             mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
