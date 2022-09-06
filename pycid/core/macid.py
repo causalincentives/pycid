@@ -4,7 +4,7 @@ import copy
 import itertools
 from collections import defaultdict
 from functools import partial, update_wrapper
-from typing import Any, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Set, Tuple, Union
 
 import networkx as nx
 import pygambit
@@ -275,9 +275,9 @@ class MACID(MACIDBase):
             }
             return action_probs
 
-        def _wrapped_partial(func, *args, **kwargs):
+        def _wrapped_partial(func: Callable, *args: str) -> Callable:
             """Adds __name__ and __doc__ to partial functions"""
-            partial_func = partial(func, *args, **kwargs)
+            partial_func = partial(func, *args)
             update_wrapper(partial_func, func)
             return partial_func
 
