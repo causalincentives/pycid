@@ -86,10 +86,9 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(KeyError):
             macid.get_all_ne_in_sg(decisions_in_sg=["D3"])
 
-        # TODO add tests for mixed equilibria
-        # mixed_ne_in_subgame = macid.get_all_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
-        # print(mixed_ne_in_subgame)
-        # self.assertEqual(len(mixed_ne_in_subgame), 1)
+        # TODO add more tests for mixed equilibria
+        mixed_ne_in_subgame = macid.get_all_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
+        self.assertEqual(len(mixed_ne_in_subgame), 1)
 
     # @unittest.skip("")
     def test_get_all_spe(self) -> None:

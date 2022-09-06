@@ -5,6 +5,7 @@ import itertools
 from collections import defaultdict
 from functools import partial, update_wrapper
 from typing import Any, Callable, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Set, Tuple, Union
+from warnings import warn
 
 import networkx as nx
 import pygambit
@@ -74,10 +75,12 @@ class MACID(MACIDBase):
         # pygambit NE solver
         efg, parents_to_infoset = self._macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
         ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
+        print(ne_behaviour_strategies)
         all_ne_in_sg = [
             self._behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
         ]
+        print(all_ne_in_sg)
 
         return all_ne_in_sg
 
@@ -219,8 +222,13 @@ class MACID(MACIDBase):
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
         Pygambit will raise errors if solver not allowed for the game (e.g. not 2 player games)
-        TODO manual asserts/fallbacks for solvers when not 2 players
         """
+        # check if not 2 player game
+        two_player = True if len(game.players) == 2 else False
+        if solver in ["enummixed", "lcp", "lp"] and not two_player:
+            warn(f"Solver {solver} not allowed for non-2 player games. Using 'simpdiv' instead.")
+            solver = "simpdiv"
+
         if solver == "enummixed":
             mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
         elif solver == "enumpure":
