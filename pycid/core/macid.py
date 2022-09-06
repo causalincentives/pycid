@@ -282,7 +282,6 @@ class MACID(MACIDBase):
             return partial_func
 
         # require domain to get cpd.values in the same order as in macid
-        # require agent for the infoset
         cpds = [
             StochasticFunctionCPD(
                 variable=node,
