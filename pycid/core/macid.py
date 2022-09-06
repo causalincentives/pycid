@@ -218,8 +218,8 @@ class MACID(MACIDBase):
         self, game: pygambit.Game, solver: Optional[str] = "enumpure"
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
-        Pygambit will raise errors if solver not allowed for the game (e.g. more than 2 players)
-        TODO manual asserts for errors?
+        Pygambit will raise errors if solver not allowed for the game (e.g. not 2 player games)
+        TODO manual asserts/fallbacks for solvers when not 2 players
         """
         if solver == "enummixed":
             mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
@@ -230,7 +230,7 @@ class MACID(MACIDBase):
         elif solver == "lp":
             mixed_strategies = pygambit.nash.lp_solve(game, rational=False)
         elif solver == "simpdiv":
-            mixed_strategies = pygambit.nash.simpdiv_solve(game, rational=False)
+            mixed_strategies = pygambit.nash.simpdiv_solve(game)
         elif solver == "ipa":
             mixed_strategies = pygambit.nash.ipa_solve(game)
         elif solver == "gnm":
@@ -238,7 +238,7 @@ class MACID(MACIDBase):
         else:
             raise ValueError(f"Solver {solver} not recognised")
         # convert to behavior strategies
-        behavior_strategies = [x.as_behavior() for x in mixed_strategies]
+        behavior_strategies = [x.as_behavior() if solver not in ["lp", "lcp"] else x for x in mixed_strategies]
 
         return behavior_strategies
 
