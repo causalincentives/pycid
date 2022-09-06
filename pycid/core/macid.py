@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import itertools
 from collections import defaultdict
+from functools import partial, update_wrapper
 from typing import Any, Dict, Hashable, Iterable, KeysView, List, Mapping, Optional, Set, Tuple, Union
 
 import networkx as nx
@@ -27,7 +28,7 @@ class MACID(MACIDBase):
             - "enumpure": enumerate all pure NEs in the MACID
             - "enummixed": enumerate all mixed NEs in the MACID (only for 2-player games)
             - "lcp": Compute NE using the Linear Complementarity Program (LCP) solver (only for 2-player games)
-            - "lp": Compute (one) NE using the Linear Programming solver (only for 2-player games)
+            - "lp": Compute (one) NE using the Linear Programming solver (only for 2-player, constant sum games)
             - "simpdiv": Compute (one) NE using the Simplicial Subdivision
             - "ipa": Compute (one) NE using the Iterative Partial Assignment solver
             - "gnm": Compute (one) NE using the global newton method
@@ -78,7 +79,6 @@ class MACID(MACIDBase):
             for strat in ne_behaviour_strategies
         ]
 
-        print(all_ne_in_sg)
         return all_ne_in_sg
 
     def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
@@ -275,12 +275,18 @@ class MACID(MACIDBase):
             }
             return action_probs
 
+        def _wrapped_partial(func, *args, **kwargs):
+            """Adds __name__ and __doc__ to partial functions"""
+            partial_func = partial(func, *args, **kwargs)
+            update_wrapper(partial_func, func)
+            return partial_func
+
         # require domain to get cpd.values in the same order as in macid
         # require agent for the infoset
         cpds = [
             StochasticFunctionCPD(
                 variable=node,
-                stochastic_function=lambda **x: _action_prob_given_parents(node, **x),
+                stochastic_function=_wrapped_partial(_action_prob_given_parents, node),
                 cbn=macid,
                 domain=macid.model.domain[node],
             )
