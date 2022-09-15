@@ -225,8 +225,8 @@ class MACID(MACIDBase):
         two_player = True if len(game.players) == 2 else False
         if solver in ["enummixed", "lcp", "lp"] and not two_player:
             warn(
-                f"Solver {solver} not allowed for non-2 player games. Using 'simpdiv'"
-                "instead. Note this will find only one NE."
+                f"Solver {solver} not allowed for non-2 player games. Using 'simpdiv' instead."
+                "Note this will find only one NE."
             )
             solver = "simpdiv"
 
