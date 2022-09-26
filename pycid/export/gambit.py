@@ -105,7 +105,7 @@ def macid_to_efg(
                     state_info.update({node: actions[action_idx]})
                     node_idx_to_state[node_idx + (action_idx,)] = state_info
 
-    _add_payoffs(macid, game, range_num_children, node_idx_to_state, agents_in_sg)
+    game = _add_payoffs(macid, game, range_num_children, node_idx_to_state, agents_in_sg)
 
     return game, parents_to_infoset
 
@@ -198,7 +198,7 @@ def _add_payoffs(
     range_num_children: List[List],
     node_idx_to_state: Dict[Tuple[int, ...], Dict[str, Any]],
     agents_in_sg: Iterable[Hashable],
-) -> None:
+) -> pygambit.Game:
     """add payoffs to the game as leave nodes"""
     for node_idx in itertools.product(*range_num_children):
         cur_node = _get_cur_node(game, node_idx)
@@ -209,6 +209,8 @@ def _add_payoffs(
             payoff = macid.expected_utility(context=context, agent=agent)
             payoff_tuple[i] = pygambit.Decimal(payoff)
         cur_node.outcome = payoff_tuple
+
+    return game
 
 
 def _get_cur_node(game: pygambit.Game, idx: Tuple[int, ...]) -> pygambit.Node:
