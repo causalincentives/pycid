@@ -140,7 +140,6 @@ class TestMACID(unittest.TestCase):
 
         macid = modified_taxi_competition()
         all_spe = macid.get_spe()
-        print(all_spe)
         self.assertTrue(len(all_spe) == 2)
 
         macid = prisoners_dilemma()
@@ -175,8 +174,6 @@ class TestMACID(unittest.TestCase):
         macid = basic_different_dec_cardinality()
         all_spe = macid.get_spe(solver="enummixed")
         self.assertTrue(len(all_spe) == 1)
-
-        # TODO add more tests for mixed equilibria
 
 
 if __name__ == "__main__":
