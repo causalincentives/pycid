@@ -93,6 +93,67 @@ class MACID(MACIDBase):
 
         return ne_in_sg
 
+    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
+        """Return a dictionary with the joint or partial policy profile assigned -
+        ie a decision rule for each of the MACIM's decision nodes."""
+        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
+        pp.update({cpd.variable: cpd for cpd in partial_policy})
+        return pp
+
+    def get_spe(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
+        """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
+        By default, finds all pure SPE using the "enumpure" pygambit solver.
+        Use the 'solver' argument to change this behaviour (see get_ne method for details).
+        - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        """
+        spes: List[List[StochasticFunctionCPD]] = [[]]
+
+        # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
+        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
+            extended_spes = []
+            for partial_profile in spes:
+                self.add_cpds(*partial_profile)
+                ne_in_sg = self.get_all_ne_in_sg(decisions_in_sg=scc, solver=solver)
+                for ne in ne_in_sg:
+                    extended_spes.append(partial_profile + list(ne))
+            spes = extended_spes
+        return spes
+
+    def decs_in_each_maid_subgame(self) -> List[set]:
+        """
+        Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
+        """
+        con_rel = CondensedRelevanceGraph(self)
+        con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
+        powerset = list(
+            itertools.chain.from_iterable(
+                itertools.combinations(con_rel_sccs, r) for r in range(1, len(con_rel_sccs) + 1)
+            )
+        )
+        con_rel_subgames = copy.deepcopy(powerset)
+        for subset in powerset:
+            for node in subset:
+                if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
+                    con_rel_subgames.remove(subset)
+
+        dec_subgames = [
+            [con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame] for con_rel_subgame in con_rel_subgames
+        ]
+
+        return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
+
+    def copy_without_cpds(self) -> MACID:
+        """copy the MACID structure"""
+        new = MACID()
+        new.add_nodes_from(self.nodes)
+        new.add_edges_from(self.edges)
+        for agent in self.agents:
+            for decision in self.agent_decisions[agent]:
+                new.make_decision(decision, agent)
+            for utility in self.agent_utilities[agent]:
+                new.make_utility(utility, agent)
+        return new
+
     def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
         """add players to the pygambit game"""
         agent_to_player = {}
@@ -310,64 +371,3 @@ class MACID(MACIDBase):
             for node in decisions_in_sg
         ]
         return cpds
-
-    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
-        """Return a dictionary with the joint or partial policy profile assigned -
-        ie a decision rule for each of the MACIM's decision nodes."""
-        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
-        pp.update({cpd.variable: cpd for cpd in partial_policy})
-        return pp
-
-    def get_spe(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
-        """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
-        By default, finds all pure SPE using the "enumpure" pygambit solver.
-        Use the 'solver' argument to change this behaviour (see get_ne method for details).
-        - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
-        """
-        spes: List[List[StochasticFunctionCPD]] = [[]]
-
-        # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
-        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
-            extended_spes = []
-            for partial_profile in spes:
-                self.add_cpds(*partial_profile)
-                ne_in_sg = self.get_all_ne_in_sg(decisions_in_sg=scc, solver=solver)
-                for ne in ne_in_sg:
-                    extended_spes.append(partial_profile + list(ne))
-            spes = extended_spes
-        return spes
-
-    def decs_in_each_maid_subgame(self) -> List[set]:
-        """
-        Return a list giving the set of decision nodes in each MAID subgame of the original MAID.
-        """
-        con_rel = CondensedRelevanceGraph(self)
-        con_rel_sccs = con_rel.nodes  # the nodes of the condensed relevance graph are the maximal sccs of the MA(C)ID
-        powerset = list(
-            itertools.chain.from_iterable(
-                itertools.combinations(con_rel_sccs, r) for r in range(1, len(con_rel_sccs) + 1)
-            )
-        )
-        con_rel_subgames = copy.deepcopy(powerset)
-        for subset in powerset:
-            for node in subset:
-                if not nx.descendants(con_rel, node).issubset(subset) and subset in con_rel_subgames:
-                    con_rel_subgames.remove(subset)
-
-        dec_subgames = [
-            [con_rel.get_decisions_in_scc()[scc] for scc in con_rel_subgame] for con_rel_subgame in con_rel_subgames
-        ]
-
-        return [set(itertools.chain.from_iterable(i)) for i in dec_subgames]
-
-    def copy_without_cpds(self) -> MACID:
-        """copy the MACID structure"""
-        new = MACID()
-        new.add_nodes_from(self.nodes)
-        new.add_edges_from(self.edges)
-        for agent in self.agents:
-            for decision in self.agent_decisions[agent]:
-                new.make_decision(decision, agent)
-            for utility in self.agent_utilities[agent]:
-                new.make_utility(utility, agent)
-        return new
