@@ -21,6 +21,19 @@ Outcome = Any
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
 
+    def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
+        """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
+        pure decision rule to every decision node in the MACID."""
+        all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
+        return list(itertools.product(*all_dec_decision_rules))
+
+    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
+        """Return a dictionary with the joint or partial policy profile assigned -
+        ie a decision rule for each of the MACIM's decision nodes."""
+        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
+        pp.update({cpd.variable: cpd for cpd in partial_policy})
+        return pp
+
     def get_ne(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
         """
         Return a list of Nash equilbiria in the MACID. By default, this finds all pure NE using the 'enumpure'
@@ -51,12 +64,6 @@ class MACID(MACIDBase):
         """
         return self.get_ne_in_sg(solver=solver)
 
-    def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
-        """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
-        pure decision rule to every decision node in the MACID."""
-        all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
-        return list(itertools.product(*all_dec_decision_rules))
-
     def get_ne_in_sg(
         self,
         decisions_in_sg: Optional[Iterable[str]] = None,
@@ -85,7 +92,7 @@ class MACID(MACIDBase):
 
         # pygambit NE solver
         efg, parents_to_infoset = self._macid_to_pygambit_efg(sg_macid, decisions_in_sg, agents_in_sg)
-        ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
+        ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver_override=solver)
         ne_in_sg = [
             self._behavior_to_cpd(sg_macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
@@ -93,16 +100,10 @@ class MACID(MACIDBase):
 
         return ne_in_sg
 
-    def policy_profile_assignment(self, partial_policy: Iterable[StochasticFunctionCPD]) -> Dict:
-        """Return a dictionary with the joint or partial policy profile assigned -
-        ie a decision rule for each of the MACIM's decision nodes."""
-        pp: Dict[str, Optional[TabularCPD]] = {d: None for d in self.decisions}
-        pp.update({cpd.variable: cpd for cpd in partial_policy})
-        return pp
-
-    def get_spe(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
+    def get_spe(self, solver: Optional[str] = None) -> List[List[StochasticFunctionCPD]]:
         """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
-        By default, finds all pure SPE using the "enumpure" pygambit solver.
+        By default, this finds mixed SPE using the "enummixed" pygambit solver for 2-player games, and
+        pure SPE using the "enumpure" pygambit solver for N-player games.
         Use the 'solver' argument to change this behaviour (see get_ne method for details).
         - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
@@ -287,24 +288,34 @@ class MACID(MACIDBase):
         return game, parents_to_infoset
 
     def _pygambit_ne_solver(
-        self, game: pygambit.Game, solver: Optional[str] = "enumpure"
+        self, game: pygambit.Game, solver_override: Optional[str] = None
     ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
         """Uses pygambit to find the Nash equilibria of the EFG.
-        Pygambit will raise errors if solver not allowed for the game (e.g. not constant sum for lp)
+        Default solver is enummixed for 2 player games. This finds all NEs.
+        For non-2-player games, the default is enumpure which finds all pure NEs.
+        If no pure NEs are found, then simpdiv is used to find a mixed NE if it exists.
+        If a specific solver is desired, it can be passed as a string, but if it is not compatible
+        with the game, a warning will be raised and it will be ignored. We need to do this because
+        enummixed is not compatible for non-2-player games.
         """
-        # check if not 2 player game
+        # check if a 2 player game, if so, default to enummixed, else enumpure
         two_player = True if len(game.players) == 2 else False
-        if solver in ["enummixed", "lcp", "lp"] and not two_player:
-            warn(
-                f"Solver {solver} not allowed for non-2 player games. Using 'simpdiv' instead."
-                "Note this will find only one NE."
-            )
-            solver = "simpdiv"
+        if solver_override is None:
+            solver = "enummixed" if two_player else "enumpure"
+        elif solver_override in ["enummixed", "lcp", "lp"] and not two_player:
+            warn(f"Solver {solver_override} not allowed for non-2 player games. Using 'enumpure' instead.")
+            solver = "enumpure"
+        else:
+            solver = solver_override
 
         if solver == "enummixed":
             mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
         elif solver == "enumpure":
             mixed_strategies = pygambit.nash.enumpure_solve(game)
+            # if no pure NEs found, try simpdiv if not overridden by user
+            if len(mixed_strategies) == 0 and solver_override is None:
+                warn("No pure NEs found using enumpure. Trying simpdiv.")
+                mixed_strategies = pygambit.nash.simpdiv_solve(game)
         elif solver == "lcp":
             mixed_strategies = pygambit.nash.lcp_solve(game, rational=False)
         elif solver == "lp":

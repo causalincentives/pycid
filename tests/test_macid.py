@@ -122,7 +122,6 @@ class TestMACID(unittest.TestCase):
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg(decisions_in_sg=["D3"])
 
-        # TODO add more tests for mixed equilibria
         mixed_ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
         self.assertEqual(len(mixed_ne_in_subgame), 1)
 
@@ -139,19 +138,19 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
 
         macid = modified_taxi_competition()
-        all_spe = macid.get_spe()
+        all_spe = macid.get_spe("enumpure")
         self.assertTrue(len(all_spe) == 2)
 
         macid = prisoners_dilemma()
-        all_spe = macid.get_spe()
+        all_spe = macid.get_spe("enumpure")
         self.assertTrue(len(all_spe) == 1)
 
         macid = battle_of_the_sexes()
-        all_spe = macid.get_spe()
-        self.assertTrue(len(all_spe) == 2)
+        all_spe = macid.get_spe("enumpure")
+        self.assertTrue(len(all_spe) == 2)  # only 2 pure subgame perfect NE
 
         macid3 = basic_different_dec_cardinality()
-        all_spe = macid3.get_spe()
+        all_spe = macid3.get_spe("enumpure")
         spe = all_spe[0]
         joint_policy = macid3.policy_profile_assignment(spe)
         cpd_d1 = joint_policy["D1"]
@@ -170,7 +169,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(len(all_spe) == 1)
         macid = modified_taxi_competition()
         all_spe = macid.get_spe(solver="enummixed")
-        self.assertTrue(len(all_spe) == 1)
+        self.assertTrue(len(all_spe) == 2)
         macid = basic_different_dec_cardinality()
         all_spe = macid.get_spe(solver="enummixed")
         self.assertTrue(len(all_spe) == 1)
