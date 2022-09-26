@@ -70,11 +70,41 @@ class TestMACID(unittest.TestCase):
         macid3 = matching_pennies()
         self.assertEqual(len(macid3.get_ne()), 0)
         self.assertEqual(len(macid3.get_ne(solver="enummixed")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="enummixed")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
         self.assertEqual(len(macid3.get_ne(solver="lp")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="lp")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
         self.assertEqual(len(macid3.get_ne(solver="lcp")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="lcp")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
         self.assertEqual(len(macid3.get_ne(solver="simpdiv")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="simpdiv")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
         self.assertEqual(len(macid3.get_ne(solver="gnm")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="gnm")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
         self.assertEqual(len(macid3.get_ne(solver="ipa")), 1)
+        joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="ipa")[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
 
         macid4 = two_agents_three_actions()
         self.assertEqual(len(macid4.get_ne()), 1)
