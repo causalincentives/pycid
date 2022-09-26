@@ -78,16 +78,16 @@ class MACID(MACIDBase):
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
         # impute random decisions to non-instantiated, irrelevant decision nodes
-        macid = self.copy()
-        for d in macid.decisions:
-            if not macid.is_s_reachable(decisions_in_sg, d) and isinstance(macid.get_cpds(d), DecisionDomain):
-                macid.impute_random_decision(d)
+        sg_macid = self.copy()
+        for d in sg_macid.decisions:
+            if not sg_macid.is_s_reachable(decisions_in_sg, d) and isinstance(sg_macid.get_cpds(d), DecisionDomain):
+                sg_macid.impute_random_decision(d)
 
         # pygambit NE solver
-        efg, parents_to_infoset = self._macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
+        efg, parents_to_infoset = self._macid_to_pygambit_efg(sg_macid, decisions_in_sg, agents_in_sg)
         ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
         ne_in_sg = [
-            self._behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg)
+            self._behavior_to_cpd(sg_macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
         ]
 
@@ -108,12 +108,13 @@ class MACID(MACIDBase):
         """
         spes: List[List[StochasticFunctionCPD]] = [[]]
 
+        macid = self.copy()
         # backwards induction over the sccs in the condensed relevance graph (handling tie-breaks)
-        for scc in reversed(CondensedRelevanceGraph(self).get_scc_topological_ordering()):
+        for scc in reversed(CondensedRelevanceGraph(macid).get_scc_topological_ordering()):
             extended_spes = []
             for partial_profile in spes:
-                self.add_cpds(*partial_profile)
-                ne_in_sg = self.get_ne_in_sg(decisions_in_sg=scc, solver=solver)
+                macid.add_cpds(*partial_profile)
+                ne_in_sg = macid.get_ne_in_sg(decisions_in_sg=scc, solver=solver)
                 for ne in ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
