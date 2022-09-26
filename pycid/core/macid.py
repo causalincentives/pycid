@@ -345,7 +345,7 @@ class MACID(MACIDBase):
             # get the infoset for the node
             infoset = state_to_infoset[pv_tuple]
             # if the infoset does not exist, this is not a valid parent instantiation
-            # TODO check what to do here
+            # TODO this was needed previously, but probably not needed anymore
             if not infoset:
                 return {}
             # get the action probs for the infoset
