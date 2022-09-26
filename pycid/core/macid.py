@@ -21,22 +21,35 @@ Outcome = Any
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
 
-    def get_all_ne(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
+    def get_ne(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of Nash equilbiria in the MACID.
-        - solver can be any of the pygambit solvers.
-        See pygambit docs for details https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
-            - "enumpure": enumerate all pure NEs in the MACID
-            - "enummixed": enumerate all mixed NEs in the MACID (only for 2-player games)
-            - "lcp": Compute NE using the Linear Complementarity Program (LCP) solver (only for 2-player games)
-            - "lp": Compute (one) NE using the Linear Programming solver (only for 2-player, constant sum games)
-            - "simpdiv": Compute (one) NE using the Simplicial Subdivision
-            - "ipa": Compute (one) NE using the Iterative Partial Assignment solver
-            - "gnm": Compute (one) NE using the global newton method
+        Return a list of Nash equilbiria in the MACID. By default, this finds all pure NE using the 'enumpure'
+        pygambit solver. Use the 'solver' argument to change this behaviour.
+        Recommended Usage:
+        - 2-player games: solver='enummixed' to find all mixed NE
+        - N-player games: solver='enumpure' if one ones to find all pure NE, or solver={'simpdiv', 'ipa', 'gnm'}
+        if one wants to find at least one mixed NE. See pygambit docs for details
+        https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
+        - solver can be any of the pygambit solvers (default: "enumpure" - finds all pure NEs).
+            - "enumpure": enumerate all pure NEs in the MACID.
+                - for arbitrary N-player games
+            - "enummixed": Valid for enumerate all mixed NEs in the MACID by computing the
+              extreme points of the set of equilibria.
+                - for 2-player games only
+            - "lcp": Compute NE using the Linear Complementarity Program (LCP) solver.
+                - for 2-player games only
+            - "lp": Compute (one) NE using the Linear Programming solver.
+                - for 2-player, constant sum games only
+            - "simpdiv": Compute one mixed NE using the Simplicial Subdivision.
+                - for arbitrary N-player games
+            - "ipa": Compute one mixed NE using the Iterative Partial Assignment solver
+                - for arbitrary N-player games
+            - "gnm": Compute one mixed NE using the global newton method
+                - for arbitrary N-player games
 
-        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
+        Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
-        return self.get_all_ne_in_sg(solver=solver)
+        return self.get_ne_in_sg(solver=solver)
 
     def joint_pure_policies(self, decisions: Iterable[str]) -> List[Tuple[StochasticFunctionCPD, ...]]:
         """return a list of tuples of all joint pure policies in the MACID. A joint pure policy assigns a
@@ -44,18 +57,16 @@ class MACID(MACIDBase):
         all_dec_decision_rules = list(map(self.pure_decision_rules, decisions))
         return list(itertools.product(*all_dec_decision_rules))
 
-    def get_all_ne_in_sg(
+    def get_ne_in_sg(
         self,
         decisions_in_sg: Optional[Iterable[str]] = None,
         solver: Optional[str] = "enumpure",
     ) -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of all Nash equilbiria in a MACID subgame.
-
+        Return a list of NE in a MACID subgame. By default, this finds all pure NE in an arbitray N-player game.
+        Use the 'solver' argument to change this behaviour (see get_ne method for details).
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
-        - solver can be any of the pygambit solvers.
-        See pygambit docs for details https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
-        - If decisions_in_sg is not specified, this method finds all NE in the full MACID.
+        - If decisions_in_sg is not specified, this method finds NE in the full MACID.
         - If the MACID being operated on already has function CPDs for some decision nodes, it is
         assumed that these have already been optimised and so these are not changed.
         """
@@ -75,12 +86,12 @@ class MACID(MACIDBase):
         # pygambit NE solver
         efg, parents_to_infoset = self._macid_to_pygambit_efg(macid, decisions_in_sg, agents_in_sg)
         ne_behaviour_strategies = self._pygambit_ne_solver(efg, solver=solver)
-        all_ne_in_sg = [
+        ne_in_sg = [
             self._behavior_to_cpd(macid, parents_to_infoset, strat, decisions_in_sg)
             for strat in ne_behaviour_strategies
         ]
 
-        return all_ne_in_sg
+        return ne_in_sg
 
     def _add_players(self, game: pygambit.Game, agents_in_sg: Iterable[Hashable]) -> Dict[Hashable, pygambit.Player]:
         """add players to the pygambit game"""
@@ -307,11 +318,11 @@ class MACID(MACIDBase):
         pp.update({cpd.variable: cpd for cpd in partial_policy})
         return pp
 
-    def get_all_spe(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
-        """Return a list of all subgame perfect Nash equilbiria (SPE) in the MACIM
+    def get_spe(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
+        """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
+        By default, finds all pure SPE using the "enumpure" pygambit solver.
+        Use the 'solver' argument to change this behaviour (see get_ne method for details).
         - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
-        - solver can be any of the pygambit solvers.
-        See pygambit docs for details https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
         """
         spes: List[List[StochasticFunctionCPD]] = [[]]
 
@@ -320,8 +331,8 @@ class MACID(MACIDBase):
             extended_spes = []
             for partial_profile in spes:
                 self.add_cpds(*partial_profile)
-                all_ne_in_sg = self.get_all_ne_in_sg(decisions_in_sg=scc, solver=solver)
-                for ne in all_ne_in_sg:
+                ne_in_sg = self.get_all_ne_in_sg(decisions_in_sg=scc, solver=solver)
+                for ne in ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
         return spes
