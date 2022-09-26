@@ -144,7 +144,7 @@ def taxi_competition() -> MACID:
         | cheap    |     5    |   1      |
         +----------+----------+----------+
 
-    There are 3 pure strategy NE and 1 pure SPE.
+    There are 3 pure strategy NE, 1 mixed strategy NE and 1 pure SPE.
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],

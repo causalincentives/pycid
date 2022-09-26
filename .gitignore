@@ -140,5 +140,5 @@ dmypy.json
 cython_debug/
 
 # gambit
-.efg
-.nfg
+*.efg
+*.nfg
