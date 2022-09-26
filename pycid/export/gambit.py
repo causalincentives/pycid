@@ -26,6 +26,7 @@ def macid_to_efg(
     3) Labels each node X_i with a partial instantiation of the splits in the path to X_i in the EFG.
     Args:
     - macid: The MACID object to convert to a pygambit EFG.
+      Expected input is a MACID object, but also allows for CIDs to be converted to EFGs.
     - decisions_in_sg: The decisions to include in the EFG. If None, all decisions are included.
     - agents_in_sg: The agents to include in the EFG. If None, all agents are included.
     Returns:
@@ -139,12 +140,6 @@ def behavior_to_cpd(
     - cpds: A list of CPDs for each decision node.
     """
 
-    def _decimal_from_fraction(item: Any) -> float:
-        if isinstance(item, pygambit.Rational):
-            return float(item.numerator / item.denominator)
-        else:
-            return float(item)
-
     def _action_prob_given_parents(node: Any, **pv: Outcome) -> Mapping[str, float]:
         """Takes the parent instantiation and outputs the prob from the infoset"""
         pv_tuple = (macid.decision_agent[node], tuple(pv.items()))
@@ -155,9 +150,7 @@ def behavior_to_cpd(
         if not infoset:
             return {}
         # get the action probs for the infoset
-        action_probs = {
-            macid.model.domain[node][i]: _decimal_from_fraction(prob) for i, prob in enumerate(behavior[infoset])
-        }
+        action_probs = {macid.model.domain[node][i]: float(prob) for i, prob in enumerate(behavior[infoset])}
         return action_probs
 
     def _wrapped_partial(func: Callable, *args: str) -> Callable:

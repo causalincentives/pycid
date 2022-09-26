@@ -26,7 +26,7 @@ class MACID(MACIDBase):
         pygambit solver. Use the 'solver' argument to change this behavior.
         Recommended Usage:
         - 2-player games: solver='enummixed' to find all mixed NE
-        - N-player games: solver='enumpure' if one ones to find all pure NE, or solver={'simpdiv', 'ipa', 'gnm'}
+        - N-player games: solver='enumpure' if one wants to find all pure NE, or solver={'simpdiv', 'ipa', 'gnm'}
         if one wants to find at least one mixed NE. See pygambit docs for details
         https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
         - solver can be any of the pygambit solvers (default: "enumpure" - finds all pure NEs).
