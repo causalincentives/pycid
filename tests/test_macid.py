@@ -58,7 +58,8 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(macid.expected_utility({}, agent=2), -2)
 
         macid2 = battle_of_the_sexes()
-        self.assertEqual(len(macid2.get_ne()), 2)
+        self.assertEqual(len(macid2.get_ne()), 3)
+        self.assertEqual(len(macid2.get_ne("enumpure")), 2)
         self.assertEqual(len(macid2.get_ne(solver="enummixed")), 3)
         nes = macid2.get_ne(solver="enummixed")
         joint_policy = macid2.policy_profile_assignment(nes[1])  # mixed ne (order not guaranteed?)
@@ -68,7 +69,8 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.allclose(cpd_dm.values, np.array([0.4, 0.6])))
 
         macid3 = matching_pennies()
-        self.assertEqual(len(macid3.get_ne()), 0)
+        self.assertEqual(len(macid3.get_ne()), 1)  # gets the mixed NE by default
+        self.assertEqual(len(macid3.get_ne("enumpure")), 0)  # no NE if overriden solver to pure NE only
         self.assertEqual(len(macid3.get_ne(solver="enummixed")), 1)
         joint_policy = macid3.policy_profile_assignment(macid3.get_ne(solver="enummixed")[0])
         cpd_d1 = joint_policy["D1"]
@@ -118,7 +120,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
         self.assertFalse(policy_assignment["D1"])
         ne_in_full_macid = macid.get_ne_in_sg()
-        self.assertEqual(len(ne_in_full_macid), 3)
+        self.assertEqual(len(ne_in_full_macid), 4)
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg(decisions_in_sg=["D3"])
 

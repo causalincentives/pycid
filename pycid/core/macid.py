@@ -20,16 +20,14 @@ Outcome = Any
 class MACID(MACIDBase):
     """A Multi-Agent Causal Influence Diagram"""
 
-    def get_ne(self, solver: Optional[str] = "enumpure") -> List[List[StochasticFunctionCPD]]:
+    def get_ne(self, solver: Optional[str] = None) -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of Nash equilbiria in the MACID. By default, this finds all pure NE using the 'enumpure'
-        pygambit solver. Use the 'solver' argument to change this behavior.
-        Recommended Usage:
-        - 2-player games: solver='enummixed' to find all mixed NE
-        - N-player games: solver='enumpure' if one wants to find all pure NE, or solver={'simpdiv', 'ipa', 'gnm'}
-        if one wants to find at least one mixed NE. See pygambit docs for details
-        https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
-        - solver can be any of the pygambit solvers (default: "enumpure" - finds all pure NEs).
+        Return a list of Nash equilbiria in the MACID using pygambit solvers.
+        By default, this does the following:
+        - 2-player games: uses solver='enummixed' to find all mixed NE
+        - N-player games: uses solver='enumpure' to find all pure NE.
+          If no pure NE exist, uses solver='simpdiv' to find 1 mixed NE if it exists.
+        To change this behavior, use the 'solver' argument. The following solvers are available:
             - "enumpure": enumerate all pure NEs in the MACID.
                 - for arbitrary N-player games
             - "enummixed": Valid for enumerate all mixed NEs in the MACID by computing the
@@ -37,7 +35,7 @@ class MACID(MACIDBase):
                 - for 2-player games only
             - "lcp": Compute NE using the Linear Complementarity Program (LCP) solver.
                 - for 2-player games only
-            - "lp": Compute (one) NE using the Linear Programming solver.
+            - "lp": Compute one NE using the Linear Programming solver.
                 - for 2-player, constant sum games only
             - "simpdiv": Compute one mixed NE using the Simplicial Subdivision.
                 - for arbitrary N-player games
@@ -45,7 +43,8 @@ class MACID(MACIDBase):
                 - for arbitrary N-player games
             - "gnm": Compute one mixed NE using the global newton method
                 - for arbitrary N-player games
-
+        See pygambit docs for more details
+        https://gambitproject.readthedocs.io/en/latest/pyapi.html#module-pygambit.nash
         Each NE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
         return self.get_ne_in_sg(solver=solver)
@@ -53,10 +52,14 @@ class MACID(MACIDBase):
     def get_ne_in_sg(
         self,
         decisions_in_sg: Optional[Iterable[str]] = None,
-        solver: Optional[str] = "enumpure",
+        solver: Optional[str] = None,
     ) -> List[List[StochasticFunctionCPD]]:
         """
-        Return a list of NE in a MACID subgame. By default, this finds all pure NE in an arbitray N-player game.
+        Return a list of NE in a MACID subgame.
+        By default, this does the following:
+        - 2-player games: uses solver='enummixed' to find all mixed NE
+        - N-player games: uses solver='enumpure' to find all pure NE.
+          If no pure NE exist, uses solver='simpdiv' to find 1 mixed NE if it exists.
         Use the 'solver' argument to change this behavior (see get_ne method for details).
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
         - If decisions_in_sg is not specified, this method finds NE in the full MACID.
@@ -87,9 +90,9 @@ class MACID(MACIDBase):
 
     def get_spe(self, solver: Optional[str] = None) -> List[List[StochasticFunctionCPD]]:
         """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
-        By default, this finds mixed SPE using the 'enummixed' pygambit solver for 2-player games, and
-        pure SPE using the 'enumpure' pygambit solver for N-player games. If pure NE do not exist,
-        it uses the 'simpdiv' solver to find a mixed NE.
+        By default, this finds mixed eq using the 'enummixed' pygambit solver for 2-player subgames, and
+        pure eq using the 'enumpure' pygambit solver for N-player games. If pure NE do not exist,
+        it uses the 'simpdiv' solver to find a mixed eq.
         Use the 'solver' argument to change this behavior (see get_ne method for details).
         - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
