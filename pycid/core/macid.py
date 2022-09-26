@@ -143,8 +143,6 @@ class MACID(MACIDBase):
         if agents_in_sg is None:
             agents_in_sg = macid.agents
 
-        # instantiate the decisions (TODO already instantiated in subgame?)
-        # macid.impute_fully_mixed_policy_profile()
         # choose only relevant nodes
         game_tree_nodes = set(
             list(decisions_in_sg) + [parent for dec in decisions_in_sg for parent in macid.get_parents(dec)]
