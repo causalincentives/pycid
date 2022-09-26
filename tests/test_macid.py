@@ -104,6 +104,7 @@ class TestMACID(unittest.TestCase):
 
         macid = modified_taxi_competition()
         all_spe = macid.get_spe()
+        print(all_spe)
         self.assertTrue(len(all_spe) == 2)
 
         macid = prisoners_dilemma()
@@ -134,7 +135,7 @@ class TestMACID(unittest.TestCase):
         self.assertTrue(len(all_spe) == 1)
         macid = modified_taxi_competition()
         all_spe = macid.get_spe(solver="enummixed")
-        self.assertTrue(len(all_spe) == 2)
+        self.assertTrue(len(all_spe) == 1)
         macid = basic_different_dec_cardinality()
         all_spe = macid.get_spe(solver="enummixed")
         self.assertTrue(len(all_spe) == 1)
