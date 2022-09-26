@@ -60,6 +60,12 @@ class TestMACID(unittest.TestCase):
         macid2 = battle_of_the_sexes()
         self.assertEqual(len(macid2.get_ne()), 2)
         self.assertEqual(len(macid2.get_ne(solver="enummixed")), 3)
+        nes = macid2.get_ne(solver="enummixed")
+        joint_policy = macid2.policy_profile_assignment(nes[1])  # mixed ne (order not guaranteed?)
+        cpd_df = joint_policy["D_F"]
+        cpd_dm = joint_policy["D_M"]
+        self.assertTrue(np.allclose(cpd_df.values, np.array([0.6, 0.4])))
+        self.assertTrue(np.allclose(cpd_dm.values, np.array([0.4, 0.6])))
 
         macid3 = matching_pennies()
         self.assertEqual(len(macid3.get_ne()), 0)
