@@ -102,8 +102,9 @@ class MACID(MACIDBase):
 
     def get_spe(self, solver: Optional[str] = None) -> List[List[StochasticFunctionCPD]]:
         """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
-        By default, this finds mixed SPE using the "enummixed" pygambit solver for 2-player games, and
-        pure SPE using the "enumpure" pygambit solver for N-player games.
+        By default, this finds mixed SPE using the 'enummixed' pygambit solver for 2-player games, and
+        pure SPE using the 'enumpure' pygambit solver for N-player games. If pure NE do not exist,
+        it uses the 'simpdiv' solver to find a mixed NE.
         Use the 'solver' argument to change this behaviour (see get_ne method for details).
         - Each SPE comes as a list of FunctionCPDs, one for each decision node in the MACID.
         """
