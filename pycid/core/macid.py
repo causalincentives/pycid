@@ -113,7 +113,7 @@ class MACID(MACIDBase):
             extended_spes = []
             for partial_profile in spes:
                 self.add_cpds(*partial_profile)
-                ne_in_sg = self.get_all_ne_in_sg(decisions_in_sg=scc, solver=solver)
+                ne_in_sg = self.get_ne_in_sg(decisions_in_sg=scc, solver=solver)
                 for ne in ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
