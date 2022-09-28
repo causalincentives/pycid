@@ -3,16 +3,14 @@ from __future__ import annotations
 import copy
 import itertools
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-from warnings import warn
 
 import networkx as nx
-import pygambit
 from pgmpy.factors.discrete import TabularCPD
 
 from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
 from pycid.core.macid_base import MACIDBase
 from pycid.core.relevance_graph import CondensedRelevanceGraph
-from pycid.export.gambit import behavior_to_cpd, macid_to_efg
+from pycid.export.gambit import behavior_to_cpd, macid_to_efg, pygambit_ne_solver
 
 Outcome = Any
 
@@ -81,7 +79,7 @@ class MACID(MACIDBase):
 
         # pygambit NE solver
         efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
-        ne_behavior_strategies = self._pygambit_ne_solver(efg, solver_override=solver)
+        ne_behavior_strategies = pygambit_ne_solver(efg, solver_override=solver)
         ne_in_sg = [
             behavior_to_cpd(sg_macid, parents_to_infoset, strat, decisions_in_sg) for strat in ne_behavior_strategies
         ]
@@ -157,49 +155,3 @@ class MACID(MACIDBase):
             for utility in self.agent_utilities[agent]:
                 new.make_utility(utility, agent)
         return new
-
-    def _pygambit_ne_solver(
-        self, game: pygambit.Game, solver_override: Optional[str] = None
-    ) -> List[pygambit.lib.libgambit.MixedStrategyProfile]:
-        """Uses pygambit to find the Nash equilibria of the EFG.
-        Default solver is enummixed for 2 player games. This finds all NEs.
-        For non-2-player games, the default is enumpure which finds all pure NEs.
-        If no pure NEs are found, then simpdiv is used to find a mixed NE if it exists.
-        If a specific solver is desired, it can be passed as a string, but if it is not compatible
-        with the game, a warning will be raised and it will be ignored. We need to do this because
-        enummixed is not compatible for non-2-player games.
-        """
-        # check if a 2 player game, if so, default to enummixed, else enumpure
-        two_player = True if len(game.players) == 2 else False
-        if solver_override is None:
-            solver = "enummixed" if two_player else "enumpure"
-        elif solver_override in ["enummixed", "lcp", "lp"] and not two_player:
-            warn(f"Solver {solver_override} not allowed for non-2 player games. Using 'enumpure' instead.")
-            solver = "enumpure"
-        else:
-            solver = solver_override
-
-        if solver == "enummixed":
-            mixed_strategies = pygambit.nash.enummixed_solve(game, rational=False)
-        elif solver == "enumpure":
-            mixed_strategies = pygambit.nash.enumpure_solve(game)
-            # if no pure NEs found, try simpdiv if not overridden by user
-            if len(mixed_strategies) == 0 and solver_override is None:
-                warn("No pure NEs found using enumpure. Trying simpdiv.")
-                mixed_strategies = pygambit.nash.simpdiv_solve(game)
-        elif solver == "lcp":
-            mixed_strategies = pygambit.nash.lcp_solve(game, rational=False)
-        elif solver == "lp":
-            mixed_strategies = pygambit.nash.lp_solve(game, rational=False)
-        elif solver == "simpdiv":
-            mixed_strategies = pygambit.nash.simpdiv_solve(game)
-        elif solver == "ipa":
-            mixed_strategies = pygambit.nash.ipa_solve(game)
-        elif solver == "gnm":
-            mixed_strategies = pygambit.nash.gnm_solve(game)
-        else:
-            raise ValueError(f"Solver {solver} not recognised")
-        # convert to behavior strategies
-        behavior_strategies = [x.as_behavior() if solver not in ["lp", "lcp"] else x for x in mixed_strategies]
-
-        return behavior_strategies
