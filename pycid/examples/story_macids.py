@@ -58,7 +58,8 @@ def battle_of_the_sexes() -> MACID:
         | Football | 0, 0     | 2, 3     |
         +----------+----------+----------+
 
-    This game has two pure NE: (Opera, Football) and (Football, Opera)
+    This game has two pure NE: (Opera, Opera) and (Football, Football)
+    and 1 mixed NE: (0.4, 0.6), (0,6, 0.4)
     """
     macid = MACID(
         [("D_F", "U_F"), ("D_F", "U_M"), ("D_M", "U_M"), ("D_M", "U_F")],
@@ -143,7 +144,7 @@ def taxi_competition() -> MACID:
         | cheap    |     5    |   1      |
         +----------+----------+----------+
 
-    There are 3 pure strategy NE and 1 pure SPE.
+    There are 3 pure strategy NE, 1 mixed strategy NE and 1 pure SPE.
     """
     macid = MACID(
         [("D1", "D2"), ("D1", "U1"), ("D1", "U2"), ("D2", "U2"), ("D2", "U1")],

@@ -172,7 +172,6 @@ class CausalBayesianNetwork(BayesianNetwork):
 
         with np.errstate(invalid="ignore"):  # Suppress numpy warnings for 0/0
             factor = bp.query(query, context, show_progress=False)
-            factor = bp.query(query, context, show_progress=False)
         return factor
 
     def intervene(self, intervention: Dict[str, Outcome]) -> None:
