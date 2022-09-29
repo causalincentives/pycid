@@ -5,7 +5,7 @@ This package implements causal influence diagrams and methods to analyze them, a
 
 Building on [pgmpy](https://pgmpy.org/) and [NetworkX](https://networkx.org/), pycid provides methods for
 defining CBNs, CIDs and MACIDs,
-computing optimal policies and Nash equilibria,
+computing optimal policies in CIDs, pure and mixed Nash equilibria in multi-agent CIDs,
 studying the effects of interventions, and
 checking graphical criteria for various types of incentives.
 
