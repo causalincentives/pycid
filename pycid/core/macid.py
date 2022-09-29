@@ -23,7 +23,7 @@ class MACID(MACIDBase):
         Return a list of Nash equilbiria in the MACID using pygambit solvers.
         By default, this does the following:
         - 2-player games: uses solver='enummixed' to find all mixed NE
-        - N-player games: uses solver='enumpure' to find all pure NE.
+        - N-player games (where N ≠ 2): uses solver='enumpure' to find all pure NE.
           If no pure NE exist, uses solver='simpdiv' to find 1 mixed NE if it exists.
         To change this behavior, use the 'solver' argument. The following solvers are available:
             - "enumpure": enumerate all pure NEs in the MACID.
@@ -56,7 +56,7 @@ class MACID(MACIDBase):
         Return a list of NE in a MACID subgame.
         By default, this does the following:
         - 2-player games: uses solver='enummixed' to find all mixed NE
-        - N-player games: uses solver='enumpure' to find all pure NE.
+        - N-player games (where N ≠ 2): uses solver='enumpure' to find all pure NE.
           If no pure NE exist, uses solver='simpdiv' to find 1 mixed NE if it exists.
         Use the 'solver' argument to change this behavior (see get_ne method for details).
         - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
@@ -87,7 +87,7 @@ class MACID(MACIDBase):
         return ne_in_sg
 
     def get_spe(self, solver: Optional[str] = None) -> List[List[StochasticFunctionCPD]]:
-        """Return a list of subgame perfect Nash equilbiria (SPE) in the MACIM.
+        """Return a list of subgame perfect equilbiria (SPE) in the MACIM.
         By default, this finds mixed eq using the 'enummixed' pygambit solver for 2-player subgames, and
         pure eq using the 'enumpure' pygambit solver for N-player games. If pure NE do not exist,
         it uses the 'simpdiv' solver to find a mixed eq.
