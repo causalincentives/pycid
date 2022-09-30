@@ -10,7 +10,7 @@ studying the effects of interventions, and
 checking graphical criteria for various types of incentives.
 
 ## News
-Version 0.8 breaks backwards compatibility by removing the get_all_pure_ne, get_all_pure_ne_in_sg, and get_all_pure_spe class methods from the MACID class. This is because pure variants of NE and SPE can now be found by simply selecting the "enumpure" solver as an argument in the new get_ne, get_ne_in_sg, and get_all_pure_spe MACID class methods.
+Version 0.8 breaks backwards compatibility by removing the get_all_pure_ne, get_all_pure_ne_in_sg, and get_all_pure_spe class methods from the MACID class. This is because pure variants of NE and SPE can now be found by simply selecting the "enumpure" solver as an argument in the new get_ne, get_ne_in_sg, and get_spe MACID class methods.
 
 Version 0.7 *breaks backwards compatibility* by requiring CPD arguments to match the case of the parent nodes.
 To update your code to the latest version, simply change the case of the arguments, as illustrated [here](https://github.com/causalincentives/pycid/commit/e50ee06b7eafac63fe7c9471764c9c5774fc743b).
