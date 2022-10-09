@@ -8,6 +8,7 @@ from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
     get_basic_subgames,
     get_basic_subgames3,
+    subgame_mixed_spe,
     two_agents_three_actions,
 )
 from pycid.examples.story_macids import (
@@ -123,7 +124,6 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(len(ne_in_full_macid), 4)
         with self.assertRaises(KeyError):
             macid.get_ne_in_sg2(decisions_in_sg=["D3"])
-
         mixed_ne_in_subgame = macid.get_ne_in_sg2(decisions_in_sg=["D2"], solver="enummixed")
         self.assertEqual(len(mixed_ne_in_subgame), 1)
 
@@ -138,6 +138,23 @@ class TestMACID(unittest.TestCase):
         cpd_d2 = joint_policy["D2"]
         self.assertTrue(np.array_equal(cpd_d1.values, np.array([1, 0])))
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
+
+        macid = subgame_mixed_spe()
+        joint_policy = macid.policy_profile_assignment(macid.get_spe()[0])
+        cpd_d1 = joint_policy["D1"]
+        cpd_d2 = joint_policy["D2"]
+        cpd_d3 = joint_policy["D3"]
+        cpd_d4 = joint_policy["D4"]
+        cpd_d5 = joint_policy["D5"]
+        cpd_d6 = joint_policy["D6"]
+        cpd_d7 = joint_policy["D7"]
+        self.assertTrue(np.allclose(cpd_d1.values, np.array([0, 1])))
+        self.assertTrue(np.allclose(cpd_d2.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d3.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d4.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d5.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d6.values, np.array([0.5, 0.5])))
+        self.assertTrue(np.allclose(cpd_d7.values, np.array([0.5, 0.5])))
 
         macid = modified_taxi_competition()
         all_spe = macid.get_spe("enumpure")

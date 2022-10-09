@@ -47,48 +47,9 @@ class MACID(MACIDBase):
         """
         return self.get_ne_in_sg(solver=solver)
 
-    def get_ne_in_sg(
-        self,
-        decisions_in_sg: Optional[Iterable[str]] = None,
-        solver: Optional[str] = None,
-    ) -> List[List[StochasticFunctionCPD]]:
-        """
-        Return a list of NE in a MACID subgame.
-        By default, this does the following:
-        - 2-player games: uses solver='enummixed' to find all mixed NE
-        - N-player games (where N ≠ 2): uses solver='enumpure' to find all pure NE.
-          If no pure NE exist, uses solver='simpdiv' to find 1 mixed NE if it exists.
-        Use the 'solver' argument to change this behavior (see get_ne method for details).
-        - Each NE comes as a list of FunctionCPDs, one for each decision node in the MAID subgame.
-        - If decisions_in_sg is not specified, this method finds NE in the full MACID.
-        - If the MACID being operated on already has function CPDs for some decision nodes, it is
-        assumed that these have already been optimised and so these are not changed.
-        """
-        # TODO: Check that the decisions in decisions_in_sg actually make up a MAID subgame
-        if decisions_in_sg is None:
-            decisions_in_sg = self.decisions
-        else:
-            decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
-        agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
-
-        # impute random decisions to non-instantiated, irrelevant decision nodes
-        sg_macid = self.copy()
-        for d in sg_macid.decisions:
-            if not sg_macid.is_s_reachable(decisions_in_sg, d) and isinstance(sg_macid.get_cpds(d), DecisionDomain):
-                sg_macid.impute_random_decision(d)
-
-        # pygambit NE solver
-        efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
-        ne_behavior_strategies = pygambit_ne_solver(efg, solver_override=solver)
-        ne_in_sg = [
-            behavior_to_cpd(sg_macid, parents_to_infoset, strat, decisions_in_sg) for strat in ne_behavior_strategies
-        ]
-
-        return ne_in_sg
-
     def create_subgame(self, active_subgame_decs):
         """
-        creates a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame
+        Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame
         """
         # find the nodes that are r-relevant for the active_subgame_decs
         r_nodes = [node for node in self.nodes if self.is_r_reachable(active_subgame_decs, node)]
@@ -140,13 +101,9 @@ class MACID(MACIDBase):
         for node in set(sg_macid.nodes) - parents_for_marginalisation_of_original_cpd:
             sg_macid.model[node] = macid_copy.get_cpds(node)  # or self.model[node]
 
-        # # randomly initalise decision nodes that are in the subgame but are not active decisions
-        # for node in set(sg_macid.nodes).intersection(set(self.decisions)) - set(sg_macid.decisions):
-        #     sg_macid.impute_random_decision(node)
-
         return sg_macid
 
-    def get_ne_in_sg2(
+    def get_ne_in_sg(
         self,
         decisions_in_sg: Optional[Iterable[str]] = None,
         solver: Optional[str] = None,
@@ -171,7 +128,6 @@ class MACID(MACIDBase):
 
         # get subgame
         sg_macid = self.create_subgame(decisions_in_sg)
-        # agents_in_sg = list(sg_macid.agent_decisions.keys())
         # pygambit NE solver
         efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
         ne_behavior_strategies = pygambit_ne_solver(efg, solver_override=solver)
@@ -197,7 +153,7 @@ class MACID(MACIDBase):
             extended_spes = []
             for partial_profile in spes:
                 macid.add_cpds(*partial_profile)
-                ne_in_sg = macid.get_ne_in_sg2(decisions_in_sg=scc, solver=solver)
+                ne_in_sg = macid.get_ne_in_sg(decisions_in_sg=scc, solver=solver)
                 for ne in ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes
