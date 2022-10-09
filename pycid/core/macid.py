@@ -118,7 +118,6 @@ class MACID(MACIDBase):
         sg_macid = MACID(edges=edges_sg, agent_decisions=sg_agents_decs, agent_utilities=sg_agents_utils)
 
         # impute random decisions to non-instantiated, irrelevant decision nodes
-
         # (this is to ensure that they are all "fully mixed - i.e., every action is chosen with positive probability")
         macid_copy = self.copy()
         for d in macid_copy.decisions:
@@ -128,7 +127,6 @@ class MACID(MACIDBase):
                 macid_copy.impute_random_decision(d)
 
         # for every node in the subgame that is a parent of a r_nodes_plus_decs node,
-
         #  marginalise out its parents from its CPD
         parents_for_marginilisation_of_original_cpd = set(sg_macid.nodes) - r_nodes_plus_decs
         for node in parents_for_marginilisation_of_original_cpd:
@@ -169,11 +167,10 @@ class MACID(MACIDBase):
             decisions_in_sg = self.decisions
         else:
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
-        agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
         # get subgame
         sg_macid = self.create_subgame(decisions_in_sg)
-
+        agents_in_sg = list(sg_macid.agent_decisions.keys())
         # pygambit NE solver
         efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
         ne_behavior_strategies = pygambit_ne_solver(efg, solver_override=solver)
