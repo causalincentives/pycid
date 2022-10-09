@@ -49,7 +49,7 @@ class MACID(MACIDBase):
 
     def create_subgame(self, active_subgame_decs):
         """
-        Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame
+        Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame.
         """
         # find the nodes that are r-relevant for the active_subgame_decs
         r_nodes = [node for node in self.nodes if self.is_r_reachable(active_subgame_decs, node)]
@@ -126,7 +126,9 @@ class MACID(MACIDBase):
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
         agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
-        # get subgame
+        # We exploit the fact that we only need to create an EFG correspondsing to the MACID subgame
+        # we don't need to create an EFG for the full MACID
+        # - the macid_to_efg transformation is exponential in the number of MACID nodes
         sg_macid = self.create_subgame(decisions_in_sg)
         # pygambit NE solver
         efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
