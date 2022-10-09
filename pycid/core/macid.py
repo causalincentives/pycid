@@ -8,7 +8,7 @@ import networkx as nx
 from pgmpy.factors.discrete import TabularCPD
 
 from pycid.core.cpd import DecisionDomain, StochasticFunctionCPD
-from pycid.core.macid_base import MACIDBase
+from pycid.core.macid_base import AgentLabel, MACIDBase
 from pycid.core.relevance_graph import CondensedRelevanceGraph
 from pycid.export.gambit import behavior_to_cpd, macid_to_efg, pygambit_ne_solver
 
@@ -47,7 +47,7 @@ class MACID(MACIDBase):
         """
         return self.get_ne_in_sg(solver=solver)
 
-    def create_subgame(self, active_subgame_decs) -> MACID:
+    def create_subgame(self, active_subgame_decs: Iterable[str]) -> MACID:
         """
         Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame.
         """
@@ -60,7 +60,7 @@ class MACID(MACIDBase):
         edges_sg = [pair for pair in self.edges if pair[1] in r_nodes_plus_decs]
         #   sg_nodes = set([node for pair in edges_sg for node in pair])
         # finds the decision_agents mapping in this subgame
-        sg_agents_decs = {}
+        sg_agents_decs: Dict[AgentLabel, List[str]] = {}
         for node in active_subgame_decs:
             agent = self.decision_agent[node]
             if agent in sg_agents_decs:
@@ -68,7 +68,7 @@ class MACID(MACIDBase):
             else:
                 sg_agents_decs[agent] = [node]
         # finds the utilities_agents mapping in this subgame
-        sg_agents_utils = {}
+        sg_agents_utils: Dict[AgentLabel, List[str]] = {}
         for node in set(r_nodes).intersection(set(self.utilities)):
             agent = self.utility_agent[node]
             if agent in sg_agents_utils:
