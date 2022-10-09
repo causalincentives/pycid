@@ -117,7 +117,7 @@ class MACID(MACIDBase):
         # instantiate the skeleton of this MAID
         sg_macid = MACID(edges=edges_sg, agent_decisions=sg_agents_decs, agent_utilities=sg_agents_utils)
 
-        # impute random decisions to non-instantiated, irrelevant decision nodes
+        # random initialise decisions not already instantiated that aren't active in this subgame.
         # (this is to ensure that they are all "fully mixed - i.e., every action is chosen with positive probability")
         macid_copy = self.copy()
         for d in macid_copy.decisions:
@@ -128,21 +128,21 @@ class MACID(MACIDBase):
 
         # for every node in the subgame that is a parent of a r_nodes_plus_decs node,
         #  marginalise out its parents from its CPD
-        parents_for_marginilisation_of_original_cpd = set(sg_macid.nodes) - r_nodes_plus_decs
-        for node in parents_for_marginilisation_of_original_cpd:
+        parents_for_marginalisation_of_original_cpd = set(sg_macid.nodes) - r_nodes_plus_decs
+        for node in parents_for_marginalisation_of_original_cpd:
             cpd = macid_copy.get_cpds(node)
             cpd.marginalize(macid_copy.get_parents(node))
-            marginilised_probs = cpd.get_values()
-            unpack_probs = [item for sublist in marginilised_probs for item in sublist]
+            marginalised_probs = cpd.get_values()
+            unpack_probs = [item for sublist in marginalised_probs for item in sublist]
             sg_macid.model[node] = dict(zip(cpd.domain, unpack_probs))
 
         # copy over the cpds for everything else
-        for node in set(sg_macid.nodes) - parents_for_marginilisation_of_original_cpd:
+        for node in set(sg_macid.nodes) - parents_for_marginalisation_of_original_cpd:
             sg_macid.model[node] = macid_copy.get_cpds(node)  # or self.model[node]
 
-        # randomly initalise decision nodes that are in the subgame but are not active decisions
-        for node in set(sg_macid.nodes).intersection(set(self.decisions)) - set(sg_macid.decisions):
-            sg_macid.impute_random_decision(node)
+        # # randomly initalise decision nodes that are in the subgame but are not active decisions
+        # for node in set(sg_macid.nodes).intersection(set(self.decisions)) - set(sg_macid.decisions):
+        #     sg_macid.impute_random_decision(node)
 
         return sg_macid
 
@@ -167,10 +167,11 @@ class MACID(MACIDBase):
             decisions_in_sg = self.decisions
         else:
             decisions_in_sg = set(decisions_in_sg)  # For efficient membership checks
+        agents_in_sg = list({self.decision_agent[dec] for dec in decisions_in_sg})
 
         # get subgame
         sg_macid = self.create_subgame(decisions_in_sg)
-        agents_in_sg = list(sg_macid.agent_decisions.keys())
+        # agents_in_sg = list(sg_macid.agent_decisions.keys())
         # pygambit NE solver
         efg, parents_to_infoset = macid_to_efg(sg_macid, decisions_in_sg, agents_in_sg)
         ne_behavior_strategies = pygambit_ne_solver(efg, solver_override=solver)
@@ -196,7 +197,7 @@ class MACID(MACIDBase):
             extended_spes = []
             for partial_profile in spes:
                 macid.add_cpds(*partial_profile)
-                ne_in_sg = macid.get_ne_in_sg(decisions_in_sg=scc, solver=solver)
+                ne_in_sg = macid.get_ne_in_sg2(decisions_in_sg=scc, solver=solver)
                 for ne in ne_in_sg:
                     extended_spes.append(partial_profile + list(ne))
             spes = extended_spes

@@ -292,3 +292,52 @@ def basic_different_dec_cardinality() -> MACID:
     )
 
     return macid
+
+
+def subgame_mixed_spe() -> MACID:
+    """
+    A MACIM with no pure SPE, but one mixed SPE
+    """
+    macid = MACID(
+        [
+            ("D1", "U1"),
+            ("D2", "U1"),
+            ("D3", "U1"),
+            ("D2", "U2"),
+            ("D2", "U3"),
+            ("D3", "U3"),
+            ("D3", "U2"),
+            ("D4", "U4"),
+            ("D4", "U5"),
+            ("D5", "U5"),
+            ("D5", "U4"),
+            ("D4", "U1"),
+            ("D5", "U1"),
+            ("D6", "U6"),
+            ("D6", "U7"),
+            ("D7", "U7"),
+            ("D7", "U6"),
+            ("D6", "U1"),
+            ("D7", "U1"),
+        ],
+        agent_decisions={1: ["D1"], 2: ["D2"], 3: ["D3"], 4: ["D4"], 5: ["D5"], 6: ["D6"], 7: ["D7"]},
+        agent_utilities={1: ["U1"], 2: ["U2"], 3: ["U3"], 4: ["U4"], 5: ["U5"], 6: ["U6"], 7: ["U7"]},
+    )
+
+    macid.add_cpds(
+        D1=[0, 1],
+        D2=[0, 1],
+        D3=[0, 1],
+        D4=[0, 1],
+        D5=[0, 1],
+        D6=[0, 1],
+        D7=[0, 1],
+        U1=lambda D1, D2, D3, D4, D5, D6, D7: D1 * D2 * D3 * D4 * D5 * D6 * D7,
+        U2=lambda D2, D3: (1 - 2 * D2) * (1 - 2 * D3),
+        U3=lambda D2, D3: -(1 - 2 * D2) * (1 - 2 * D3),
+        U4=lambda D4, D5: (1 - 2 * D4) * (1 - 2 * D5),
+        U5=lambda D4, D5: -(1 - 2 * D4) * (1 - 2 * D5),
+        U6=lambda D6, D7: (1 - 2 * D6) * (1 - 2 * D7),
+        U7=lambda D6, D7: -(1 - 2 * D6) * (1 - 2 * D7),
+    )
+    return macid
