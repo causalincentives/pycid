@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 import pytest
 
+from pycid.core.relevance_graph import CondensedRelevanceGraph
 from pycid.examples.simple_macids import (
     basic_different_dec_cardinality,
     get_basic_subgames,
@@ -113,18 +114,33 @@ class TestMACID(unittest.TestCase):
         self.assertEqual(len(macid4.get_ne()), 1)
 
     # @unittest.skip("")
+    def test_create_subgame(self) -> None:
+        macid = subgame_mixed_spe()
+        sccs = list(reversed(CondensedRelevanceGraph(macid).get_scc_topological_ordering()))
+        self.assertEqual(len(sccs), 4)
+        subgame = macid.create_subgame(sccs[3])
+        self.assertEqual(len(subgame.nodes), 8)
+        self.assertEqual(len(subgame.agents), 1)
+        self.assertEqual(len(subgame.decisions), 1)
+        self.assertEqual(len(subgame.utilities), 1)
+        ne_policy_in_subgame = macid.policy_profile_assignment(subgame.get_ne()[0])
+        cpd_d1 = ne_policy_in_subgame["D1"]
+        self.assertTrue(np.array_equal(cpd_d1.values, np.array([0, 1])))
+        self.assertTrue(type(subgame), "pycid.core.macid.MACID")
+
+    # @unittest.skip("")
     def test_get_ne_in_sg(self) -> None:
         macid = taxi_competition()
-        ne_in_subgame = macid.get_ne_in_sg2(decisions_in_sg=["D2"])
+        ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"])
         policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
         cpd_d2 = policy_assignment["D2"]
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
         self.assertFalse(policy_assignment["D1"])
-        ne_in_full_macid = macid.get_ne_in_sg2()
+        ne_in_full_macid = macid.get_ne_in_sg()
         self.assertEqual(len(ne_in_full_macid), 4)
         with self.assertRaises(KeyError):
-            macid.get_ne_in_sg2(decisions_in_sg=["D3"])
-        mixed_ne_in_subgame = macid.get_ne_in_sg2(decisions_in_sg=["D2"], solver="enummixed")
+            macid.get_ne_in_sg(decisions_in_sg=["D3"])
+        mixed_ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
         self.assertEqual(len(mixed_ne_in_subgame), 1)
 
     # @unittest.skip("")
