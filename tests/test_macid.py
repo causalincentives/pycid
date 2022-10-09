@@ -114,17 +114,17 @@ class TestMACID(unittest.TestCase):
     # @unittest.skip("")
     def test_get_ne_in_sg(self) -> None:
         macid = taxi_competition()
-        ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"])
+        ne_in_subgame = macid.get_ne_in_sg2(decisions_in_sg=["D2"])
         policy_assignment = macid.policy_profile_assignment(ne_in_subgame[0])
         cpd_d2 = policy_assignment["D2"]
         self.assertTrue(np.array_equal(cpd_d2.values, np.array([[0, 1], [1, 0]])))
         self.assertFalse(policy_assignment["D1"])
-        ne_in_full_macid = macid.get_ne_in_sg()
+        ne_in_full_macid = macid.get_ne_in_sg2()
         self.assertEqual(len(ne_in_full_macid), 4)
         with self.assertRaises(KeyError):
-            macid.get_ne_in_sg(decisions_in_sg=["D3"])
+            macid.get_ne_in_sg2(decisions_in_sg=["D3"])
 
-        mixed_ne_in_subgame = macid.get_ne_in_sg(decisions_in_sg=["D2"], solver="enummixed")
+        mixed_ne_in_subgame = macid.get_ne_in_sg2(decisions_in_sg=["D2"], solver="enummixed")
         self.assertEqual(len(mixed_ne_in_subgame), 1)
 
     # @unittest.skip("")
