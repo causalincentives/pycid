@@ -47,7 +47,7 @@ class MACID(MACIDBase):
         """
         return self.get_ne_in_sg(solver=solver)
 
-    def create_subgame(self, active_subgame_decs):
+    def create_subgame(self, active_subgame_decs) -> MACID:
         """
         Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame.
         """
