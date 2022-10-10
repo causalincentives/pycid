@@ -49,7 +49,19 @@ class MACID(MACIDBase):
 
     def create_subgame(self, active_subgame_decs: Iterable[str]) -> MACID:
         """
-        Return a full subgame from the full macid with the active_subgame_decs active as decisions in this subgame.
+        Creates a subgame from the full macid:
+        1) Find the set of nodes that are r-relevant to the active decision nodes present in this subgame.
+        2) Construct the subgame graph from a subgraph of the full MACID's graph (we keep edges that terminate
+        in one of the active subgame decisions or nodes from (1)).
+        3) Uniform randomly initialise decision nodes in the full MAID that aren't present in the subgame
+        (and also haven't already been initialised)
+        4) For nodes that are parents of active subgame decision nodes or nodes from (1), marginalise out their
+        parents in the original MAID to create valid CPDs for the subgame.
+        5) Copy over CPDs for every other variable from the original MACID.
+        Args:
+        - active_subgame_decs: The decisions to include in the subgame
+        Returns:
+        - the subgame (MACID) object
         """
         # find the nodes that are r-relevant for the active_subgame_decs
         r_nodes = [node for node in self.nodes if self.is_r_reachable(active_subgame_decs, node)]
