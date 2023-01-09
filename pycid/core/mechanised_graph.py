@@ -27,6 +27,7 @@ because it will be just a type of graph
 import itertools
 from typing import Optional
 
+import matplotlib.pyplot as plt
 import networkx as nx
 
 from pycid.core.macid_base import AgentLabel, MACIDBase
@@ -100,3 +101,8 @@ class MechanisedGraph:
         # TODO: Fix problem with inheritance
         decision_mechanised_graph = self.graph.subgraph(decision_mechanisms)
         return nx.is_directed_acyclic_graph(decision_mechanised_graph)
+
+    def draw(self):
+        """Draws full mechanised graph"""
+        nx.draw(self.graph, with_labels=True)
+        plt.show()
