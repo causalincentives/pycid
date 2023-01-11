@@ -259,7 +259,7 @@ def robot_warehouse() -> MACID:
         B=lambda D1: noisy_copy(D1, probability=0.3, domain=[0, 1]),
         R=lambda B, D2: int(not B or D2),
         O=lambda D2: noisy_copy(D2, probability=0.6, domain=[0, 1]),
-        U1=lambda Q, B, O: int(Q and not O) - int(B), # noqa: E741
+        U1=lambda Q, B, O: int(Q and not O) - int(B),  # noqa: E741
         U2=lambda R: R,
     )
     return macid
