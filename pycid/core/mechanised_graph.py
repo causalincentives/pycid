@@ -90,7 +90,8 @@ class MechanisedGraph:
         decision_mechanisms = self.agent_decision_mechanisms[agent]
         # restrict graph to just decision mechanisms
         decision_mechanised_graph = self.graph.subgraph(decision_mechanisms)
-        return nx.is_directed_acyclic_graph(decision_mechanised_graph)
+        is_dag = nx.is_directed_acyclic_graph(decision_mechanised_graph) # type: bool
+        return is_dag 
 
     def is_sufficient_information(self) -> bool:
         """
@@ -100,9 +101,10 @@ class MechanisedGraph:
         decision_mechanisms = list(itertools.chain(*self.agent_decision_mechanisms.values()))
         # TODO: Fix problem with inheritance
         decision_mechanised_graph = self.graph.subgraph(decision_mechanisms)
-        return nx.is_directed_acyclic_graph(decision_mechanised_graph)
+        is_dag = nx.is_directed_acyclic_graph(decision_mechanised_graph) # type: bool
+        return is_dag
 
-    def draw(self):
+    def draw(self) -> None:
         """Draws full mechanised graph"""
         nx.draw(self.graph, with_labels=True)
         plt.show()
