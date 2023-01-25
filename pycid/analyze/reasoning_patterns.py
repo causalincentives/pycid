@@ -41,7 +41,7 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: Set[str]) 
 
 
 def _directed_effective_path_not_through_set_y(
-    mb: MACIDBase, start: str, finish: str, effective_set: Set[str], y: Set[str] = None
+    mb: MACIDBase, start: str, finish: str, effective_set: Set[str], y: Optional[Set[str]] = None
 ) -> bool:
     """Check whether a directed effective path exists that doesn't pass through any of the nodes in the set y."""
     if y is None:

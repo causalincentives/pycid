@@ -81,7 +81,7 @@ class CausalBayesianNetwork(BayesianNetwork):
             elif isinstance(relationship, Mapping):
                 return ConstantCPD(variable, relationship, self.cbn)
 
-    def __init__(self, edges: Iterable[Tuple[str, str]] = None, **kwargs: Any):
+    def __init__(self, edges: Optional[Iterable[Tuple[str, str]]] = None, **kwargs: Any):
         """Initialize a Causal Bayesian Network
 
         Parameters
@@ -130,7 +130,7 @@ class CausalBayesianNetwork(BayesianNetwork):
         return True
 
     def query(
-        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
+        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Optional[Dict[str, Outcome]] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -195,7 +195,7 @@ class CausalBayesianNetwork(BayesianNetwork):
         self,
         variables: Iterable[str],
         context: Dict[str, Outcome],
-        intervention: Dict[str, Outcome] = None,
+        intervention: Optional[Dict[str, Outcome]] = None,
     ) -> List[float]:
         """Compute the expected value of a real-valued variable for a given context,
         under an optional intervention
@@ -267,9 +267,9 @@ class CausalBayesianNetwork(BayesianNetwork):
 
     def draw(
         self,
-        node_color: Callable[[str], Union[str, np.ndarray]] = None,
-        node_shape: Callable[[str], str] = None,
-        node_label: Callable[[str], str] = None,
+        node_color: Optional[Callable[[str], Union[str, np.ndarray]]] = None,
+        node_shape: Optional[Callable[[str], str]] = None,
+        node_label: Optional[Callable[[str], str]] = None,
         layout: Optional[Callable[[Any], Dict[Any, Any]]] = None,
     ) -> None:
         """

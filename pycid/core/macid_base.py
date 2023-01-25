@@ -67,9 +67,9 @@ class MACIDBase(CausalBayesianNetwork):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]] = None,
-        agent_decisions: Mapping[AgentLabel, List[str]] = None,
-        agent_utilities: Mapping[AgentLabel, List[str]] = None,
+        edges: Optional[Iterable[Tuple[str, str]]] = None,
+        agent_decisions: Optional[Mapping[AgentLabel, List[str]]] = None,
+        agent_utilities: Optional[Mapping[AgentLabel, List[str]]] = None,
         **kwargs: Any,
     ):
         """Initialize a new MACIDBase instance.
@@ -142,7 +142,7 @@ class MACIDBase(CausalBayesianNetwork):
         super().add_cpds(*cpds, **relationships)
 
     def query(
-        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
+        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Optional[Dict[str, Outcome]] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -184,7 +184,7 @@ class MACIDBase(CausalBayesianNetwork):
         return super().query(query, context, intervention)
 
     def expected_utility(
-        self, context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None, agent: AgentLabel = 0
+        self, context: Dict[str, Outcome], intervention: Optional[Dict[str, Outcome]] = None, agent: AgentLabel = 0
     ) -> float:
         """Compute the expected utility of an agent for a given context and optional intervention
 
