@@ -1,29 +1,3 @@
-"""
-- it should inherit from nx.Digraph as the current relevance graph class does (this is from the networkX library)
-because it will be just a type of graph
-- the init should just take in a MACIDbase object (so it can be either a CID or a MACID)
-- it's nodes will be macidbase.nodes
-    + an adidtional mechanism variable for every node (I would give these names "old name" + "_mec"
-- its edges will be: every edge in the macidbase object
-    + V_mec -> V edges (for every macidbase node V)
-    + an edge from any mechanism that is r-reachable from it (this last thing will be the same as
-    what's currently done in the relevance graph class, but you now need to do it for all mechanisms
-    rather than just the mechanisms of decision nodes)
-- it should have methods for:
-    - is_sufficient information (this checks whether the mechanised graph
-    restricted to just mechanisms for decision variables is acyclic)
-    - is sufficient recall (this takes in an agent and checks whther
-    that agent has sufficient recall by checking whether the mechanised
-    graph restricted to just mechanisms for decision variables belongning
-    to that agent is acyclic -- if no agent is specificed, then it should
-    check that every agent in the maid has sufficient recall)
-    - draw (draws full mechanised graph)
-
-- Add dictionary to add agents to decision rule nodes and parameter nodes
-- Note: Check if d-connection exists in nx or inherit from bayesian network (it is in networkX)
-- Note: Make pull request
-"""
-
 import itertools
 from typing import Optional
 
