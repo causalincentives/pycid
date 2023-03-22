@@ -327,8 +327,8 @@ class MACIDBase(CausalBayesianNetwork):
         decisions = set(decisions)
         try:
             (agent,) = {self.decision_agent[d] for d in decisions}
-        except ValueError:
-            raise ValueError("Decisions not all from the same agent")
+        except ValueError as e:
+            raise ValueError("Decisions not all from the same agent") from e
 
         macid = self.copy()
         for d in macid.decisions:
@@ -361,8 +361,8 @@ class MACIDBase(CausalBayesianNetwork):
         """Impute a random policy to the given decision node"""
         try:
             domain = self.model.domain[d]
-        except KeyError:
-            raise ValueError(f"can't figure out domain for {d}, did you forget to specify DecisionDomain?")
+        except KeyError as e:
+            raise ValueError(f"can't figure out domain for {d}, did you forget to specify " f"DecisionDomain?") from e
         else:
             self.model[d] = StochasticFunctionCPD(
                 d, lambda **pv: {outcome: 1 / len(domain) for outcome in domain}, self, domain, label="random_decision"
