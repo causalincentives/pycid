@@ -3,7 +3,6 @@ from pycid.core.cpd import discrete_uniform
 
 
 def get_introduced_bias() -> CID:
-
     cid = CID(
         [
             ("A", "X"),  # defining the graph's nodes and edges

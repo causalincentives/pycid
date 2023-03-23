@@ -36,7 +36,6 @@ class CausalBayesianNetwork(BayesianNetwork):
             self.domain: Dict[str, List[Outcome]] = {}
 
         def __setitem__(self, variable: str, relationship: Relationship) -> None:
-
             # Update the keys
             if variable in self.keys():
                 self.__delitem__(variable)
