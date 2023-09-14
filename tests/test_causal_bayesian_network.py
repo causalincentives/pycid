@@ -35,21 +35,22 @@ class TestInitialization:
     def test_valid_edge_initialization() -> None:
         """Tests that the CBN can be initialized with valid edge data."""
         try:
-            cbn = CausalBayesianNetwork([("A", "B")])
+            CausalBayesianNetwork([("A", "B")])
         except ValueError:
             pytest.fail("CausalBayesianNetwork initialization failed with valid edge data")
-        
+
     @staticmethod
     def test_invalid_edge_initialization() -> None:
         """Tests that initializing the CBN with invalid edge data raises a ValueError."""
         with pytest.raises(ValueError):
             CausalBayesianNetwork([("A", "B", "C")])
         with pytest.raises(ValueError):
-            CausalBayesianNetwork([("Node1" "Node2" )])
+            CausalBayesianNetwork([("Node1" "Node2")])
         with pytest.raises(ValueError):
             CausalBayesianNetwork([(1, "B")])
         with pytest.raises(ValueError):
             CausalBayesianNetwork([("A", 2)])
+
 
 class TestRemoveAddEdge:
     @staticmethod

@@ -92,8 +92,6 @@ class CausalBayesianNetwork(BayesianNetwork):
             for edge in edges:
                 if not isinstance(edge, tuple) or len(edge) != 2 or not all(isinstance(node, str) for node in edge):
                     raise ValueError(f"The edge {edge} is not a tuple of two strings.")
-        
-        
         self.model = self.Model(self)
         super().__init__(ebunch=edges, **kwargs)
 
