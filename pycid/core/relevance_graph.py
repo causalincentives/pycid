@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ class RelevanceGraph(nx.DiGraph):
     - an edge D -> D' exists iff D' is r-reachable from D (ie D strategically or probabilistically relies on D')
     """
 
-    def __init__(self, cid: MACIDBase, decisions: Iterable[str] = None):
+    def __init__(self, cid: MACIDBase, decisions: Optional[Iterable[str]] = None):
         super().__init__()
         if decisions is None:
             decisions = cid.decisions

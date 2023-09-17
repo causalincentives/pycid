@@ -49,7 +49,7 @@ class StochasticFunctionCPD(TabularCPD):
         cbn: CausalBayesianNetwork,
         domain: Optional[Sequence[Outcome]] = None,
         state_names: Optional[Mapping[str, List]] = None,
-        label: str = None,
+        label: Optional[str] = None,
     ) -> None:
         """Initialize StochasticFunctionCPD with a variable name and a stochastic function.
 
@@ -130,7 +130,7 @@ class StochasticFunctionCPD(TabularCPD):
         else:
             return {ret: 1}
 
-    def compute_label(self, function: Callable = None) -> str:
+    def compute_label(self, function: Optional[Callable] = None) -> str:
         """Try to generate a string that succinctly describes the relationship"""
         function = function if function is not None else self.func
         if hasattr(function, "__name__") and function.__name__ != "<lambda>":
@@ -224,7 +224,7 @@ class ConstantCPD(StochasticFunctionCPD):
         variable: str,
         dictionary: Mapping,
         cbn: CausalBayesianNetwork,
-        domain: Sequence[Outcome] = None,
+        domain: Optional[Sequence[Outcome]] = None,
         label: Optional[str] = None,
     ):
         super().__init__(variable, lambda **pv: dictionary, cbn, domain=domain, label=label or str(dictionary))
@@ -267,7 +267,7 @@ def discrete_uniform(domain: List[Outcome]) -> Dict[Outcome, float]:
 
 
 def noisy_copy(
-    value: Outcome, probability: float = 0.9, domain: List[Outcome] = None
+    value: Outcome, probability: float = 0.9, domain: Optional[List[Outcome]] = None
 ) -> Dict[Outcome, Optional[float]]:
     """specify a variable's CPD as copying the value of some other variable with a certain probability."""
     dist = dict.fromkeys(domain) if domain else {}

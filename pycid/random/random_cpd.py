@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Iterator, Mapping, Sequence
+from typing import Iterator, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -23,7 +23,9 @@ class RandomCPD:
     Sample a random CPD, with outcomes in the given domain
     """
 
-    def __init__(self, domain: Sequence[Outcome] = None, smoothness: float = 1.0, seed: int = None) -> None:
+    def __init__(
+        self, domain: Optional[Sequence[Outcome]] = None, smoothness: float = 1.0, seed: Optional[int] = None
+    ) -> None:
         """
         Parameters
         ----------
