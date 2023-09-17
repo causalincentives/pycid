@@ -125,7 +125,6 @@ def manipulation(macid: MACID, decision: str, effective_set: Set[str]) -> bool:
 
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
-
                 for u_b in agent_b_utils:
                     if _directed_effective_path_not_through_set_y(macid, decision, u_b, effective_set, {decision_b}):
                         return True
