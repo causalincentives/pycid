@@ -41,7 +41,6 @@ def random_macidbase(
         )
 
     for _ in range(max_resampling_attempts):
-
         dag = random_dag(number_of_nodes=number_of_nodes, edge_density=edge_density, max_in_degree=max_in_degree)
 
         # assign utility nodes to each agent based on the barren nodes in the random dag

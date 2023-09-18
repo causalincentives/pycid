@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Iterator, List, Sequence, Set, Tuple
+from typing import Callable, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
 
 import networkx as nx
 
@@ -184,7 +184,7 @@ def _get_path_edges(cbn: CausalBayesianNetwork, path: Sequence[str]) -> List[Tup
     return structure
 
 
-def is_active_path(cbn: CausalBayesianNetwork, path: Sequence[str], observed: Set[str] = None) -> bool:
+def is_active_path(cbn: CausalBayesianNetwork, path: Sequence[str], observed: Optional[Set[str]] = None) -> bool:
     """
     Check if a specifc path remains active given the 'observed' set of variables.
     """
@@ -213,7 +213,7 @@ def is_active_path(cbn: CausalBayesianNetwork, path: Sequence[str], observed: Se
 
 
 def is_active_indirect_frontdoor_trail(
-    cbn: CausalBayesianNetwork, start_node: str, end_node: str, observed: Set[str] = None
+    cbn: CausalBayesianNetwork, start_node: str, end_node: str, observed: Optional[Set[str]] = None
 ) -> bool:
     """
     checks whether an active indirect frontdoor path exists given the 'observed' set of variables.
@@ -240,7 +240,7 @@ def is_active_indirect_frontdoor_trail(
 
 
 def is_active_backdoor_trail(
-    cbn: CausalBayesianNetwork, start_node: str, end_node: str, observed: Set[str] = None
+    cbn: CausalBayesianNetwork, start_node: str, end_node: str, observed: Optional[Set[str]] = None
 ) -> bool:
     """
     Returns true if there is a backdoor path that's active given the 'observed' set of nodes.

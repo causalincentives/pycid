@@ -41,7 +41,7 @@ def _path_is_effective(mb: MACIDBase, path: List[str], effective_set: Set[str]) 
 
 
 def _directed_effective_path_not_through_set_y(
-    mb: MACIDBase, start: str, finish: str, effective_set: Set[str], y: Set[str] = None
+    mb: MACIDBase, start: str, finish: str, effective_set: Set[str], y: Optional[Set[str]] = None
 ) -> bool:
     """Check whether a directed effective path exists that doesn't pass through any of the nodes in the set y."""
     if y is None:
@@ -125,7 +125,6 @@ def manipulation(macid: MACID, decision: str, effective_set: Set[str]) -> bool:
 
         for u in agent_utils:
             if _effective_dir_path_exists(macid, decision_b, u, effective_set):
-
                 for u_b in agent_b_utils:
                     if _directed_effective_path_not_through_set_y(macid, decision, u_b, effective_set, {decision_b}):
                         return True

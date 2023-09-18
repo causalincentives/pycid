@@ -177,7 +177,7 @@ def behavior_to_cpd(
     macid: MACIDBase,
     parents_to_infoset: Mapping[Tuple[Hashable, Tuple[Tuple[str, Any], ...]], pygambit.Infoset],
     behavior: pygambit.lib.libgambit.MixedStrategyProfile,
-    decisions_in_sg: Union[KeysView[str], Set[str]] = None,
+    decisions_in_sg: Optional[Union[KeysView[str], Set[str]]] = None,
 ) -> List[StochasticFunctionCPD]:
     """Convert a pygambit behavior strategy to list of CPDs for each decision node.
     Args:
