@@ -238,8 +238,8 @@ def robot_warehouse() -> MACID:
             ("B", "R"),
             ("B", "D2"),
             ("D2", "R"),
-            ("D2", "O"),
-            ("O", "U1"),
+            ("D2", "Ob"),
+            ("Ob", "U1"),
             ("R", "U2"),
         ],
         agent_decisions={
@@ -258,8 +258,8 @@ def robot_warehouse() -> MACID:
         Q=lambda D1: noisy_copy(D1, domain=[0, 1]),
         B=lambda D1: noisy_copy(D1, probability=0.3, domain=[0, 1]),
         R=lambda B, D2: int(not B or D2),
-        O=lambda D2: noisy_copy(D2, probability=0.6, domain=[0, 1]),
-        U1=lambda Q, B, O: int(Q and not O) - int(B),
+        Ob=lambda D2: noisy_copy(D2, probability=0.6, domain=[0, 1]),
+        U1=lambda Q, B, Ob: int(Q and not Ob) - int(B),
         U2=lambda R: R,
     )
     return macid

@@ -67,9 +67,9 @@ class MACIDBase(CausalBayesianNetwork):
 
     def __init__(
         self,
-        edges: Iterable[Tuple[str, str]] = None,
-        agent_decisions: Mapping[AgentLabel, List[str]] = None,
-        agent_utilities: Mapping[AgentLabel, List[str]] = None,
+        edges: Optional[Iterable[Tuple[str, str]]] = None,
+        agent_decisions: Optional[Mapping[AgentLabel, List[str]]] = None,
+        agent_utilities: Optional[Mapping[AgentLabel, List[str]]] = None,
         **kwargs: Any,
     ):
         """Initialize a new MACIDBase instance.
@@ -142,7 +142,7 @@ class MACIDBase(CausalBayesianNetwork):
         super().add_cpds(*cpds, **relationships)
 
     def query(
-        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None
+        self, query: Iterable[str], context: Dict[str, Outcome], intervention: Optional[Dict[str, Outcome]] = None
     ) -> BeliefPropagation:
         """Return P(query|context, do(intervention))*P(context | do(intervention)).
 
@@ -184,7 +184,7 @@ class MACIDBase(CausalBayesianNetwork):
         return super().query(query, context, intervention)
 
     def expected_utility(
-        self, context: Dict[str, Outcome], intervention: Dict[str, Outcome] = None, agent: AgentLabel = 0
+        self, context: Dict[str, Outcome], intervention: Optional[Dict[str, Outcome]] = None, agent: AgentLabel = 0
     ) -> float:
         """Compute the expected utility of an agent for a given context and optional intervention
 
@@ -286,7 +286,7 @@ class MACIDBase(CausalBayesianNetwork):
 
         # We begin by representing each possible decision rule as a tuple of outcomes, with
         # one element for each possible decision context
-        number_of_decision_contexts = int(np.product(parent_cardinalities))
+        number_of_decision_contexts = int(np.prod(parent_cardinalities))
         functions_as_tuples = itertools.product(domain, repeat=number_of_decision_contexts)
 
         def arg2idx(pv: Dict[str, Outcome]) -> int:
@@ -294,7 +294,7 @@ class MACIDBase(CausalBayesianNetwork):
             idx = 0
             for i, parent in enumerate(parents):
                 name_to_no: Dict[Outcome, int] = self.get_cpds(parent).name_to_no[parent]
-                idx += name_to_no[pv[parent]] * int(np.product(parent_cardinalities[:i]))
+                idx += name_to_no[pv[parent]] * int(np.prod(parent_cardinalities[:i]))
             assert 0 <= idx <= number_of_decision_contexts
             return idx
 
@@ -436,7 +436,7 @@ class MACIDBase(CausalBayesianNetwork):
         Assign a unique colour to each new agent's decision and utility nodes
         """
         agents = list(self.agents)
-        colors = cm.rainbow(np.linspace(0, 1, len(agents)))
+        colors = cm.rainbow(np.linspace(0, 1, len(agents)))  # type: ignore
         try:
             agent = self.decision_agent[node]
         except KeyError:
