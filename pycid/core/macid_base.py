@@ -258,6 +258,8 @@ class MACIDBase(CausalBayesianNetwork):
         """
         Returns true if the agent has sufficient recall in the (MA)CID.
 
+        Sufficient recall is also known as solubility (see Nilsson and Lauritzen (2000))
+
         Agent i in the (MA)CID has sufficient recall if the relevance graph
         restricted to contain only i's decision nodes is acyclic.
 
